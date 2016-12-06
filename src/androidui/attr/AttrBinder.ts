@@ -65,7 +65,7 @@ module androidui.attr {
                 onAttrChangeCall.call(this.host, attrValue, this.host);
             }
             for(let classAttrBind of this.classAttrBindList) {
-                classAttrBind.callSetter(attrName, this.host, attrValue);
+                classAttrBind.callSetter(attrName, this.host, attrValue, this);
             }
         }
 
@@ -250,7 +250,11 @@ module androidui.attr {
 
     export module AttrBinder {
         export class ClassBinderMap {
-            binderMap = new Map<string, ClassBinderValue>();
+            binderMap:Map<string, ClassBinderValue>;
+            constructor(copyBinderMap?: Map<string, androidui.attr.AttrBinder.ClassBinderValue>) {
+                this.binderMap = new Map<string, ClassBinderValue>(copyBinderMap);
+            }
+
             set(key:string, value?:androidui.attr.AttrBinder.ClassBinderValue):ClassBinderMap {
                 this.binderMap.set(key.toLowerCase(), value);
                 return this;
@@ -260,24 +264,24 @@ module androidui.attr {
                 return this.binderMap.get(key.toLowerCase());
             }
 
-            private callSetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any):void {
+            private callSetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any, attrBinder:AttrBinder):void {
                 if (!attrName) return;
                 let value = this.get(attrName);
                 if (value) {
-                    value.setter(host, attrValue);
+                    value.setter.call(host, host, attrValue, attrBinder);
                 }
             }
             private callGetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams): any {
                 if (!attrName) return;
                 let value = this.get(attrName);
                 if (value) {
-                    return value.getter(host);
+                    return value.getter.call(host, host);
                 }
             }
         }
 
         export interface ClassBinderValue {
-            setter:(host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any) => void;
+            setter:(host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any, attrBinder:AttrBinder) => void;
             getter?:(host:android.view.View|android.view.ViewGroup.LayoutParams) => any;
         }
     }

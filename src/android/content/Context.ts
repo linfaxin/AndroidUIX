@@ -41,6 +41,12 @@ module android.content {
             return this.mLayoutInflater;
         }
 
+        /**
+         * Retrieve styled attribute information.
+         */
+        public obtainStyledAttributes(attrs:HTMLElement, defStyleAttr:Map<string, string>):res.TypedArray {
+            return res.TypedArray.obtain(this.mResources, attrs, defStyleAttr);
+        }
 
     }
 }

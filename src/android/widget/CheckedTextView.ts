@@ -31,6 +31,7 @@ import ListView = android.widget.ListView;
 import TextView = android.widget.TextView;
 import View = android.view.View;
 import Context = android.content.Context;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * An extension to TextView that supports the {@link android.widget.Checkable} interface.
  * This is useful when used in a {@link android.widget.ListView ListView} where the it's 
@@ -57,18 +58,35 @@ export class CheckedTextView extends TextView implements Checkable {
     private static CHECKED_STATE_SET:number[] = [ View.VIEW_STATE_CHECKED ];
 
     constructor(context:Context, bindElement?:HTMLElement, defStyle=R.attr.checkedTextViewStyle) {
-        super(context, bindElement, null);
+        super(context, bindElement, defStyle);
 
-        this._attrBinder.addAttr('checkMark', (value)=>{
-            this.setCheckMarkDrawable(this._attrBinder.parseDrawable(value));
-        }, ()=>{
-            return this.getCheckMarkDrawable();
-        });
-        this._attrBinder.addAttr('checked', (value)=>{
-            this.setChecked(this._attrBinder.parseBoolean(value, false));
-        });
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
 
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        const d = a.getDrawable('checkMark');
+        if (d != null) {
+            this.setCheckMarkDrawable(d);
+        }
+
+        const checked = a.getBoolean('checked', false);
+        this.setChecked(checked);
+
+        a.recycle();
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('checkMark', {
+            setter(v:CheckedTextView, value:any, attrBinder:AttrBinder) {
+                v.setCheckMarkDrawable(attrBinder.parseDrawable(value));
+            }, getter(v:CheckedTextView) {
+                return v.getCheckMarkDrawable();
+            }
+        }).set('checked', {
+            setter(v:CheckedTextView, value:any, attrBinder:AttrBinder) {
+                v.setChecked(attrBinder.parseBoolean(value, false));
+            }, getter(v:CheckedTextView) {
+                return v.isChecked();
+            }
+        });
     }
 
     toggle():void  {

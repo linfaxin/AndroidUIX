@@ -70,6 +70,7 @@ import Checkable = android.widget.Checkable;
 import HeaderViewListAdapter = android.widget.HeaderViewListAdapter;
 import ListAdapter = android.widget.ListAdapter;
 import WrapperListAdapter = android.widget.WrapperListAdapter;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * A view that shows items in a vertically scrolling list. The items
  * come from the {@link ListAdapter} associated with this view.
@@ -141,65 +142,78 @@ export class ListView extends AbsListView {
     // Keeps focused children visible through resizes
     private mFocusSelector:ListView.FocusSelector;
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.listViewStyle){
-        super(context, bindElement, null);
-        this._attrBinder.addAttr('divider', (value)=>{
-            let divider = this._attrBinder.parseDrawable(value);
-            if(divider) this.setDivider(divider);
-        })
-        this._attrBinder.addAttr('overScrollHeader', (value)=>{
-            let header = this._attrBinder.parseDrawable(value);
-            if(header) this.setOverscrollHeader(header);
-        })
-        this._attrBinder.addAttr('overScrollFooter', (value)=>{
-            let footer = this._attrBinder.parseDrawable(value);
-            if(footer) this.setOverscrollFooter(footer);
-        })
-        this._attrBinder.addAttr('dividerHeight', (value)=>{
-            let dividerHeight = this._attrBinder.parseNumberPixelSize(value, -1);
-            if(dividerHeight >= 0 ){
-                this.setDividerHeight(dividerHeight);
-            }
-        })
-        this._attrBinder.addAttr('headerDividersEnabled', (value)=>{
-            this.setHeaderDividersEnabled(this._attrBinder.parseBoolean(value, true));
-        })
-        this._attrBinder.addAttr('footerDividersEnabled', (value)=>{
-            this.setFooterDividersEnabled(this._attrBinder.parseBoolean(value, true));
-        })
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.listViewStyle) {
+        super(context, bindElement, defStyle);
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
+        // let entries = a.getTextArray('entries');
+        // if (entries != null) {
+        //     this.setAdapter(new ArrayAdapter<string>(context, R.layout.simple_list_item_1, entries));
+        // }
+        const d: Drawable = a.getDrawable('divider');
+        if (d != null) {
+            // If a divider is specified use its intrinsic height for divider height
+            this.setDivider(d);
+        }
+        const osHeader: Drawable = a.getDrawable('overScrollHeader');
+        if (osHeader != null) {
+            this.setOverscrollHeader(osHeader);
+        }
+        const osFooter: Drawable = a.getDrawable('overScrollFooter');
+        if (osFooter != null) {
+            this.setOverscrollFooter(osFooter);
+        }
+        // Use the height specified, zero being the default
+        const dividerHeight: number = a.getDimensionPixelSize('dividerHeight', 0);
+        if (dividerHeight != 0) {
+            this.setDividerHeight(dividerHeight);
+        }
+        this.mHeaderDividersEnabled = a.getBoolean('headerDividersEnabled', true);
+        this.mFooterDividersEnabled = a.getBoolean('footerDividersEnabled', true);
+        a.recycle();
     }
 
-// constructor(context:Context, attrs:AttributeSet, defStyle:number) {
-    //    super(context, attrs, defStyle);
-    //    let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.ListView, defStyle, 0);
-    //    let entries:CharSequence[] = a.getTextArray(com.android.internal.R.styleable.ListView_entries);
-    //    if (entries != null) {
-    //        this.setAdapter(new ArrayAdapter<CharSequence>(context, com.android.internal.R.layout.simple_list_item_1, entries));
-    //    }
-    //    const d:Drawable = a.getDrawable(com.android.internal.R.styleable.ListView_divider);
-    //    if (d != null) {
-    //        // If a divider is specified use its intrinsic height for divider height
-    //        this.setDivider(d);
-    //    }
-    //    const osHeader:Drawable = a.getDrawable(com.android.internal.R.styleable.ListView_overScrollHeader);
-    //    if (osHeader != null) {
-    //        this.setOverscrollHeader(osHeader);
-    //    }
-    //    const osFooter:Drawable = a.getDrawable(com.android.internal.R.styleable.ListView_overScrollFooter);
-    //    if (osFooter != null) {
-    //        this.setOverscrollFooter(osFooter);
-    //    }
-    //    // Use the height specified, zero being the default
-    //    const dividerHeight:number = a.getDimensionPixelSize(com.android.internal.R.styleable.ListView_dividerHeight, 0);
-    //    if (dividerHeight != 0) {
-    //        this.setDividerHeight(dividerHeight);
-    //    }
-    //    this.mHeaderDividersEnabled = a.getBoolean(R.styleable.ListView_headerDividersEnabled, true);
-    //    this.mFooterDividersEnabled = a.getBoolean(R.styleable.ListView_footerDividersEnabled, true);
-    //    a.recycle();
-    //}
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('divider', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                let divider = attrBinder.parseDrawable(value);
+                if(divider) v.setDivider(divider);
+            }, getter(v:ListView) {
+                return v.mDivider;
+            }
+        }).set('overScrollHeader', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                let header = attrBinder.parseDrawable(value);
+                if(header) v.setOverscrollHeader(header);
+            }, getter(v:ListView) {
+                return v.getOverscrollHeader();
+            }
+        }).set('overScrollFooter', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                let footer = attrBinder.parseDrawable(value);
+                if(footer) v.setOverscrollFooter(footer);
+            }, getter(v:ListView) {
+                return v.getOverscrollFooter();
+            }
+        }).set('dividerHeight', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                v.setDividerHeight(attrBinder.parseNumberPixelSize(value, v.getDividerHeight()));
+            }, getter(v:ListView) {
+                return v.getDividerHeight();
+            }
+        }).set('headerDividersEnabled', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                v.setHeaderDividersEnabled(attrBinder.parseBoolean(value, v.mHeaderDividersEnabled));
+            }, getter(v:ListView) {
+                return v.mHeaderDividersEnabled;
+            }
+        }).set('dividerHeight', {
+            setter(v:ListView, value:any, attrBinder:AttrBinder) {
+                v.setFooterDividersEnabled(attrBinder.parseBoolean(value, v.mFooterDividersEnabled));
+            }, getter(v:ListView) {
+                return v.mFooterDividersEnabled;
+            }
+        });
+    }
 
     /**
      * @return The maximum amount a list view will scroll in response to
@@ -945,15 +959,15 @@ export class ListView extends AbsListView {
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
         // Sets up mListPadding
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        let widthMode:number = ListView.MeasureSpec.getMode(widthMeasureSpec);
-        let heightMode:number = ListView.MeasureSpec.getMode(heightMeasureSpec);
-        let widthSize:number = ListView.MeasureSpec.getSize(widthMeasureSpec);
-        let heightSize:number = ListView.MeasureSpec.getSize(heightMeasureSpec);
+        let widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        let heightMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
+        let widthSize:number = View.MeasureSpec.getSize(widthMeasureSpec);
+        let heightSize:number = View.MeasureSpec.getSize(heightMeasureSpec);
         let childWidth:number = 0;
         let childHeight:number = 0;
         let childState:number = 0;
         this.mItemCount = this.mAdapter == null ? 0 : this.mAdapter.getCount();
-        if (this.mItemCount > 0 && (widthMode == ListView.MeasureSpec.UNSPECIFIED || heightMode == ListView.MeasureSpec.UNSPECIFIED)) {
+        if (this.mItemCount > 0 && (widthMode == View.MeasureSpec.UNSPECIFIED || heightMode == View.MeasureSpec.UNSPECIFIED)) {
             const child:View = this.obtainView(0, this.mIsScrap);
             this.measureScrapChild(child, 0, widthMeasureSpec);
             childWidth = child.getMeasuredWidth();
@@ -963,15 +977,15 @@ export class ListView extends AbsListView {
                 this.mRecycler.addScrapView(child, -1);
             }
         }
-        if (widthMode == ListView.MeasureSpec.UNSPECIFIED) {
+        if (widthMode == View.MeasureSpec.UNSPECIFIED) {
             widthSize = this.mListPadding.left + this.mListPadding.right + childWidth + this.getVerticalScrollbarWidth();
         } else {
             widthSize |= (childState & ListView.MEASURED_STATE_MASK);
         }
-        if (heightMode == ListView.MeasureSpec.UNSPECIFIED) {
+        if (heightMode == View.MeasureSpec.UNSPECIFIED) {
             heightSize = this.mListPadding.top + this.mListPadding.bottom + childHeight + this.getVerticalFadingEdgeLength() * 2;
         }
-        if (heightMode == ListView.MeasureSpec.AT_MOST) {
+        if (heightMode == View.MeasureSpec.AT_MOST) {
             // TODO: after first layout we should maybe start at the first visible position, not 0
             heightSize = this.measureHeightOfChildren(widthMeasureSpec, 0, ListView.NO_POSITION, heightSize, -1);
         }
@@ -991,9 +1005,9 @@ export class ListView extends AbsListView {
         let lpHeight:number = p.height;
         let childHeightSpec:number;
         if (lpHeight > 0) {
-            childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(lpHeight, ListView.MeasureSpec.EXACTLY);
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(lpHeight, View.MeasureSpec.EXACTLY);
         } else {
-            childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(0, ListView.MeasureSpec.UNSPECIFIED);
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         }
         child.measure(childWidthSpec, childHeightSpec);
     }
@@ -1568,9 +1582,9 @@ export class ListView extends AbsListView {
             let lpHeight:number = p.height;
             let childHeightSpec:number;
             if (lpHeight > 0) {
-                childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(lpHeight, ListView.MeasureSpec.EXACTLY);
+                childHeightSpec = View.MeasureSpec.makeMeasureSpec(lpHeight, View.MeasureSpec.EXACTLY);
             } else {
-                childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(0, ListView.MeasureSpec.UNSPECIFIED);
+                childHeightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             }
             child.measure(childWidthSpec, childHeightSpec);
         } else {
@@ -2253,9 +2267,9 @@ export class ListView extends AbsListView {
         let lpHeight:number = p.height;
         let childHeightSpec:number;
         if (lpHeight > 0) {
-            childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(lpHeight, ListView.MeasureSpec.EXACTLY);
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(lpHeight, View.MeasureSpec.EXACTLY);
         } else {
-            childHeightSpec = ListView.MeasureSpec.makeMeasureSpec(0, ListView.MeasureSpec.UNSPECIFIED);
+            childHeightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         }
         child.measure(childWidthSpec, childHeightSpec);
     }

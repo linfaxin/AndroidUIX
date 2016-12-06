@@ -67,7 +67,7 @@ module android.widget{
      * </p>
      */
     export class ImageButton extends ImageView {
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.imageButtonStyle){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.imageButtonStyle){
             super(context, bindElement, defStyle);
         }
     }

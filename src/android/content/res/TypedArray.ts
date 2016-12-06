@@ -36,24 +36,37 @@ module android.content.res {
      */
     export class TypedArray {
 
-        static obtain(res:android.content.res.Resources, xml:HTMLElement):TypedArray {
+        static obtain(res:android.content.res.Resources, xml:HTMLElement, defStyleAttr?:Map<string, string>):TypedArray {
+            const attrMap = new Map<string, string>();
+            if (defStyleAttr) {
+                for(let [key, value] of defStyleAttr.entries()) {
+                    attrMap.set(key.toLowerCase(), value);
+                }
+            }
+            if (xml) {
+                for (let attr of Array.from(xml.attributes)) {
+                    attrMap.set(attr.name, attr.value);
+                }
+            }
+
             const attrs = res.mTypedArrayPool.acquire();
             if (attrs != null) {
                 attrs.mRecycled = false;
-                attrs.mXml = xml;
+                attrs.attrMap = attrMap;
+                attrs.attrMapKeysCache = [];
                 return attrs;
             }
-            return new TypedArray(res, xml);
+            return new TypedArray(res, attrMap);
         }
 
         private mResources:android.content.res.Resources;
-        private mXml:HTMLElement;
+        private attrMap:Map<string, string>;
+        private attrMapKeysCache:string[];
         private mRecycled:boolean;
 
-        constructor(res:android.content.res.Resources, xml:HTMLElement) {
+        constructor(res:android.content.res.Resources, attrMap:Map<string, string>) {
             this.mResources = res;
-            this.mXml = xml;
-
+            this.attrMap = attrMap;
         }
 
         private checkRecycled():void {
@@ -67,7 +80,24 @@ module android.content.res {
          */
         public length():number {
             this.checkRecycled();
-            return this.mXml.attributes.length;
+            if (!this.attrMap) return 0;
+            return this.attrMap.size;
+        }
+
+        /**
+         * Return the attrName for the the index in this array.
+         * AndroidUIX Deprecated: please use {@link #getLowerCaseAttrNames} to traverse the attrNames
+         * @deprecated
+         */
+        public getIndex(keyIndex:number):string {
+            if (!this.attrMapKeysCache) {
+                this.attrMapKeysCache = Array.from(this.attrMap.keys());
+            }
+            return this.attrMapKeysCache[keyIndex];
+        }
+
+        public getLowerCaseAttrNames():IterableIterator<string> {
+            return this.attrMap.keys();
         }
 
         /**
@@ -77,6 +107,16 @@ module android.content.res {
             return this.mResources;
         }
 
+        public getAttrValue(attrName:string):string {
+            return this.attrMap && this.attrMap.get(attrName && attrName.toLowerCase());
+        }
+
+        public getResourceId(attrName:string, defaultResourceId:string):string {
+            if (this.hasValueOrEmpty(attrName)) {
+                return this.getString(attrName);
+            }
+            return defaultResourceId;
+        }
 
         /**
          * Retrieve the styled string value for the attribute at <var>index</var>.
@@ -100,8 +140,8 @@ module android.content.res {
          */
         public getString(attrName:string):string {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
-            return AttrValueParser.parseString(this.mResources, value, null);
+            let value = this.getAttrValue(attrName);
+            return AttrValueParser.parseString(this.mResources, value, value);
         }
 
 
@@ -115,7 +155,7 @@ module android.content.res {
          */
         public getBoolean(attrName:string, defValue:boolean):boolean {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseBoolean(this.mResources, value, defValue);
         }
 
@@ -129,7 +169,7 @@ module android.content.res {
          */
         public getInt(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseInt(this.mResources, value, defValue);
         }
 
@@ -144,7 +184,7 @@ module android.content.res {
          */
         public getFloat(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseFloat(this.mResources, value, defValue);
         }
 
@@ -162,7 +202,7 @@ module android.content.res {
          */
         public getColor(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseColor(this.mResources, value, defValue);
         }
 
@@ -177,7 +217,7 @@ module android.content.res {
          */
         public getColorStateList(attrName:string):android.content.res.ColorStateList {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseColorStateList(this.mResources, value);
         }
 
@@ -212,7 +252,7 @@ module android.content.res {
          */
         public getDimension(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseDimension(this.mResources, value, defValue);
         }
 
@@ -235,7 +275,7 @@ module android.content.res {
          */
         public getDimensionPixelOffset(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseDimensionPixelOffset(this.mResources, value, defValue);
         }
 
@@ -260,7 +300,7 @@ module android.content.res {
          */
         public getDimensionPixelSize(attrName:string, defValue:number):number {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseDimensionPixelSize(this.mResources, value, defValue);
         }
 
@@ -273,7 +313,7 @@ module android.content.res {
          */
         public getDrawable(attrName:string):Drawable {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseDrawable(this.mResources, value);
         }
 
@@ -289,7 +329,7 @@ module android.content.res {
          */
         public getTextArray(attrName:string):string[] {
             this.checkRecycled();
-            let value = this.mXml.getAttribute(attrName);
+            let value = this.getAttrValue(attrName);
             return AttrValueParser.parseTextArray(this.mResources, value);
         }
 
@@ -305,7 +345,7 @@ module android.content.res {
          */
         public hasValue(attrName:string):boolean {
             this.checkRecycled();
-            return this.mXml.getAttribute(attrName) != null;
+            return this.getAttrValue(attrName) != null;
         }
 
 
@@ -320,7 +360,7 @@ module android.content.res {
          */
         public hasValueOrEmpty(attrName:string):boolean {
             this.checkRecycled();
-            return this.mXml.hasAttribute(attrName);
+            return this.attrMap && this.attrMap.has(attrName);
         }
 
 
@@ -330,7 +370,8 @@ module android.content.res {
          */
         public recycle():void {
             this.mRecycled = true;
-            this.mXml = null;
+            this.attrMap = null;
+            this.attrMapKeysCache = null;
             this.mResources.mTypedArrayPool.release(this);
         }
 

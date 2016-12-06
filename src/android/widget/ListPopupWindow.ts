@@ -227,7 +227,7 @@ export class ListPopupWindow {
      * @param defStyleAttr Style attribute to read for default styling of popup content.
      * @param defStyleRes Style resource ID to use for default styling of popup content.
      */
-    constructor(context:Context, styleAttr:android.R.attr.popupWindowStyleType=android.R.attr.listPopupWindowStyle) {
+    constructor(context:Context, styleAttr=android.R.attr.listPopupWindowStyle) {
         this.mContext = context;
         this.mPopup = new PopupWindow(context, styleAttr);
         this.mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);

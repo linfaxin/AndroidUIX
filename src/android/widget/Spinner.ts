@@ -62,6 +62,7 @@ import PopupWindow = android.widget.PopupWindow;
 import SpinnerAdapter = android.widget.SpinnerAdapter;
 import Context = android.content.Context;
 import R = android.R;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * A view that displays one child at a time and lets the user pick among them.
  * The items in the Spinner come from the {@link Adapter} associated with
@@ -80,7 +81,7 @@ import R = android.R;
  */
 export class Spinner extends AbsSpinner implements OnClickListener {
 
-    private static TAG:string = "Spinner";
+    static TAG:string = "Spinner";
 
     // Only measure this many items to get a decent max width.
     private static MAX_ITEMS_MEASURED:number = 15;
@@ -133,77 +134,123 @@ export class Spinner extends AbsSpinner implements OnClickListener {
      * @see #MODE_DROPDOWN
      */
     constructor(context:Context, bindElement?:HTMLElement, defStyle=R.attr.spinnerStyle, mode=Spinner.MODE_THEME) {
-        super(context, bindElement, null);
-        let a = this._attrBinder;
+        super(context, bindElement, defStyle);
+
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
+
         if (mode == Spinner.MODE_THEME) {
-            mode = Spinner.MODE_DROPDOWN;//a.getInt(com.android.internal.R.styleable.Spinner_spinnerMode, Spinner.MODE_DIALOG);
+            if ('dialog' === a.getAttrValue('spinnerMode')) {
+                mode = Spinner.MODE_DIALOG;
+            } else {
+                mode = Spinner.MODE_DROPDOWN;
+            }
         }
-        switch(mode) {
-            case Spinner.MODE_DIALOG:
-                {
-                    this.mPopup = new Spinner.DialogPopup(this);
-                    break;
-                }
-            case Spinner.MODE_DROPDOWN:
-                {
-                    const popup:Spinner.DropdownPopup = new Spinner.DropdownPopup(context, defStyle, this);
 
-                    a.addAttr('dropDownWidth', (value)=>{
-                        this.mDropDownWidth = a.parseNumberPixelSize(value, ViewGroup.LayoutParams.WRAP_CONTENT);
-                    });
-                    a.addAttr('popupBackground', (value)=>{
-                        popup.setBackgroundDrawable(a.parseDrawable(value));
-                    });
-                    a.addAttr('dropDownVerticalOffset', (value)=>{
-                        const verticalOffset:number = a.parseNumberPixelSize(value, 0);
-                        if (verticalOffset != 0) {
-                            popup.setVerticalOffset(verticalOffset);
-                        }
-                    });
-                    a.addAttr('dropDownHorizontalOffset', (value)=>{
-                        const horizontalOffset:number = a.parseNumberPixelSize(value, 0);
-                        if (horizontalOffset != 0) {
-                            popup.setHorizontalOffset(horizontalOffset);
-                        }
-                    });
-                    this.mPopup = popup;
-                    //this.mForwardingListener = (()=>{
-                    //    const _this=this;
-                    //    class _Inner extends ForwardingListener {
-                    //        getPopup():ListPopupWindow  {
-                    //            return popup;
-                    //        }
-                    //
-                    //        onForwardingStarted():boolean  {
-                    //            if (!_this.mPopup.isShowing()) {
-                    //                _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
-                    //            }
-                    //            return true;
-                    //        }
-                    //    }
-                    //    return new _Inner(this);
-                    //})();
-                    break;
+        switch (mode) {
+            case Spinner.MODE_DIALOG: {
+                this.mPopup = new Spinner.DialogPopup(this);
+                break;
+            }
+
+            case Spinner.MODE_DROPDOWN: {
+                const popup = new Spinner.DropdownPopup(context, bindElement, defStyle);
+
+                this.mDropDownWidth = a.getDimension('dropDownWidth', ViewGroup.LayoutParams.WRAP_CONTENT); // getLayoutDimension
+                popup.setBackgroundDrawable(a.getDrawable('popupBackground'));
+                const verticalOffset = a.getDimensionPixelOffset('dropDownVerticalOffset', 0);
+                if (verticalOffset != 0) {
+                    popup.setVerticalOffset(verticalOffset);
                 }
+
+                const horizontalOffset = a.getDimensionPixelOffset('dropDownHorizontalOffset', 0);
+                if (horizontalOffset != 0) {
+                    popup.setHorizontalOffset(horizontalOffset);
+                }
+
+                this.mPopup = popup;
+                // mForwardingListener = new ForwardingListener(this) {
+                // @Override
+                // public ListPopupWindow getPopup() {
+                //         return popup;
+                //     }
+                //
+                // @Override
+                // public boolean onForwardingStarted() {
+                //         if (!mPopup.isShowing()) {
+                //             mPopup.show(getTextDirection(), getTextAlignment());
+                //         }
+                //         return true;
+                //     }
+                // };
+                break;
+            }
         }
-        a.addAttr('gravity', (value)=>{
-            this.mGravity = a.parseGravity(value, Gravity.CENTER);
-        });
-        a.addAttr('prompt', (value)=>{
-            this.mPopup.setPromptText(a.parseString(value));
-        });
-        a.addAttr('disableChildrenWhenDisabled', (value)=>{
-            this.mDisableChildrenWhenDisabled = a.parseBoolean(value, false);
-        });
 
-        if(defStyle!=null) this.applyDefaultAttributes(defStyle);
+        this.mGravity = Gravity.parseGravity(a.getAttrValue('gravity'), Gravity.CENTER);
 
-        //a.recycle();
+        this.mPopup.setPromptText(a.getString('prompt'));
+
+        this.mDisableChildrenWhenDisabled = a.getBoolean('disableChildrenWhenDisabled', false);
+
+        a.recycle();
+
         // Finish setting things up if this happened.
         if (this.mTempAdapter != null) {
             this.mPopup.setAdapter(this.mTempAdapter);
             this.mTempAdapter = null;
         }
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('dropDownWidth', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                v.mDropDownWidth = a.parseNumberPixelSize(value, v.mDropDownWidth);
+            }, getter(v:Spinner) {
+                return v.mDropDownWidth;
+            }
+        }).set('popupBackground', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                v.mPopup.setBackgroundDrawable(a.parseDrawable(value));
+            }, getter(v:Spinner) {
+                return v.mPopup.getBackground();
+            }
+        }).set('dropDownVerticalOffset', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                const verticalOffset:number = a.parseNumberPixelSize(value, 0);
+                if (verticalOffset != 0) {
+                    v.mPopup.setVerticalOffset(verticalOffset);
+                }
+            }, getter(v:Spinner) {
+                return v.mPopup.getVerticalOffset();
+            }
+        }).set('dropDownHorizontalOffset', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                const horizontalOffset:number = a.parseNumberPixelSize(value, 0);
+                if (horizontalOffset != 0) {
+                    v.mPopup.setHorizontalOffset(horizontalOffset);
+                }
+            }, getter(v:Spinner) {
+                return v.mPopup.getHorizontalOffset();
+            }
+        }).set('gravity', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                v.mGravity = a.parseGravity(value, Gravity.CENTER);
+            }, getter(v:Spinner) {
+                return v.mGravity;
+            }
+        }).set('prompt', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                v.mPopup.setPromptText(a.parseString(value));
+            }, getter(v:Spinner) {
+                return v.mPopup.getHintText();
+            }
+        }).set('disableChildrenWhenDisabled', {
+            setter(v:Spinner, value:any, a:AttrBinder) {
+                v.mDisableChildrenWhenDisabled = a.parseBoolean(value, false);
+            }, getter(v:Spinner) {
+                return v.mDisableChildrenWhenDisabled;
+            }
+        });
     }
 
     /**
@@ -440,9 +487,9 @@ export class Spinner extends AbsSpinner implements OnClickListener {
 
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (this.mPopup != null && Spinner.MeasureSpec.getMode(widthMeasureSpec) == Spinner.MeasureSpec.AT_MOST) {
+        if (this.mPopup != null && View.MeasureSpec.getMode(widthMeasureSpec) == View.MeasureSpec.AT_MOST) {
             const measuredWidth:number = this.getMeasuredWidth();
-            this.setMeasuredDimension(Math.min(Math.max(measuredWidth, this.measureContentWidth(this.getAdapter(), this.getBackground())), Spinner.MeasureSpec.getSize(widthMeasureSpec)), this.getMeasuredHeight());
+            this.setMeasuredDimension(Math.min(Math.max(measuredWidth, this.measureContentWidth(this.getAdapter(), this.getBackground())), View.MeasureSpec.getSize(widthMeasureSpec)), this.getMeasuredHeight());
         }
     }
 
@@ -632,8 +679,8 @@ export class Spinner extends AbsSpinner implements OnClickListener {
         let width:number = 0;
         let itemView:View = null;
         let itemType:number = 0;
-        const widthMeasureSpec:number = Spinner.MeasureSpec.makeMeasureSpec(0, Spinner.MeasureSpec.UNSPECIFIED);
-        const heightMeasureSpec:number = Spinner.MeasureSpec.makeMeasureSpec(0, Spinner.MeasureSpec.UNSPECIFIED);
+        const widthMeasureSpec:number = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        const heightMeasureSpec:number = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         // Make sure the number of items we'll measure is capped. If it's a huge data set
         // with wildly varying sizes, oh well.
         let start:number = Math.max(0, this.getSelectedItemPosition());

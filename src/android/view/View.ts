@@ -107,6 +107,7 @@ module android.view {
     import KeyEvent = android.view.KeyEvent;
     import Animation = animation.Animation;
     import Transformation = animation.Transformation;
+    import TypedArray = android.content.res.TypedArray;
 
 
     /**
@@ -680,9 +681,9 @@ module android.view {
      *
      * @see android.view.ViewGroup
      *
-     * androidui NOTE: something modified
+     * AndroidUIX NOTE: something modified
      */
-    export class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback{
+    export class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
         static DBG = Log.View_DBG;
         static VIEW_LOG_TAG = "View";
 
@@ -1356,7 +1357,7 @@ module android.view {
         private mUnscaledDrawingCache:Canvas;
         mTouchSlop = 0;
         private mVerticalScrollFactor = 0;
-        private mOverScrollMode = 0;
+        private mOverScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
         mParent:ViewParent;
         private mMeasureCache:Map<string, number[]>;
         mAttachInfo:View.AttachInfo;
@@ -1429,10 +1430,10 @@ module android.view {
             this.requestSyncBoundToElement();
         }
 
-        private mPaddingLeft = 0;
-        private mPaddingRight = 0;
-        private mPaddingTop = 0;
-        private mPaddingBottom = 0;
+        protected mPaddingLeft = 0;
+        protected mPaddingRight = 0;
+        protected mPaddingTop = 0;
+        protected mPaddingBottom = 0;
 
         //androidui add:
         //clip with the cornerRadius:
@@ -1444,344 +1445,460 @@ module android.view {
         private mShadowPaint:Paint;
         private mShadowDrawable:Drawable;
 
-        constructor(context?:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.viewStyle) {
+        constructor(context:Context, bindElement?:HTMLElement, defStyleAttr?:Map<string, string>) {
             super();
             this.mContext = context;
             this.mTouchSlop = ViewConfiguration.get().getScaledTouchSlop();
-            this.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
 
+            // AndroidUI add logic:
             this.initBindAttr();
-
             this.initBindElement(bindElement);
+            // AndroidUI add end
 
-            if(defStyle) this.applyDefaultAttributes(defStyle);
-        }
+            const a:TypedArray = context.obtainStyledAttributes(bindElement, defStyleAttr);
 
-        protected initBindAttr():void {
-            if (!View.ViewClassAttrBinder) {
-                View.ViewClassAttrBinder = new AttrBinder.ClassBinderMap();
-                View.ViewClassAttrBinder.set('background', {
-                    setter(v:View, value:any) { v.setBackground(v._attrBinder.parseDrawable(value)); },
-                    getter(v:View) { return v.mBackground; },
-                }).set('padding', {
-                    setter(v:View, value:any) {
-                        if(value==null) value = 0;
-                        let [left, top, right, bottom] = v._attrBinder.parsePaddingMarginLTRB(value);
-                        v._setPaddingWithUnit(left, top, right, bottom);
-                    },
-                    getter(v:View) { return v.mPaddingTop + ' ' + v.mPaddingRight + ' ' + v.mPaddingBottom + ' ' + v.mPaddingLeft; },
-                }).set('paddingLeft', {
-                    setter(v:View, value:any) {
-                        if(value==null) value = 0;
-                        v._setPaddingWithUnit(value, v.mPaddingTop, v.mPaddingRight, v.mPaddingBottom);
-                    },
-                    getter(v:View) { return v.mPaddingLeft; },
-                }).set('paddingTop', {
-                    setter(v:View, value:any) {
-                        if(value==null) value = 0;
-                        v._setPaddingWithUnit(v.mPaddingLeft, value, v.mPaddingRight, v.mPaddingBottom);
-                    },
-                    getter(v:View) { return v.mPaddingTop; },
-                }).set('paddingRight', {
-                    setter(v:View, value:any) {
-                        if(value==null) value = 0;
-                        v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, value, v.mPaddingBottom);
-                    },
-                    getter(v:View) { return v.mPaddingRight; },
-                }).set('paddingBottom', {
-                    setter(v:View, value:any) {
-                        if(value==null) value = 0;
-                        v._setPaddingWithUnit(v.mPaddingLeft, v.mPaddingTop, v.mPaddingRight, value);
-                    },
-                    getter(v:View) { return v.mPaddingBottom; },
-                }).set('scrollX', {
-                    setter(v:View, value:any) {
-                        value = v._attrBinder.parseNumberPixelOffset(value);
-                        if(Number.isInteger(value)) v.scrollTo(value, v.mScrollY);
-                    },
-                    getter(v:View) { v.getScrollX(); },
-                }).set('scrollY', {
-                    setter(v:View, value:any) {
-                        value = v._attrBinder.parseNumberPixelOffset(value);
-                        if(Number.isInteger(value)) v.scrollTo(v.mScrollX, value);
-                    },
-                    getter(v:View) { return v.getScrollY(); },
-                }).set('alpha', {
-                    setter(v:View, value:any) {
-                        v.setAlpha(v._attrBinder.parseFloat(value, v.getAlpha()));
-                    },
-                    getter(v:View) { return v.getAlpha(); },
-                }).set('transformPivotX', {
-                    setter(v:View, value:any) {
-                        v.setPivotX(v._attrBinder.parseNumberPixelOffset(value, v.getPivotX()));
-                    },
-                    getter(v:View) { return v.getPivotX(); },
-                }).set('transformPivotY', {
-                    setter(v:View, value:any) {
-                        v.setPivotY(v._attrBinder.parseNumberPixelOffset(value, v.getPivotY()));
-                    },
-                    getter(v:View) { return v.getPivotY(); },
-                }).set('translationX', {
-                    setter(v:View, value:any) {
-                        v.setTranslationX(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationX()));
-                    },
-                    getter(v:View) {
-                        return v.getTranslationX();
-                    },
-                }).set('translationY', {
-                    setter(v:View, value:any) {
-                        v.setTranslationY(v._attrBinder.parseNumberPixelOffset(value, v.getTranslationY()));
-                    },
-                    getter(v:View) {
-                        return v.getTranslationY();
-                    },
-                }).set('rotation', {
-                    setter(v:View, value:any) {
-                        v.setRotation(v._attrBinder.parseFloat(value, v.getRotation()));
-                    },
-                    getter(v:View) {
-                        return v.getRotation();
-                    },
-                }).set('scaleX', {
-                    setter(v:View, value:any) {
-                        v.setScaleX(v._attrBinder.parseFloat(value, v.getScaleX()));
-                    },
-                    getter(v:View) {
-                        return v.getScaleX();
-                    },
-                }).set('scaleY', {
-                    setter(v:View, value:any) {
-                        v.setScaleY(v._attrBinder.parseFloat(value, v.getScaleY()));
-                    },
-                    getter(v:View) {
-                        return v.getScaleY();
-                    },
-                }).set('tag', {
-                    setter(v:View, value:any) {
-                        v.setTag(value);
-                    },
-                    getter(v:View) {
-                        return v.getTag();
-                    },
-                }).set('id', {
-                    setter(v:View, value:any) {
-                        v.setId(value);
-                    },
-                    getter(v:View) {
-                        return v.getId();
-                    },
-                }).set('focusable', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
-                        }
-                    },
-                    getter(v:View) {
-                        return v.isFocusable();
-                    },
-                }).set('focusableInTouchMode', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
-                                View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
-                        }
-                    },
-                    getter(v:View) {
-                        return v.isFocusableInTouchMode();
-                    },
-                }).set('clickable', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setFlags(View.CLICKABLE, View.CLICKABLE);
-                        }
-                    },
-                    getter(v:View) {
-                        return v.isClickable();
-                    },
-                }).set('longClickable', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
-                        }
-                    },
-                    getter(v:View) {
-                        return v.isLongClickable();
-                    },
-                }).set('duplicateParentState', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
-                        }
-                    },
-                    getter(v:View) {
-                        return (v.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE;
-                    },
-                }).set('visibility', {
-                    setter(v:View, value:any) {
-                        if(value === 'gone') v.setVisibility(View.GONE);
-                        else if(value === 'invisible') v.setVisibility(View.INVISIBLE);
-                        else if(value === 'visible') v.setVisibility(View.VISIBLE);
-                    },
-                    getter(v:View) {
-                        return v.getVisibility();
-                    },
-                }).set('scrollbars', {
-                    setter(v:View, value:any) {
-                        if(value === 'none') {
-                            v.setHorizontalScrollBarEnabled(false);
-                            v.setVerticalScrollBarEnabled(false);
-                        } else if (value === 'horizontal') {
-                            v.setHorizontalScrollBarEnabled(true);
-                            v.setVerticalScrollBarEnabled(false);
-                        } else if (value === 'vertical') {
-                            v.setHorizontalScrollBarEnabled(false);
-                            v.setVerticalScrollBarEnabled(true);
-                        }
-                    },
-                }).set('isScrollContainer', {
-                    setter(v:View, value:any) {
-                        if(v._attrBinder.parseBoolean(value, false)){
-                            v.setScrollContainer(true);
-                        }
-                    },
-                    getter(v:View) {
-                        return v.isScrollContainer();
-                    },
-                }).set('minWidth', {
-                    setter(v:View, value:any) {
-                        v.setMinimumWidth(v._attrBinder.parseNumberPixelSize(value, 0));
-                    },
-                    getter(v:View) {
-                        return v.mMinWidth;
-                    },
-                }).set('minHeight', {
-                    setter(v:View, value:any) {
-                        v.setMinimumHeight(v._attrBinder.parseNumberPixelSize(value, 0));
-                    },
-                    getter(v:View) {
-                        return v.mMinHeight;
-                    },
-                }).set('onClick', {
-                    setter(v:View, value:any) {
-                        if (value && typeof value === 'string') {
-                            v.setOnClickListener((view:View) => {
-                                // call activity method
-                                try {
-                                    let activityClickMethod = view.getContext()[value];
-                                    if (typeof activityClickMethod === 'function') {
-                                        activityClickMethod.call(view.getContext(), view);
-                                        return;
-                                    }
-                                } catch (e) {
-                                }
+            let background:Drawable = null;
 
-                                // eval js code
-                                try {
-                                    new Function(value).call(view);
-                                } catch (e) {
-                                }
-                            });
+            let leftPadding = -1;
+            let topPadding = -1;
+            let rightPadding = -1;
+            let bottomPadding = -1;
+            // let startPadding = -1;//View.UNDEFINED_PADDING;
+            // let endPadding = -1;//View.UNDEFINED_PADDING;
+
+            let padding = -1;
+
+            let viewFlagValues = 0;
+            let viewFlagMasks = 0;
+
+            let setScrollContainer = false;
+
+            let x = 0;
+            let y = 0;
+
+            let tx = 0;
+            let ty = 0;
+            let rotation = 0;
+            let rotationX = 0;
+            let rotationY = 0;
+            let sx = 1;
+            let sy = 1;
+            let transformSet = false;
+
+            // let scrollbarStyle = View.SCROLLBARS_INSIDE_OVERLAY;
+            let overScrollMode = this.mOverScrollMode;
+            let initializeScrollbars = false;
+
+            // let startPaddingDefined = false;
+            // let endPaddingDefined = false;
+            // let leftPaddingDefined = false;
+            // let rightPaddingDefined = false;
+
+            // const targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
+            for (let attr of a.getLowerCaseAttrNames()) {
+                switch (attr) {
+                    case 'background':
+                        background = a.getDrawable(attr);
+                        break;
+                    case 'padding':
+                        padding = a.getDimensionPixelSize(attr, -1);
+                        // this.mUserPaddingLeftInitial = padding;
+                        // this.mUserPaddingRightInitial = padding;
+                        // leftPaddingDefined = true;
+                        // rightPaddingDefined = true;
+                        break;
+                     case 'paddingleft':
+                        leftPadding = a.getDimensionPixelSize(attr, -1);
+                        // this.mUserPaddingLeftInitial = leftPadding;
+                        // leftPaddingDefined = true;
+                        break;
+                    case 'paddingtop':
+                        topPadding = a.getDimensionPixelSize(attr, -1);
+                        break;
+                    case 'paddingright':
+                        rightPadding = a.getDimensionPixelSize(attr, -1);
+                        // this.mUserPaddingRightInitial = rightPadding;
+                        // rightPaddingDefined = true;
+                        break;
+                    case 'paddingbottom':
+                        bottomPadding = a.getDimensionPixelSize(attr, -1);
+                        break;
+                    case 'paddingstart':
+                        leftPadding = a.getDimensionPixelSize(attr, -1);
+                        // leftPaddingDefined = true;
+                        // startPadding = a.getDimensionPixelSize(attr, UNDEFINED_PADDING);
+                        // startPaddingDefined = (startPadding != UNDEFINED_PADDING);
+                        break;
+                    case 'paddingend':
+                        rightPadding = a.getDimensionPixelSize(attr, -1);
+                        // rightPaddingDefined = true;
+                        // endPadding = a.getDimensionPixelSize(attr, UNDEFINED_PADDING);
+                        // endPaddingDefined = (endPadding != UNDEFINED_PADDING);
+                        break;
+                    case 'scrollx':
+                        x = a.getDimensionPixelOffset(attr, 0);
+                        break;
+                    case 'scrolly':
+                        y = a.getDimensionPixelOffset(attr, 0);
+                        break;
+                    case 'alpha':
+                        this.setAlpha(a.getFloat(attr, 1));
+                        break;
+                    case 'transformpivotx':
+                        this.setPivotX(a.getDimensionPixelOffset(attr, 0));
+                        break;
+                    case 'transformpivoty':
+                        this.setPivotY(a.getDimensionPixelOffset(attr, 0));
+                        break;
+                    case 'translationx':
+                        tx = a.getDimensionPixelOffset(attr, 0);
+                        transformSet = true;
+                        break;
+                    case 'translationy':
+                        ty = a.getDimensionPixelOffset(attr, 0);
+                        transformSet = true;
+                        break;
+                    case 'rotation':
+                        rotation = a.getFloat(attr, 0);
+                        transformSet = true;
+                        break;
+                    case 'rotationx':
+                        rotationX = a.getFloat(attr, 0);
+                        transformSet = true;
+                        break;
+                    case 'rotationy':
+                        rotationY = a.getFloat(attr, 0);
+                        transformSet = true;
+                        break;
+                    case 'scalex':
+                        sx = a.getFloat(attr, 1);
+                        transformSet = true;
+                        break;
+                    case 'scaley':
+                        sy = a.getFloat(attr, 1);
+                        transformSet = true;
+                        break;
+                    case 'id':
+                        this.mID = a.getString(attr);
+                        break;
+                    case 'tag':
+                        this.mTag = a.getText(attr);
+                        break;
+                    case 'fitssystemwindows':
+                        // if (a.getBoolean(attr, false)) {
+                        //     viewFlagValues |= FITS_SYSTEM_WINDOWS;
+                        //     viewFlagMasks |= FITS_SYSTEM_WINDOWS;
+                        // }
+                        break;
+                    case 'focusable':
+                        if (a.getBoolean(attr, false)) {
+                            viewFlagValues |= View.FOCUSABLE;
+                            viewFlagMasks |= View.FOCUSABLE_MASK;
                         }
-                        v.bindElement.removeAttribute('onclick'); // remove avoid when debug layout show, will trigger click twice on safari.
-                    },
-                }).set('overScrollMode', {
-                    setter(v:View, value:any) {
-                        let scrollMode = View[('OVER_SCROLL_'+value).toUpperCase()];
-                        if(scrollMode===undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
-                        v.setOverScrollMode(scrollMode);
-                    }
-                }).set('layerType', {
-                    setter(v:View, value:any) {
-                        if((value+'').toLowerCase() == 'software'){
-                            v.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                        break;
+                    case 'focusableintouchmode':
+                        if (a.getBoolean(attr, false)) {
+                            viewFlagValues |= View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE;
+                            viewFlagMasks |= View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK;
+                        }
+                        break;
+                    case 'clickable':
+                        if (a.getBoolean(attr, false)) {
+                            viewFlagValues |= View.CLICKABLE;
+                            viewFlagMasks |= View.CLICKABLE;
+                        }
+                        break;
+                    case 'longclickable':
+                        if (a.getBoolean(attr, false)) {
+                            viewFlagValues |= View.LONG_CLICKABLE;
+                            viewFlagMasks |= View.LONG_CLICKABLE;
+                        }
+                        break;
+                    case 'saveenabled':
+                        // if (!a.getBoolean(attr, true)) {
+                        //     viewFlagValues |= View.SAVE_DISABLED;
+                        //     viewFlagMasks |= View.SAVE_DISABLED_MASK;
+                        // }
+                        break;
+                    case 'duplicateparentstate':
+                        if (a.getBoolean(attr, false)) {
+                            viewFlagValues |= View.DUPLICATE_PARENT_STATE;
+                            viewFlagMasks |= View.DUPLICATE_PARENT_STATE;
+                        }
+                        break;
+                    case 'visibility':
+                        const visibility = a.getAttrValue(attr);
+                        if(visibility === 'gone') {
+                            viewFlagValues |= View.GONE;
+                            viewFlagMasks |= View.VISIBILITY_MASK;
+                        } else if(visibility === 'invisible') {
+                            viewFlagValues |= View.INVISIBLE;
+                            viewFlagMasks |= View.VISIBILITY_MASK;
+                        } else if(visibility === 'visible') {
+                            viewFlagValues |= View.VISIBLE;
+                            viewFlagMasks |= View.VISIBILITY_MASK;
+                        }
+                        break;
+                    case 'layoutdirection':
+                        // // Clear any layout direction flags (included resolved bits) already set
+                        // this.mPrivateFlags2 &=
+                        //         ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
+                        // // Set the layout direction flags depending on the value of the attribute
+                        // const layoutDirection = a.getInt(attr, -1);
+                        // const value = (layoutDirection != -1) ?
+                        //         LAYOUT_DIRECTION_FLAGS[layoutDirection] : LAYOUT_DIRECTION_DEFAULT;
+                        // this.mPrivateFlags2 |= (value << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
+                        break;
+                    case 'drawingcachequality':
+                        // const cacheQuality = a.getInt(attr, 0);
+                        // if (cacheQuality != 0) {
+                        //     viewFlagValues |= View.DRAWING_CACHE_QUALITY_FLAGS[cacheQuality];
+                        //     viewFlagMasks |= View.DRAWING_CACHE_QUALITY_MASK;
+                        // }
+                        break;
+                    case 'contentdescription':
+                        // this.setContentDescription(a.getString(attr));
+                        break;
+                    case 'labelfor':
+                        // this.setLabelFor(a.getString(attr));
+                        break;
+                    case 'soundeffectsenabled':
+                        // if (!a.getBoolean(attr, true)) {
+                        //     viewFlagValues &= ~View.SOUND_EFFECTS_ENABLED;
+                        //     viewFlagMasks |= View.SOUND_EFFECTS_ENABLED;
+                        // }
+                        break;
+                    case 'hapticfeedbackenabled':
+                        // if (!a.getBoolean(attr, true)) {
+                        //     viewFlagValues &= ~View.HAPTIC_FEEDBACK_ENABLED;
+                        //     viewFlagMasks |= View.HAPTIC_FEEDBACK_ENABLED;
+                        // }
+                        break;
+                    case 'scrollbars':
+                        const scrollbars = a.getAttrValue(attr);
+                        if (scrollbars === 'horizontal') {
+                            viewFlagValues |= View.SCROLLBARS_HORIZONTAL;
+                            viewFlagMasks |= View.SCROLLBARS_MASK;
+                            initializeScrollbars = true;
+                        } else if (scrollbars === 'vertical') {
+                            viewFlagValues |= View.SCROLLBARS_VERTICAL;
+                            viewFlagMasks |= View.SCROLLBARS_MASK;
+                            initializeScrollbars = true;
+                        }
+                        break;
+                    //noinspection deprecation
+                    case 'fadingedge':
+                        // if (targetSdkVersion >= ICE_CREAM_SANDWICH) {
+                        //     // Ignore the attribute starting with ICS
+                        //     break;
+                        // }
+                        // With builds < ICS, fall through and apply fading edges
+                    case 'requiresfadingedge':
+                        // const fadingEdge = a.getInt(attr, FADING_EDGE_NONE);
+                        // if (fadingEdge != FADING_EDGE_NONE) {
+                        //     viewFlagValues |= fadingEdge;
+                        //     viewFlagMasks |= View.FADING_EDGE_MASK;
+                        //     this.initializeFadingEdge(a);
+                        // }
+                        break;
+                    case 'scrollbarstyle':
+                        // scrollbarStyle = a.getInt(attr, View.SCROLLBARS_INSIDE_OVERLAY);
+                        // if (scrollbarStyle != View.SCROLLBARS_INSIDE_OVERLAY) {
+                        //     viewFlagValues |= scrollbarStyle & View.SCROLLBARS_STYLE_MASK;
+                        //     viewFlagMasks |= View.SCROLLBARS_STYLE_MASK;
+                        // }
+                        break;
+                    case 'isscrollcontainer':
+                        setScrollContainer = true;
+                        if (a.getBoolean(attr, false)) {
+                            this.setScrollContainer(true);
+                        }
+                        break;
+                    case 'keepscreenon':
+                        // if (a.getBoolean(attr, false)) {
+                        //     viewFlagValues |= View.KEEP_SCREEN_ON;
+                        //     viewFlagMasks |= View.KEEP_SCREEN_ON;
+                        // }
+                        break;
+                    case 'filtertoucheswhenobscured':
+                        // if (a.getBoolean(attr, false)) {
+                        //     viewFlagValues |= View.FILTER_TOUCHES_WHEN_OBSCURED;
+                        //     viewFlagMasks |= View.FILTER_TOUCHES_WHEN_OBSCURED;
+                        // }
+                        break;
+                    case 'nextfocusleft':
+                        this.mNextFocusLeftId = a.getResourceId(attr, View.NO_ID);
+                        break;
+                    case 'nextfocusright':
+                        this.mNextFocusRightId = a.getResourceId(attr, View.NO_ID);
+                        break;
+                    case 'nextfocusup':
+                        this.mNextFocusUpId = a.getResourceId(attr, View.NO_ID);
+                        break;
+                    case 'nextfocusdown':
+                        this.mNextFocusDownId = a.getResourceId(attr, View.NO_ID);
+                        break;
+                    case 'nextfocusforward':
+                        this.mNextFocusForwardId = a.getResourceId(attr, View.NO_ID);
+                        break;
+                    case 'minwidth':
+                        this.mMinWidth = a.getDimensionPixelSize(attr, 0);
+                        break;
+                    case 'minheight':
+                        this.mMinHeight = a.getDimensionPixelSize(attr, 0);
+                        break;
+                    case 'onclick':
+                        this.setOnClickListenerByAttrValueString(a.getString(attr));
+                        break;
+                    case 'overscrollmode':
+                        let scrollMode = View[('OVER_SCROLL_'+a.getAttrValue(attr)).toUpperCase()];
+                        overScrollMode = scrollMode || View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                        break;
+                    case 'verticalscrollbarposition':
+                        // this.mVerticalScrollbarPosition = a.getInt(attr, SCROLLBAR_POSITION_DEFAULT);
+                        break;
+                    case 'layertype':
+                        if((a.getAttrValue(attr)+'').toLowerCase() == 'software') {
+                            this.setLayerType(View.LAYER_TYPE_SOFTWARE);
                         }else{
-                            v.setLayerType(View.LAYER_TYPE_NONE);
+                            this.setLayerType(View.LAYER_TYPE_NONE);
                         }
-                    }
-                }).set('cornerRadius', { // androidui add
-                    setter(v:View, value:any) {
-                        let [leftTop, topRight, rightBottom, bottomLeft] = v._attrBinder.parsePaddingMarginLTRB(value);
-                        v.setCornerRadius(v._attrBinder.parseNumberPixelSize(leftTop, 0), v._attrBinder.parseNumberPixelSize(topRight, 0),
-                            v._attrBinder.parseNumberPixelSize(rightBottom, 0), v._attrBinder.parseNumberPixelSize(bottomLeft, 0));
-                    },
-                    getter(v:View) {
-                        return v.mCornerRadiusTopLeft + ' ' + v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft;
-                    },
-                }).set('cornerRadiusTopLeft', {
-                    setter(v:View, value:any) {
-                        v.setCornerRadiusTopLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopLeft));
-                    },
-                    getter(v:View) {
-                        return v.mCornerRadiusTopLeft;
-                    },
-                }).set('cornerRadiusTopRight', {
-                    setter(v:View, value:any) {
-                        v.setCornerRadiusTopRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopRight));
-                    },
-                    getter(v:View) {
-                        return v.mCornerRadiusTopRight;
-                    },
-                }).set('cornerRadiusBottomLeft', {
-                    setter(v:View, value:any) {
-                        v.setCornerRadiusBottomLeft(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomLeft));
-                    },
-                    getter(v:View) {
-                        return v.mCornerRadiusBottomLeft;
-                    },
-                }).set('cornerRadiusBottomRight', {
-                    setter(v:View, value:any) {
-                        v.setCornerRadiusBottomRight(v._attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomRight));
-                    },
-                    getter(v:View) {
-                        return v.mCornerRadiusBottomRight;
-                    },
-                }).set('viewShadowColor', {
-                    setter(v:View, value:any) {
-                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
-                        v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy,
-                            v._attrBinder.parseColor(value, v.mShadowPaint.shadowColor));
-                    },
-                    getter(v:View) {
-                        if(v.mShadowPaint) return v.mShadowPaint.shadowColor;
-                    },
-                }).set('viewShadowDx', {
-                    setter(v:View, value:any) {
-                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
-                        let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDx);
-                        v.setShadowView(v.mShadowPaint.shadowRadius, dx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
-                    },
-                    getter(v:View) {
-                        if(v.mShadowPaint) return v.mShadowPaint.shadowDx;
-                    },
-                }).set('viewShadowDy', {
-                    setter(v:View, value:any) {
-                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
-                        let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDy);
-                        v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, dy, v.mShadowPaint.shadowColor);
-                    },
-                    getter(v:View) {
-                        if(v.mShadowPaint) return v.mShadowPaint.shadowDy;
-                    },
-                }).set('viewShadowRadius', {
-                    setter(v:View, value:any) {
-                        if(!v.mShadowPaint) v.mShadowPaint = new Paint();
-                        let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowRadius);
-                        v.setShadowView(radius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
-                    },
-                    getter(v:View) {
-                        if(v.mShadowPaint) return v.mShadowPaint.shadowRadius;
-                    },
-                })
-                ;
-                View.ViewClassAttrBinder.set('paddingStart', View.ViewClassAttrBinder.get('paddingLeft'));
-                View.ViewClassAttrBinder.set('paddingEnd', View.ViewClassAttrBinder.get('paddingRight'));
+                        break;
+                    case 'textdirection':
+                        // Clear any text direction flag already set
+                        // this.mPrivateFlags2 &= ~PFLAG2_TEXT_DIRECTION_MASK;
+                        // // Set the text direction flags depending on the value of the attribute
+                        // final int textDirection = a.getInt(attr, -1);
+                        // if (textDirection != -1) {
+                        //     this.mPrivateFlags2 |= PFLAG2_TEXT_DIRECTION_FLAGS[textDirection];
+                        // }
+                        break;
+                    case 'textalignment':
+                        // // Clear any text alignment flag already set
+                        // this.mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+                        // // Set the text alignment flag depending on the value of the attribute
+                        // final int textAlignment = a.getInt(attr, TEXT_ALIGNMENT_DEFAULT);
+                        // this.mPrivateFlags2 |= PFLAG2_TEXT_ALIGNMENT_FLAGS[textAlignment];
+                        break;
+                    case 'importantforaccessibility':
+                        // setImportantForAccessibility(a.getInt(attr, IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
+                        break;
+                    case 'accessibilityliveregion':
+                        // setAccessibilityLiveRegion(a.getInt(attr, ACCESSIBILITY_LIVE_REGION_DEFAULT));
+                        break;
+                    case 'cornerradius':
+                    case 'cornerradiustopleft':
+                    case 'cornerradiustopright':
+                    case 'cornerradiusbottomleft':
+                    case 'cornerradiusbottomright':
+                    case 'viewshadowcolor':
+                    case 'viewshadowdx':
+                    case 'viewshadowdy':
+                    case 'viewshadowradius':
+                        //AndroidUIX add: these cases, attr pass to attr Binder (let attr Binder parse and set these values).
+                        this._attrBinder.onAttrChange(attr, a.getAttrValue(attr), this.getContext());
+                        break;
+                }
             }
-            this._attrBinder.addClassAttrBind(View.ViewClassAttrBinder);
+
+            this.setOverScrollMode(overScrollMode);
+
+            // // Cache start/end user padding as we cannot fully resolve padding here (we dont have yet
+            // // the resolved layout direction). Those cached values will be used later during padding
+            // // resolution.
+            // this.mUserPaddingStart = startPadding;
+            // this.mUserPaddingEnd = endPadding;
+
+            if (background != null) {
+                this.setBackground(background);
+            }
+
+            // setBackground above will record that padding is currently provided by the background.
+            // If we have padding specified via xml, record that here instead and use it.
+            // this.mLeftPaddingDefined = leftPaddingDefined;
+            // this.mRightPaddingDefined = rightPaddingDefined;
+
+            if (padding >= 0) {
+                leftPadding = padding;
+                topPadding = padding;
+                rightPadding = padding;
+                bottomPadding = padding;
+                // this.mUserPaddingLeftInitial = padding;
+                // this.mUserPaddingRightInitial = padding;
+            }
+
+            // if (isRtlCompatibilityMode()) {
+            //     // RTL compatibility mode: pre Jelly Bean MR1 case OR no RTL support case.
+            //     // left / right padding are used if defined (meaning here nothing to do). If they are not
+            //     // defined and start / end padding are defined (e.g. in Frameworks resources), then we use
+            //     // start / end and resolve them as left / right (layout direction is not taken into account).
+            //     // Padding from the background drawable is stored at this point in mUserPaddingLeftInitial
+            //     // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
+            //     // defined.
+            //     if (!mLeftPaddingDefined && startPaddingDefined) {
+            //         leftPadding = startPadding;
+            //     }
+            //     this.mUserPaddingLeftInitial = (leftPadding >= 0) ? leftPadding : this.mUserPaddingLeftInitial;
+            //     if (!mRightPaddingDefined && endPaddingDefined) {
+            //         rightPadding = endPadding;
+            //     }
+            //     this.mUserPaddingRightInitial = (rightPadding >= 0) ? rightPadding : this.mUserPaddingRightInitial;
+            // } else {
+            //     // Jelly Bean MR1 and after case: if start/end defined, they will override any left/right
+            //     // values defined. Otherwise, left /right values are used.
+            //     // Padding from the background drawable is stored at this point in mUserPaddingLeftInitial
+            //     // and mUserPaddingRightInitial) so drawable padding will be used as ultimate default if
+            //     // defined.
+            //     const hasRelativePadding = startPaddingDefined || endPaddingDefined;
+            //
+            //     if (mLeftPaddingDefined && !hasRelativePadding) {
+            //         this.mUserPaddingLeftInitial = leftPadding;
+            //     }
+            //     if (mRightPaddingDefined && !hasRelativePadding) {
+            //         this.mUserPaddingRightInitial = rightPadding;
+            //     }
+            // }
+
+            this.setPadding(leftPadding >= 0 ? leftPadding : this.mPaddingLeft, topPadding >= 0 ? topPadding : this.mPaddingTop,
+                rightPadding >= 0 ? rightPadding : this.mPaddingRight, bottomPadding >= 0 ? bottomPadding : this.mPaddingBottom);
+
+            if (viewFlagMasks != 0) {
+                this.setFlags(viewFlagValues, viewFlagMasks);
+            }
+
+            if (initializeScrollbars) {
+                this.initializeScrollbars(a);
+            }
+
+            a.recycle();
+
+            // // Needs to be called after mViewFlags is set
+            // if (scrollbarStyle != View.SCROLLBARS_INSIDE_OVERLAY) {
+            //     this.recomputePadding();
+            // }
+
+            if (x != 0 || y != 0) {
+                scrollTo(x, y);
+            }
+
+            if (transformSet) {
+                this.setTranslationX(tx);
+                this.setTranslationY(ty);
+                this.setRotation(rotation);
+                this.setRotationX(rotationX);
+                this.setRotationY(rotationY);
+                this.setScaleX(sx);
+                this.setScaleY(sy);
+            }
+
+            if (!setScrollContainer && (viewFlagValues&View.SCROLLBARS_VERTICAL) != 0) {
+                this.setScrollContainer(true);
+            }
+
+            this.computeOpaqueFlags();
         }
+
         getContext():Context {
-            if(this.mContext == null && this.mAttachInfo!=null){
-                return this.mAttachInfo.mRootView.mContext;
-            }
             return this.mContext;
         }
         getWidth():number {
@@ -1850,34 +1967,6 @@ module android.view {
             }
         }
 
-        private _setPaddingWithUnit(left, top, right, bottom){
-            let view = this;
-            let width = view.getWidth();
-            let height = view.getHeight();
-            let a = this._attrBinder;
-            let padLeft = a.parseDimension(left, 0, width);
-            let padTop = a.parseDimension(top, 0, height);
-            let padRight = a.parseDimension(right, 0, width);
-            let padBottom = a.parseDimension(bottom, 0, height);
-            view.setPadding(padLeft, padTop, padRight, padBottom);
-
-            //FRACTION unit should layout again
-            let unit = android.util.TypedValue.COMPLEX_UNIT_FRACTION;
-            if( (typeof left === 'string' && left.endsWith(unit)) || (typeof top === 'string' && top.endsWith(unit))
-                || (typeof right === 'string' && right.endsWith(unit)) || (typeof bottom === 'string' && bottom.endsWith(unit))){
-                view.post({
-                    run:()=>{
-                        let width = view.getWidth();
-                        let height = view.getHeight();
-                        let padLeftN = a.parseDimension(left, 0, width);
-                        let padTopN = a.parseDimension(top, 0, height);
-                        let padRightN = a.parseDimension(right, 0, width);
-                        let padBottomN = a.parseDimension(bottom, 0, height);
-                        view.setPadding(padLeftN, padTopN, padRightN, padBottomN);
-                    }
-                });
-            }
-        }
         resolvePadding():void  {
             //no need resolve padding.(not support RTL now)
         }
@@ -2236,105 +2325,105 @@ module android.view {
             }
         }
 
-        ///**
-        // * The degrees that the view is rotated around the vertical axis through the pivot point.
-        // *
-        // * @see #getPivotX()
-        // * @see #getPivotY()
-        // * @see #setRotationY(float)
-        // *
-        // * @return The degrees of Y rotation.
-        // */
-        //getRotationY():number  {
-        //    return this.mTransformationInfo != null ? this.mTransformationInfo.mRotationY : 0;
-        //}
-        //
-        ///**
-        // * Sets the degrees that the view is rotated around the vertical axis through the pivot point.
-        // * Increasing values result in counter-clockwise rotation from the viewpoint of looking
-        // * down the y axis.
-        // *
-        // * When rotating large views, it is recommended to adjust the camera distance
-        // * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
-        // *
-        // * @param rotationY The degrees of Y rotation.
-        // *
-        // * @see #getRotationY()
-        // * @see #getPivotX()
-        // * @see #getPivotY()
-        // * @see #setRotation(float)
-        // * @see #setRotationX(float)
-        // * @see #setCameraDistance(float)
-        // *
-        // * @attr ref android.R.styleable#View_rotationY
-        // */
-        //setRotationY(rotationY:number):void  {
-        //    this.ensureTransformationInfo();
-        //    const info:View.TransformationInfo = this.mTransformationInfo;
-        //    if (info.mRotationY != rotationY) {
-        //        this.invalidateViewProperty(true, false);
-        //        info.mRotationY = rotationY;
-        //        info.mMatrixDirty = true;
-        //        this.invalidateViewProperty(false, true);
-        //        if (this.mDisplayList != null) {
-        //            this.mDisplayList.setRotationY(rotationY);
-        //        }
-        //        if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
-        //            // View was rejected last time it was drawn by its parent; this may have changed
-        //            this.invalidateParentIfNeeded();
-        //        }
-        //    }
-        //}
-        //
-        ///**
-        // * The degrees that the view is rotated around the horizontal axis through the pivot point.
-        // *
-        // * @see #getPivotX()
-        // * @see #getPivotY()
-        // * @see #setRotationX(float)
-        // *
-        // * @return The degrees of X rotation.
-        // */
-        //getRotationX():number  {
-        //    return this.mTransformationInfo != null ? this.mTransformationInfo.mRotationX : 0;
-        //}
-        //
-        ///**
-        // * Sets the degrees that the view is rotated around the horizontal axis through the pivot point.
-        // * Increasing values result in clockwise rotation from the viewpoint of looking down the
-        // * x axis.
-        // *
-        // * When rotating large views, it is recommended to adjust the camera distance
-        // * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
-        // *
-        // * @param rotationX The degrees of X rotation.
-        // *
-        // * @see #getRotationX()
-        // * @see #getPivotX()
-        // * @see #getPivotY()
-        // * @see #setRotation(float)
-        // * @see #setRotationY(float)
-        // * @see #setCameraDistance(float)
-        // *
-        // * @attr ref android.R.styleable#View_rotationX
-        // */
-        //setRotationX(rotationX:number):void  {
-        //    this.ensureTransformationInfo();
-        //    const info:View.TransformationInfo = this.mTransformationInfo;
-        //    if (info.mRotationX != rotationX) {
-        //        this.invalidateViewProperty(true, false);
-        //        info.mRotationX = rotationX;
-        //        info.mMatrixDirty = true;
-        //        this.invalidateViewProperty(false, true);
-        //        if (this.mDisplayList != null) {
-        //            this.mDisplayList.setRotationX(rotationX);
-        //        }
-        //        if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
-        //            // View was rejected last time it was drawn by its parent; this may have changed
-        //            this.invalidateParentIfNeeded();
-        //        }
-        //    }
-        //}
+        /**
+        * The degrees that the view is rotated around the vertical axis through the pivot point.
+        *
+        * @see #getPivotX()
+        * @see #getPivotY()
+        * @see #setRotationY(float)
+        *
+        * @return The degrees of Y rotation.
+        */
+        getRotationY():number  {
+           return 0;//this.mTransformationInfo != null ? this.mTransformationInfo.mRotationY : 0;
+        }
+
+        /**
+        * Sets the degrees that the view is rotated around the vertical axis through the pivot point.
+        * Increasing values result in counter-clockwise rotation from the viewpoint of looking
+        * down the y axis.
+        *
+        * When rotating large views, it is recommended to adjust the camera distance
+        * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
+        *
+        * @param rotationY The degrees of Y rotation.
+        *
+        * @see #getRotationY()
+        * @see #getPivotX()
+        * @see #getPivotY()
+        * @see #setRotation(float)
+        * @see #setRotationX(float)
+        * @see #setCameraDistance(float)
+        *
+        * @attr ref android.R.styleable#View_rotationY
+        */
+        setRotationY(rotationY:number):void  {
+           // this.ensureTransformationInfo();
+           // const info:View.TransformationInfo = this.mTransformationInfo;
+           // if (info.mRotationY != rotationY) {
+           //     this.invalidateViewProperty(true, false);
+           //     info.mRotationY = rotationY;
+           //     info.mMatrixDirty = true;
+           //     this.invalidateViewProperty(false, true);
+           //     if (this.mDisplayList != null) {
+           //         this.mDisplayList.setRotationY(rotationY);
+           //     }
+           //     if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+           //         // View was rejected last time it was drawn by its parent; this may have changed
+           //         this.invalidateParentIfNeeded();
+           //     }
+           // }
+        }
+
+        /**
+        * The degrees that the view is rotated around the horizontal axis through the pivot point.
+        *
+        * @see #getPivotX()
+        * @see #getPivotY()
+        * @see #setRotationX(float)
+        *
+        * @return The degrees of X rotation.
+        */
+        getRotationX():number  {
+           return 0;//this.mTransformationInfo != null ? this.mTransformationInfo.mRotationX : 0;
+        }
+
+        /**
+        * Sets the degrees that the view is rotated around the horizontal axis through the pivot point.
+        * Increasing values result in clockwise rotation from the viewpoint of looking down the
+        * x axis.
+        *
+        * When rotating large views, it is recommended to adjust the camera distance
+        * accordingly. Refer to {@link #setCameraDistance(float)} for more information.
+        *
+        * @param rotationX The degrees of X rotation.
+        *
+        * @see #getRotationX()
+        * @see #getPivotX()
+        * @see #getPivotY()
+        * @see #setRotation(float)
+        * @see #setRotationY(float)
+        * @see #setCameraDistance(float)
+        *
+        * @attr ref android.R.styleable#View_rotationX
+        */
+        setRotationX(rotationX:number):void  {
+           // this.ensureTransformationInfo();
+           // const info:View.TransformationInfo = this.mTransformationInfo;
+           // if (info.mRotationX != rotationX) {
+           //     this.invalidateViewProperty(true, false);
+           //     info.mRotationX = rotationX;
+           //     info.mMatrixDirty = true;
+           //     this.invalidateViewProperty(false, true);
+           //     if (this.mDisplayList != null) {
+           //         this.mDisplayList.setRotationX(rotationX);
+           //     }
+           //     if ((this.mPrivateFlags2 & View.PFLAG2_VIEW_QUICK_REJECTED) == View.PFLAG2_VIEW_QUICK_REJECTED) {
+           //         // View was rejected last time it was drawn by its parent; this may have changed
+           //         this.invalidateParentIfNeeded();
+           //     }
+           // }
+        }
 
         /**
          * The amount that the view is scaled in x around the pivot point, as a proportion of
@@ -4199,6 +4288,40 @@ module android.view {
                 return;
             }
             li.mOnAttachStateChangeListeners.remove(listener);
+        }
+        //AndroidUIX add: call for init view from xml / onclick attr value change
+        private setOnClickListenerByAttrValueString(onClickAttrString:string):void {
+            this.setOnClickListener((view:View) => {
+                if (!onClickAttrString) return;
+                // call activity method
+                try {
+                    let activityClickMethod = view.getContext()[onClickAttrString];
+                    if (typeof activityClickMethod === 'function') {
+                        try {
+                            activityClickMethod.call(view.getContext(), view);
+                        } catch (e) {
+                            console.error(e);
+                            throw new Error(`Could not execute method '${onClickAttrString}' of the activity`);
+                        }
+                        return;
+                    } else {
+                        throw new Error("Could not find a method " +
+                            onClickAttrString + "(View) in the activity "
+                            + view.getContext().constructor.name + " for onClick handler"
+                            + " on view " + view.getClass() + view.getId());
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+
+                // eval js code
+                try {
+                    new Function(onClickAttrString).call(view);
+                } catch (e) {
+                    console.error(e);
+                    throw new Error(`Could not execute method '${onClickAttrString}' of the activity`);
+                }
+            });
         }
         setOnClickListener(l:View.OnClickListener|((v:View)=>void)) {
             if (!this.isClickable()) {
@@ -6506,7 +6629,7 @@ module android.view {
             return 0;
         }
 
-        initializeScrollbars(a?):void {
+        initializeScrollbars(a?:TypedArray):void {
             this.initScrollCache();
         }
         initScrollCache() {
@@ -6716,7 +6839,6 @@ module android.view {
         dispatchAttachedToWindow(info: View.AttachInfo, visibility:number) {
             //System.out.println("Attached! " + this);
             this.mAttachInfo = info;
-            if(info.mRootView && info.mRootView.mContext) this.mContext = info.mRootView.mContext;//android ui add
 
             if (this.mOverlay != null) {
                 this.mOverlay.getOverlayView().dispatchAttachedToWindow(info, visibility);
@@ -6950,10 +7072,10 @@ module android.view {
         bindElement: HTMLElement;
         private _AttrObserver:MutationObserver;
         private _stateAttrList:StateAttrList;
-        protected _attrBinder = new AttrBinder(this);
-        private static ViewClassAttrBinder:AttrBinder.ClassBinderMap;
+        private _attrBinder = new AttrBinder(this);
+        private static ViewClassAttrBinderClazzMap = new Map<java.lang.Class, AttrBinder.ClassBinderMap>();
         static AndroidViewProperty = 'AndroidView';
-        private _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver){
+        private static _AttrObserverCallBack(arr: MutationRecord[], observer: MutationObserver) {
             arr.forEach((record)=>{
                 let target = <Element>record.target;
                 let androidView:View = target[View.AndroidViewProperty];
@@ -6983,6 +7105,355 @@ module android.view {
             this._initAttrObserver();
         }
 
+        protected initBindAttr():void {
+            let classAttrBinder = View.ViewClassAttrBinderClazzMap.get(this.getClass());
+            if (!classAttrBinder) {
+                classAttrBinder = this.createClassAttrBinder();
+                View.ViewClassAttrBinderClazzMap.set(this.getClass(), classAttrBinder);
+            }
+            this._attrBinder.addClassAttrBind(classAttrBinder);
+        }
+
+        /**
+         * AndroidUIX add:
+         * override this method to create the attr binder for current view class.
+         * this method will call once when the first view instance of the class create, later will use cache.
+         * Should call super.createClassAttrBinder() when override, so code will be like:
+         *     return super.createClassAttrBinder().set('xxx', {setter(v, value){}, getter(v){}});
+         *
+         * AttrBinder design for:
+         * 1. bind the xml's attr to view
+         * 2. stash stated attr value when change state_xxx attrs value in xml
+         * @returns created class attr binder
+         */
+        protected createClassAttrBinder(): AttrBinder.ClassBinderMap {
+            const classAttrBinder = new AttrBinder.ClassBinderMap()
+                    .set('background', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setBackground(attrBinder.parseDrawable(value));
+                        },
+                        getter(v: View) {
+                            return v.mBackground;
+                        },
+                    }).set('padding', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value == null) value = 0;
+                            let [left, top, right, bottom] = attrBinder.parsePaddingMarginLTRB(value);
+                            v.setPadding(attrBinder.parseDimension(left, 0), attrBinder.parseDimension(top, 0),
+                                attrBinder.parseDimension(right, 0), attrBinder.parseDimension(bottom, 0));
+                        },
+                        getter(v: View) {
+                            return v.mPaddingTop + ' ' + v.mPaddingRight + ' ' + v.mPaddingBottom + ' ' + v.mPaddingLeft;
+                        },
+                    }).set('paddingLeft', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value == null) value = 0;
+                            v.setPadding(attrBinder.parseDimension(value, 0), v.mPaddingTop, v.mPaddingRight, v.mPaddingBottom);
+                        },
+                        getter(v: View) {
+                            return v.mPaddingLeft;
+                        },
+                    }).set('paddingTop', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value == null) value = 0;
+                            v.setPadding(v.mPaddingLeft, attrBinder.parseDimension(value, 0), v.mPaddingRight, v.mPaddingBottom);
+                        },
+                        getter(v: View) {
+                            return v.mPaddingTop;
+                        },
+                    }).set('paddingRight', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value == null) value = 0;
+                            v.setPadding(v.mPaddingLeft, v.mPaddingTop, attrBinder.parseDimension(value, 0), v.mPaddingBottom);
+                        },
+                        getter(v: View) {
+                            return v.mPaddingRight;
+                        },
+                    }).set('paddingBottom', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value == null) value = 0;
+                            v.setPadding(v.mPaddingLeft, v.mPaddingTop, v.mPaddingRight, attrBinder.parseDimension(value, 0));
+                        },
+                        getter(v: View) {
+                            return v.mPaddingBottom;
+                        },
+                    }).set('scrollX', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            value = attrBinder.parseNumberPixelOffset(value);
+                            if (Number.isInteger(value)) v.scrollTo(value, v.mScrollY);
+                        },
+                        getter(v: View) {
+                            v.getScrollX();
+                        },
+                    }).set('scrollY', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            value = attrBinder.parseNumberPixelOffset(value);
+                            if (Number.isInteger(value)) v.scrollTo(v.mScrollX, value);
+                        },
+                        getter(v: View) {
+                            return v.getScrollY();
+                        },
+                    }).set('alpha', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setAlpha(attrBinder.parseFloat(value, v.getAlpha()));
+                        },
+                        getter(v: View) {
+                            return v.getAlpha();
+                        },
+                    }).set('transformPivotX', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setPivotX(attrBinder.parseNumberPixelOffset(value, v.getPivotX()));
+                        },
+                        getter(v: View) {
+                            return v.getPivotX();
+                        },
+                    }).set('transformPivotY', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setPivotY(attrBinder.parseNumberPixelOffset(value, v.getPivotY()));
+                        },
+                        getter(v: View) {
+                            return v.getPivotY();
+                        },
+                    }).set('translationX', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setTranslationX(attrBinder.parseNumberPixelOffset(value, v.getTranslationX()));
+                        },
+                        getter(v: View) {
+                            return v.getTranslationX();
+                        },
+                    }).set('translationY', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setTranslationY(attrBinder.parseNumberPixelOffset(value, v.getTranslationY()));
+                        },
+                        getter(v: View) {
+                            return v.getTranslationY();
+                        },
+                    }).set('rotation', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setRotation(attrBinder.parseFloat(value, v.getRotation()));
+                        },
+                        getter(v: View) {
+                            return v.getRotation();
+                        },
+                    }).set('scaleX', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setScaleX(attrBinder.parseFloat(value, v.getScaleX()));
+                        },
+                        getter(v: View) {
+                            return v.getScaleX();
+                        },
+                    }).set('scaleY', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setScaleY(attrBinder.parseFloat(value, v.getScaleY()));
+                        },
+                        getter(v: View) {
+                            return v.getScaleY();
+                        },
+                    }).set('tag', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setTag(value);
+                        },
+                        getter(v: View) {
+                            return v.getTag();
+                        },
+                    }).set('id', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setId(value);
+                        },
+                        getter(v: View) {
+                            return v.getId();
+                        },
+                    }).set('focusable', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.FOCUSABLE, View.FOCUSABLE_MASK);
+                            }
+                        },
+                        getter(v: View) {
+                            return v.isFocusable();
+                        },
+                    }).set('focusableInTouchMode', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE,
+                                    View.FOCUSABLE_IN_TOUCH_MODE | View.FOCUSABLE_MASK);
+                            }
+                        },
+                        getter(v: View) {
+                            return v.isFocusableInTouchMode();
+                        },
+                    }).set('clickable', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.CLICKABLE, View.CLICKABLE);
+                            }
+                        },
+                        getter(v: View) {
+                            return v.isClickable();
+                        },
+                    }).set('longClickable', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.LONG_CLICKABLE, View.LONG_CLICKABLE);
+                            }
+                        },
+                        getter(v: View) {
+                            return v.isLongClickable();
+                        },
+                    }).set('duplicateParentState', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setFlags(View.DUPLICATE_PARENT_STATE, View.DUPLICATE_PARENT_STATE);
+                            }
+                        },
+                        getter(v: View) {
+                            return (v.mViewFlags & View.DUPLICATE_PARENT_STATE) == View.DUPLICATE_PARENT_STATE;
+                        },
+                    }).set('visibility', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value === 'gone') v.setVisibility(View.GONE);
+                            else if (value === 'invisible') v.setVisibility(View.INVISIBLE);
+                            else if (value === 'visible') v.setVisibility(View.VISIBLE);
+                        },
+                        getter(v: View) {
+                            return v.getVisibility();
+                        },
+                    }).set('scrollbars', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value === 'none') {
+                                v.setHorizontalScrollBarEnabled(false);
+                                v.setVerticalScrollBarEnabled(false);
+                            } else if (value === 'horizontal') {
+                                v.setHorizontalScrollBarEnabled(true);
+                                v.setVerticalScrollBarEnabled(false);
+                            } else if (value === 'vertical') {
+                                v.setHorizontalScrollBarEnabled(false);
+                                v.setVerticalScrollBarEnabled(true);
+                            }
+                        },
+                    }).set('isScrollContainer', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (attrBinder.parseBoolean(value, false)) {
+                                v.setScrollContainer(true);
+                            }
+                        },
+                        getter(v: View) {
+                            return v.isScrollContainer();
+                        },
+                    }).set('minWidth', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setMinimumWidth(attrBinder.parseNumberPixelSize(value, 0));
+                        },
+                        getter(v: View) {
+                            return v.mMinWidth;
+                        },
+                    }).set('minHeight', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setMinimumHeight(attrBinder.parseNumberPixelSize(value, 0));
+                        },
+                        getter(v: View) {
+                            return v.mMinHeight;
+                        },
+                    }).set('onClick', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (value && typeof value === 'string') {
+                                v.setOnClickListenerByAttrValueString(value);
+                            }
+                            // remove attr to avoid when debug layout show dom to click again on safari.
+                            v.bindElement.removeAttribute('onclick');
+                        },
+                    }).set('overScrollMode', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            let scrollMode = View[('OVER_SCROLL_' + value).toUpperCase()];
+                            if (scrollMode === undefined) scrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS;
+                            v.setOverScrollMode(scrollMode);
+                        }
+                    }).set('layerType', {
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if ((value + '').toLowerCase() == 'software') {
+                                v.setLayerType(View.LAYER_TYPE_SOFTWARE);
+                            } else {
+                                v.setLayerType(View.LAYER_TYPE_NONE);
+                            }
+                        }
+                    }).set('cornerRadius', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            let [leftTop, topRight, rightBottom, bottomLeft] = attrBinder.parsePaddingMarginLTRB(value);
+                            v.setCornerRadius(attrBinder.parseNumberPixelSize(leftTop, 0), attrBinder.parseNumberPixelSize(topRight, 0),
+                                attrBinder.parseNumberPixelSize(rightBottom, 0), attrBinder.parseNumberPixelSize(bottomLeft, 0));
+                        },
+                        getter(v: View) {
+                            return v.mCornerRadiusTopLeft + ' ' + v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft;
+                        },
+                    }).set('cornerRadiusTopLeft', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setCornerRadiusTopLeft(attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopLeft));
+                        },
+                        getter(v: View) {
+                            return v.mCornerRadiusTopLeft;
+                        },
+                    }).set('cornerRadiusTopRight', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setCornerRadiusTopRight(attrBinder.parseNumberPixelSize(value, v.mCornerRadiusTopRight));
+                        },
+                        getter(v: View) {
+                            return v.mCornerRadiusTopRight;
+                        },
+                    }).set('cornerRadiusBottomLeft', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setCornerRadiusBottomLeft(attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomLeft));
+                        },
+                        getter(v: View) {
+                            return v.mCornerRadiusBottomLeft;
+                        },
+                    }).set('cornerRadiusBottomRight', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            v.setCornerRadiusBottomRight(attrBinder.parseNumberPixelSize(value, v.mCornerRadiusBottomRight));
+                        },
+                        getter(v: View) {
+                            return v.mCornerRadiusBottomRight;
+                        },
+                    }).set('viewShadowColor', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (!v.mShadowPaint) v.mShadowPaint = new Paint();
+                            v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy,
+                                attrBinder.parseColor(value, v.mShadowPaint.shadowColor));
+                        },
+                        getter(v: View) {
+                            if (v.mShadowPaint) return v.mShadowPaint.shadowColor;
+                        },
+                    }).set('viewShadowDx', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (!v.mShadowPaint) v.mShadowPaint = new Paint();
+                            let dx = attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDx);
+                            v.setShadowView(v.mShadowPaint.shadowRadius, dx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v: View) {
+                            if (v.mShadowPaint) return v.mShadowPaint.shadowDx;
+                        },
+                    }).set('viewShadowDy', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (!v.mShadowPaint) v.mShadowPaint = new Paint();
+                            let dy = attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowDy);
+                            v.setShadowView(v.mShadowPaint.shadowRadius, v.mShadowPaint.shadowDx, dy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v: View) {
+                            if (v.mShadowPaint) return v.mShadowPaint.shadowDy;
+                        },
+                    }).set('viewShadowRadius', { // androidui add
+                        setter(v: View, value: any, attrBinder:AttrBinder) {
+                            if (!v.mShadowPaint) v.mShadowPaint = new Paint();
+                            let radius = attrBinder.parseNumberPixelSize(value, v.mShadowPaint.shadowRadius);
+                            v.setShadowView(radius, v.mShadowPaint.shadowDx, v.mShadowPaint.shadowDy, v.mShadowPaint.shadowColor);
+                        },
+                        getter(v: View) {
+                            if (v.mShadowPaint) return v.mShadowPaint.shadowRadius;
+                        },
+                    });
+            classAttrBinder.set('paddingStart', classAttrBinder.get('paddingLeft'));
+            classAttrBinder.set('paddingEnd', classAttrBinder.get('paddingRight'));
+            return classAttrBinder;
+        }
 
         private _syncToElementLock:boolean;
         private _syncToElementImmediatelyLock:boolean;
@@ -7106,7 +7577,7 @@ module android.view {
 
         private _initAttrObserver(){
             if(!window['MutationObserver']) return;
-            if(!this._AttrObserver) this._AttrObserver = new MutationObserver(this._AttrObserverCallBack);
+            if(!this._AttrObserver) this._AttrObserver = new MutationObserver(View._AttrObserverCallBack);
             else this._AttrObserver.disconnect();
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
@@ -7171,16 +7642,6 @@ module android.view {
 
             this._attrBinder.onAttrChange(attrName, newVal, this.getContext());
         }
-
-        applyDefaultAttributes(attrs:any) {
-            let initAttrMap = this._stateAttrList.getDefaultStateAttr().getAttrMap();
-            for(let key in attrs){
-                if(!initAttrMap.has(key.toLowerCase())){ // filter defined attr in xml.
-                    this._attrBinder.onAttrChange(key, attrs[key], this.getContext());
-                }
-            }
-        }
-
 
         tagName() : string{
             return this.constructor.name;

@@ -34,6 +34,7 @@ import System = java.lang.System;
 import Button = android.widget.Button;
 import Checkable = android.widget.Checkable;
 import TextView = android.widget.TextView;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * <p>
  * A button with two states, checked and unchecked. When the button is pressed
@@ -64,20 +65,25 @@ export abstract class CompoundButton extends Button implements Checkable {
 
     private static CHECKED_STATE_SET:number[] = [ View.VIEW_STATE_CHECKED ];
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
-        super(context, bindElement, null);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
+        super(context, bindElement, defStyle);
 
-        this._attrBinder.addAttr('button', (value)=>{
-            this.setButtonDrawable(this._attrBinder.parseDrawable(value));
-        }, ()=>{
-            return this.mButtonDrawable;
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('button', {
+            setter(v:CompoundButton, value:any, attrBinder:AttrBinder) {
+                v.setButtonDrawable(attrBinder.parseDrawable(value));
+            }, getter(v:CompoundButton) {
+                return v.mButtonDrawable;
+            }
+        }).set('checked', {
+            setter(v:CompoundButton, value:any, attrBinder:AttrBinder) {
+                v.setChecked(attrBinder.parseBoolean(value, v.isChecked()));
+            }, getter(v:CompoundButton) {
+                return v.isChecked();
+            }
         });
-        this._attrBinder.addAttr('checked', (value)=>{
-            this.setChecked(this._attrBinder.parseBoolean(value, this.isChecked()));
-        }, ()=>{
-            return this.isChecked();
-        });
-        if(defStyle!=null) this.applyDefaultAttributes(defStyle);
     }
 
     toggle():void  {

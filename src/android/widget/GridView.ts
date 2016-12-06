@@ -44,6 +44,7 @@ import Adapter = android.widget.Adapter;
 import Checkable = android.widget.Checkable;
 import ListAdapter = android.widget.ListAdapter;
 import ListView = android.widget.ListView;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * A view that shows items in two-dimensional scrolling grid. The items in the
  * grid come from the {@link ListAdapter} associated with this view.
@@ -119,63 +120,91 @@ export class GridView extends AbsListView {
 
     private mTempRect:Rect = new Rect();
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.gridViewStyle){
-        super(context, bindElement, null);
-
-        this._attrBinder.addAttr('horizontalSpacing', (value)=>{
-            this.setHorizontalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
-        });
-        this._attrBinder.addAttr('verticalSpacing', (value)=>{
-            this.setVerticalSpacing(this._attrBinder.parseNumberPixelOffset(value, 0));
-        });
-        this._attrBinder.addAttr('stretchMode', (value)=>{
-            this.setStretchMode(this._attrBinder.parseEnum(value,
-                new Map<string, number>()
-                    .set("none", GridView.NO_STRETCH)
-                    .set("spacingWidth", GridView.STRETCH_SPACING)
-                    .set("columnWidth", GridView.STRETCH_COLUMN_WIDTH)
-                    .set("spacingWidthUniform", GridView.STRETCH_SPACING_UNIFORM),
-                GridView.STRETCH_COLUMN_WIDTH));
-        });
-        this._attrBinder.addAttr('columnWidth', (value)=>{
-            let columnWidth = this._attrBinder.parseNumberPixelOffset(value, -1);
-            if(columnWidth > 0 ){
-                this.setColumnWidth(columnWidth);
-            }
-        });
-        this._attrBinder.addAttr('numColumns', (value)=>{
-            this.setNumColumns(this._attrBinder.parseInt(value, 1));
-        });
-        this._attrBinder.addAttr('gravity', (value)=>{
-            this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
-        });
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+    constructor(context:android.content.Context, attrs:HTMLElement, defStyle=android.R.attr.gridViewStyle) {
+       super(context, attrs, defStyle);
+       let a = context.obtainStyledAttributes(attrs, defStyle);
+       let hSpacing:number = a.getDimensionPixelOffset('horizontalSpacing', 0);
+       this.setHorizontalSpacing(hSpacing);
+       let vSpacing:number = a.getDimensionPixelOffset('verticalSpacing', 0);
+       this.setVerticalSpacing(vSpacing);
+       let stretchModeS = a.getAttrValue('stretchMode');
+       if (stretchModeS) {
+           switch (stretchModeS) {
+               case "none":
+                   this.setStretchMode(GridView.NO_STRETCH);
+                   break;
+               case "spacingWidth":
+                   this.setStretchMode(GridView.STRETCH_SPACING);
+                   break;
+               case "columnWidth":
+                   this.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+                   break;
+               case "spacingWidthUniform":
+                   this.setStretchMode(GridView.STRETCH_SPACING_UNIFORM);
+                   break;
+           }
+       }
+       let columnWidth:number = a.getDimensionPixelOffset('columnWidth', -1);
+       if (columnWidth > 0) {
+           this.setColumnWidth(columnWidth);
+       }
+       let numColumns:number = a.getInt('numColumns', 1);
+       this.setNumColumns(numColumns);
+       let gravityS = a.getAttrValue('gravity');
+       if (gravityS) {
+           this.setGravity(Gravity.parseGravity(gravityS, this.mGravity));
+       }
+       a.recycle();
     }
 
-    // constructor(context:Context, attrs:AttributeSet, defStyle:number) {
-    //    super(context, attrs, defStyle);
-    //    let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.GridView, defStyle, 0);
-    //    let hSpacing:number = a.getDimensionPixelOffset(com.android.internal.R.styleable.GridView_horizontalSpacing, 0);
-    //    this.setHorizontalSpacing(hSpacing);
-    //    let vSpacing:number = a.getDimensionPixelOffset(com.android.internal.R.styleable.GridView_verticalSpacing, 0);
-    //    this.setVerticalSpacing(vSpacing);
-    //    let index:number = a.getInt(com.android.internal.R.styleable.GridView_stretchMode, GridView.STRETCH_COLUMN_WIDTH);
-    //    if (index >= 0) {
-    //        this.setStretchMode(index);
-    //    }
-    //    let columnWidth:number = a.getDimensionPixelOffset(com.android.internal.R.styleable.GridView_columnWidth, -1);
-    //    if (columnWidth > 0) {
-    //        this.setColumnWidth(columnWidth);
-    //    }
-    //    let numColumns:number = a.getInt(com.android.internal.R.styleable.GridView_numColumns, 1);
-    //    this.setNumColumns(numColumns);
-    //    index = a.getInt(com.android.internal.R.styleable.GridView_gravity, -1);
-    //    if (index >= 0) {
-    //        this.setGravity(index);
-    //    }
-    //    a.recycle();
-    //}
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('horizontalSpacing', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                v.setHorizontalSpacing(attrBinder.parseNumberPixelOffset(value, 0));
+            }, getter(v:GridView) {
+                return v.getHorizontalSpacing();
+            }
+        }).set('verticalSpacing', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                v.setVerticalSpacing(attrBinder.parseNumberPixelOffset(value, 0));
+            }, getter(v:GridView) {
+                return v.getVerticalSpacing();
+            }
+        }).set('stretchMode', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                v.setStretchMode(attrBinder.parseEnum(value,
+                    new Map<string, number>()
+                        .set("none", GridView.NO_STRETCH)
+                        .set("spacingWidth", GridView.STRETCH_SPACING)
+                        .set("columnWidth", GridView.STRETCH_COLUMN_WIDTH)
+                        .set("spacingWidthUniform", GridView.STRETCH_SPACING_UNIFORM),
+                    GridView.STRETCH_COLUMN_WIDTH));
+            }, getter(v:GridView) {
+                return v.getStretchMode();
+            }
+        }).set('columnWidth', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                let columnWidth = attrBinder.parseNumberPixelOffset(value, -1);
+                if(columnWidth > 0 ){
+                    this.setColumnWidth(columnWidth);
+                }
+            }, getter(v:GridView) {
+                return v.getColumnWidth();
+            }
+        }).set('numColumns', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                v.setNumColumns(attrBinder.parseInt(value, 1));
+            }, getter(v:GridView) {
+                return v.getNumColumns();
+            }
+        }).set('gravity', {
+            setter(v:GridView, value:any, attrBinder:AttrBinder) {
+                v.setGravity(attrBinder.parseGravity(value, v.getGravity()));
+            }, getter(v:GridView) {
+                return v.getGravity();
+            }
+        });
+    }
 
     getAdapter():ListAdapter  {
         return this.mAdapter;

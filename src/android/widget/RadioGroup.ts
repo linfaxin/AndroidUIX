@@ -68,25 +68,39 @@ export class RadioGroup extends LinearLayout {
 
     private mPassThroughListener:RadioGroup.PassThroughHierarchyChangeListener;
 
-    private static RadioGroupClassAttrBind:AttrBinder.ClassBinderMap;
-
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
-        this.setOrientation(RadioGroup.VERTICAL);
+
+        // retrieve selected radio button as requested by the user in the
+        // XML layout file
+        let attributes = context.obtainStyledAttributes(
+            bindElement, defStyle);
+
+        let value = attributes.getString('checkedButton');
+        if (value) {
+            this.mCheckedId = value;
+        }
+
+        const orientation = attributes.getString('orientation');
+        if (orientation === 'horizontal') {
+            this.setOrientation(RadioGroup.HORIZONTAL);
+        } else {
+            this.setOrientation(RadioGroup.VERTICAL);
+        }
+
+        attributes.recycle();
+
         this.init();
     }
 
-    protected initBindAttr():void {
-        super.initBindAttr();
-        if (!RadioGroup.RadioGroupClassAttrBind) {
-            RadioGroup.RadioGroupClassAttrBind = new AttrBinder.ClassBinderMap();
-            RadioGroup.RadioGroupClassAttrBind.set('checkedButton', {
-                setter(v:RadioGroup, value:any) {
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('checkedButton', {
+            setter(v:RadioGroup, value:any) {
+                if (typeof value === 'string' || value == null) {
                     v.setCheckedId(value);
                 }
-            })
-        }
-        this._attrBinder.addClassAttrBind(RadioGroup.RadioGroupClassAttrBind);
+            }
+        });
     }
 
     private init():void  {

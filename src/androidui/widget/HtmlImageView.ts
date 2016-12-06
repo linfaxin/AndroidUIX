@@ -33,7 +33,7 @@ module androidui.widget{
 
         private mImgElement:HTMLImageElement;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
             this.initImageView();
             this._attrBinder.addAttr('src', (value)=>{

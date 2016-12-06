@@ -148,67 +148,12 @@ module android.view {
         private mChildCountWithTransientState = 0;
         private static ViewGroupClassAttrBind:AttrBinder.ClassBinderMap;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>){
             super(context, bindElement, defStyle);
             this.initViewGroup();
-        }
-
-        protected initBindAttr():void {
-            super.initBindAttr();
-            if (!ViewGroup.ViewGroupClassAttrBind) {
-                ViewGroup.ViewGroupClassAttrBind = new AttrBinder.ClassBinderMap();
-                ViewGroup.ViewGroupClassAttrBind.set('clipChildren', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setClipChildren(v._attrBinder.parseBoolean(value));
-                    },
-                    getter(v:ViewGroup) {
-                        return v.getClipChildren();
-                    }
-                }).set('clipToPadding', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setClipToPadding(v._attrBinder.parseBoolean(value));
-                    },
-                    getter(v:ViewGroup) {
-                        return v.isClipToPadding();
-                    }
-                }).set('animationCache', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setAnimationCacheEnabled(v._attrBinder.parseBoolean(value, true));
-                    }
-                }).set('persistentDrawingCache', {
-                    setter(v:ViewGroup, value:any) {
-                        if(value === 'none') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
-                        else if(value === 'animation') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
-                        else if(value === 'scrolling') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
-                        else if(value === 'all') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
-                    }
-                }).set('addStatesFromChildren', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setAddStatesFromChildren(v._attrBinder.parseBoolean(value, false));
-                    }
-                }).set('alwaysDrawnWithCache', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setAlwaysDrawnWithCacheEnabled(v._attrBinder.parseBoolean(value, true));
-                    }
-                }).set('descendantFocusability', {
-                    setter(v:ViewGroup, value:any) {
-                        if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                        else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-                        else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-                    }
-                }).set('splitMotionEvents', {
-                    setter(v:ViewGroup, value:any) {
-                        v.setMotionEventSplittingEnabled(v._attrBinder.parseBoolean(value, false));
-                    }
-                });
-                //a.addAttr('layoutAnimation', (value)=>{//TODO when layout support
-                //});
-                //a.addAttr('animateLayoutChanges', (value)=>{//TODO when layout transition support
-                //});
-                //a.addAttr('layoutMode', (value)=>{//TODO when more layout mode support
-                //});
+            if (bindElement || defStyle) {
+                this.initFromAttributes(context, bindElement, defStyle);
             }
-            this._attrBinder.addClassAttrBind(ViewGroup.ViewGroupClassAttrBind);
         }
 
         private initViewGroup() {
@@ -225,6 +170,111 @@ module android.view {
             this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
 
             this.mPersistentDrawingCache = ViewGroup.PERSISTENT_SCROLLING_CACHE;
+        }
+
+        private initFromAttributes(context:Context, attrs:HTMLElement, defStyle?:Map<string, string>) {
+            const a = context.obtainStyledAttributes(attrs, defStyle);
+
+            for (let attr of a.getLowerCaseAttrNames()) {
+                switch (attr) {
+                    case 'clipchildren':
+                        this.setClipChildren(a.getBoolean(attr, true));
+                        break;
+                    case 'cliptopadding':
+                        this.setClipToPadding(a.getBoolean(attr, true));
+                        break;
+                    case 'animationcache':
+                        this.setAnimationCacheEnabled(a.getBoolean(attr, true));
+                        break;
+                    case 'persistentdrawingcache':
+                        let value = a.getAttrValue(attr);
+                        if(value === 'none') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                        else if(value === 'animation') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                        else if(value === 'scrolling') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                        else if(value === 'all') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
+                        break;
+                    case 'addstatesfromchildren':
+                        this.setAddStatesFromChildren(a.getBoolean(attr, false));
+                        break;
+                    case 'alwaysdrawnwithcache':
+                        this.setAlwaysDrawnWithCacheEnabled(a.getBoolean(attr, true));
+                        break;
+                    case 'layoutanimation': // TODO when layout anim support
+                        // int id = a.getResourceId(attr, -1);
+                        // if (id > 0) {
+                        //     setLayoutAnimation(AnimationUtils.loadLayoutAnimation(mContext, id));
+                        // }
+                        break;
+                    case 'descendantfocusability':
+                        let value = a.getAttrValue(attr);
+                        if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                        else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                        else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                        break;
+                    case 'splitmotionevents':
+                        this.setMotionEventSplittingEnabled(a.getBoolean(attr, false));
+                        break;
+                    case 'animatelayoutchanges': //TODO when layout transition support
+                        // let animateLayoutChanges = a.getBoolean(attr, false);
+                        // if (animateLayoutChanges) {
+                        //     this.setLayoutTransition(new LayoutTransition());
+                        // }
+                        break;
+                    case 'layoutmode': //TODO when more layout mode support
+                        // this.setLayoutMode(a.getInt(attr, LAYOUT_MODE_UNDEFINED));
+                        break;
+                }
+            }
+
+            a.recycle();
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder()
+                .set('clipChildren', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setClipChildren(attrBinder.parseBoolean(value));
+                    },
+                    getter(v:ViewGroup) {
+                        return v.getClipChildren();
+                    }
+                }).set('clipToPadding', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setClipToPadding(attrBinder.parseBoolean(value));
+                    },
+                    getter(v:ViewGroup) {
+                        return v.isClipToPadding();
+                    }
+                }).set('animationCache', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setAnimationCacheEnabled(attrBinder.parseBoolean(value, true));
+                    }
+                }).set('persistentDrawingCache', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        if(value === 'none') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                        else if(value === 'animation') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                        else if(value === 'scrolling') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                        else if(value === 'all') v.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
+                    }
+                }).set('addStatesFromChildren', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setAddStatesFromChildren(attrBinder.parseBoolean(value, false));
+                    }
+                }).set('alwaysDrawnWithCache', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setAlwaysDrawnWithCacheEnabled(attrBinder.parseBoolean(value, true));
+                    }
+                }).set('descendantFocusability', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                        else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                        else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                    }
+                }).set('splitMotionEvents', {
+                    setter(v:ViewGroup, value:any, attrBinder:AttrBinder) {
+                        v.setMotionEventSplittingEnabled(attrBinder.parseBoolean(value, false));
+                    }
+                });
         }
 
         getDescendantFocusability():number {

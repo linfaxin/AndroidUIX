@@ -35,7 +35,7 @@ export class SeekBar extends AbsSeekBar {
     private mOnSeekBarChangeListener:SeekBar.OnSeekBarChangeListener;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.seekBarStyle){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.seekBarStyle){
         super(context, bindElement, defStyle);
     }
 

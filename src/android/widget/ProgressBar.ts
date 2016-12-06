@@ -60,6 +60,7 @@ import LinearLayout = android.widget.LinearLayout;
 import TextView = android.widget.TextView;
 import R = android.R;
 import NetDrawable = androidui.image.NetDrawable;
+    import AttrBinder = androidui.attr.AttrBinder;
 
 /**
  * <p>
@@ -257,143 +258,152 @@ export class ProgressBar extends View {
 
     //private mAccessibilityEventSender:ProgressBar.AccessibilityEventSender;
 
-
-    /**
-     * Create a new progress bar with range 0...100 and initial progress of 0.
-     * @param context the application environment
-     */
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.progressBarStyle){
-        super(context, bindElement, null);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.progressBarStyle) {
+        super(context, bindElement, defStyle);
+        //this.mUiThreadId = Thread.currentThread().getId();
 
         this.initProgressBar();
-
-        const a = this._attrBinder;
-        a.addAttr('progressDrawable', (value)=>{
-            let drawable = a.parseDrawable(value);
-            if(drawable!=null){
-                drawable = this.tileify(drawable, false);
-                this.setProgressDrawable(drawable);
-            }
-        }, ()=>{
-            return this.mProgressDrawable;
-        });
-        a.addAttr('indeterminateDuration', (value)=>{
-            this.mDuration = Math.floor(a.parseInt(value, this.mDuration));
-        }, ()=>{
-            return this.mDuration;
-        });
-        a.addAttr('minWidth', (value)=>{
-            this.mMinWidth = Math.floor(a.parseNumberPixelSize(value, this.mMinWidth));
-        }, ()=>{
-            return this.mMinWidth;
-        });
-        a.addAttr('maxWidth', (value)=>{
-            this.mMaxWidth = Math.floor(a.parseNumberPixelSize(value, this.mMaxWidth));
-        }, ()=>{
-            return this.mMaxWidth;
-        });
-        a.addAttr('minHeight', (value)=>{
-            this.mMinHeight = Math.floor(a.parseNumberPixelSize(value, this.mMinHeight));
-        }, ()=>{
-            return this.mMinHeight;
-        });
-        a.addAttr('maxHeight', (value)=>{
-            this.mMaxHeight = Math.floor(a.parseNumberPixelSize(value, this.mMaxHeight));
-        }, ()=>{
-            return this.mMaxHeight;
-        });
-        a.addAttr('indeterminateBehavior', (value)=>{
-            if(value+''.toLowerCase() == 'cycle'){
-                this.mBehavior = Animation.REVERSE;
-            }else {
-                this.mBehavior = Animation.RESTART;
-            }
-        });
-
-        a.addAttr('interpolator', (value)=>{
-        });
-        a.addAttr('max', (value)=>{
-            this.setMax(a.parseInt(value, this.mMax));
-        }, ()=>{
-            return this.mMax;
-        });
-        a.addAttr('progress', (value)=>{
-            this.setProgress(a.parseInt(value, this.mProgress));
-        }, ()=>{
-            return this.mProgress;
-        });
-        a.addAttr('secondaryProgress', (value)=>{
-            this.setSecondaryProgress(a.parseInt(value, this.mSecondaryProgress));
-        }, ()=>{
-            return this.mSecondaryProgress;
-        });
-
-        a.addAttr('indeterminateDrawable', (value)=>{
-            let drawable = a.parseDrawable(value);
-            if(drawable!=null){
-                drawable = this.tileifyIndeterminate(drawable);
-                this.setIndeterminateDrawable(drawable);
-            }
-        }, ()=>{
-            return this.mIndeterminateDrawable;
-        });
-
-        a.addAttr('indeterminateOnly', (value)=>{
-            this.mOnlyIndeterminate = a.parseBoolean(value, this.mOnlyIndeterminate);
-            this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
-        });
-        a.addAttr('indeterminate', (value)=>{
-            this.setIndeterminate(this.mOnlyIndeterminate || a.parseBoolean(value, this.mIndeterminate));
-        });
-
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
         this.mNoInvalidate = true;
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        let drawable: Drawable = a.getDrawable('progressDrawable');
+        if (drawable != null) {
+            drawable = this.tileify(drawable, false);
+            // Calling this method can set mMaxHeight, make sure the corresponding
+            // XML attribute for mMaxHeight is read after calling this method
+            this.setProgressDrawable(drawable);
+        }
+        this.mDuration = a.getInt('indeterminateDuration', this.mDuration);
+        this.mMinWidth = a.getDimensionPixelSize('minWidth', this.mMinWidth);
+        this.mMaxWidth = a.getDimensionPixelSize('maxWidth', this.mMaxWidth);
+        this.mMinHeight = a.getDimensionPixelSize('minHeight', this.mMinHeight);
+        this.mMaxHeight = a.getDimensionPixelSize('maxHeight', this.mMaxHeight);
+        if(a.getAttrValue('indeterminateBehavior') == 'cycle') {
+            this.mBehavior = Animation.REVERSE;
+        } else {
+            this.mBehavior = Animation.RESTART;
+        }
+        // const resID: number = a.getResourceId(com.android.internal.R.styleable.ProgressBar_interpolator, // default to linear interpolator
+        //     android.R.anim.linear_interpolator);
+        // if (resID > 0) {
+        //     this.setInterpolator(context, resID);
+        // }
+        this.setMax(a.getInt('max', this.mMax));
+        this.setProgress(a.getInt('progress', this.mProgress));
+        this.setSecondaryProgress(a.getInt('secondaryProgress', this.mSecondaryProgress));
+        drawable = a.getDrawable('indeterminateDrawable');
+        if (drawable != null) {
+            drawable = this.tileifyIndeterminate(drawable);
+            this.setIndeterminateDrawable(drawable);
+        }
+        this.mOnlyIndeterminate = a.getBoolean('indeterminateOnly', this.mOnlyIndeterminate);
         this.mNoInvalidate = false;
-        this.setIndeterminate(this.mOnlyIndeterminate || this.mIndeterminate);
+        this.setIndeterminate(this.mOnlyIndeterminate || a.getBoolean('indeterminate', this.mIndeterminate));
+        this.mMirrorForRtl = a.getBoolean('mirrorForRtl', this.mMirrorForRtl);
+        a.recycle();
     }
 
-    ///**
-    // * @hide
-    // */
-    //constructor( context:Context, attrs:AttributeSet, defStyle:number, styleRes:number) {
-    //    super(context, attrs, defStyle);
-        ////this.mUiThreadId = Thread.currentThread().getId();
-
-        //this.initProgressBar();
-        //let a:TypedArray = context.obtainStyledAttributes(attrs, R.styleable.ProgressBar, defStyle, styleRes);
-        //this.mNoInvalidate = true;
-        //let drawable:Drawable = a.getDrawable(R.styleable.ProgressBar_progressDrawable);
-        //if (drawable != null) {
-        //    drawable = this.tileify(drawable, false);
-        //    // Calling this method can set mMaxHeight, make sure the corresponding
-        //    // XML attribute for mMaxHeight is read after calling this method
-        //    this.setProgressDrawable(drawable);
-        //}
-        //this.mDuration = a.getInt(R.styleable.ProgressBar_indeterminateDuration, this.mDuration);
-        //this.mMinWidth = a.getDimensionPixelSize(R.styleable.ProgressBar_minWidth, this.mMinWidth);
-        //this.mMaxWidth = a.getDimensionPixelSize(R.styleable.ProgressBar_maxWidth, this.mMaxWidth);
-        //this.mMinHeight = a.getDimensionPixelSize(R.styleable.ProgressBar_minHeight, this.mMinHeight);
-        //this.mMaxHeight = a.getDimensionPixelSize(R.styleable.ProgressBar_maxHeight, this.mMaxHeight);
-        //this.mBehavior = a.getInt(R.styleable.ProgressBar_indeterminateBehavior, this.mBehavior);
-        //const resID:number = a.getResourceId(com.android.internal.R.styleable.ProgressBar_interpolator, // default to linear interpolator
-        //android.R.anim.linear_interpolator);
-        //if (resID > 0) {
-        //    this.setInterpolator(context, resID);
-        //}
-        //this.setMax(a.getInt(R.styleable.ProgressBar_max, this.mMax));
-        //this.setProgress(a.getInt(R.styleable.ProgressBar_progress, this.mProgress));
-        //this.setSecondaryProgress(a.getInt(R.styleable.ProgressBar_secondaryProgress, this.mSecondaryProgress));
-        //drawable = a.getDrawable(R.styleable.ProgressBar_indeterminateDrawable);
-        //if (drawable != null) {
-        //    drawable = this.tileifyIndeterminate(drawable);
-        //    this.setIndeterminateDrawable(drawable);
-        //}
-        //this.mOnlyIndeterminate = a.getBoolean(R.styleable.ProgressBar_indeterminateOnly, this.mOnlyIndeterminate);
-        //this.mNoInvalidate = false;
-        //this.setIndeterminate(this.mOnlyIndeterminate || a.getBoolean(R.styleable.ProgressBar_indeterminate, this.mIndeterminate));
-        //this.mMirrorForRtl = a.getBoolean(R.styleable.ProgressBar_mirrorForRtl, this.mMirrorForRtl);
-        //a.recycle();
-    //}
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('progressDrawable', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                let drawable = a.parseDrawable(value);
+                if(drawable!=null){
+                    drawable = v.tileify(drawable, false);
+                    v.setProgressDrawable(drawable);
+                }
+            }, getter(v:ProgressBar) {
+                return v.getProgressDrawable();
+            }
+        }).set('indeterminateDuration', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mDuration = Math.floor(a.parseInt(value, v.mDuration));
+            }, getter(v:ProgressBar) {
+                return v.mDuration;
+            }
+        }).set('minWidth', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mMinWidth = Math.floor(a.parseNumberPixelSize(value, v.mMinWidth));
+            }, getter(v:ProgressBar) {
+                return v.mMinWidth;
+            }
+        }).set('maxWidth', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mMaxWidth = Math.floor(a.parseNumberPixelSize(value, v.mMaxWidth));
+            }, getter(v:ProgressBar) {
+                return v.mMaxWidth;
+            }
+        }).set('minHeight', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mMinHeight = Math.floor(a.parseNumberPixelSize(value, v.mMinHeight));
+            }, getter(v:ProgressBar) {
+                return v.mMinHeight;
+            }
+        }).set('maxHeight', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mMaxHeight = Math.floor(a.parseNumberPixelSize(value, v.mMaxHeight));
+            }, getter(v:ProgressBar) {
+                return v.mMaxHeight;
+            }
+        }).set('indeterminateBehavior', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                if (Number.isInteger(Number.parseInt(value))) {
+                    v.mBehavior = Number.parseInt(value);
+                } else {
+                    if (value + ''.toLowerCase() == 'cycle') {
+                        v.mBehavior = Animation.REVERSE;
+                    } else {
+                        v.mBehavior = Animation.RESTART;
+                    }
+                }
+            }, getter(v:ProgressBar) {
+                return v.mBehavior;
+            }
+        }).set('interpolator', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+            }, getter(v:ProgressBar) {
+            }
+        }).set('max', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.setMax(a.parseInt(value, v.mMax));
+            }, getter(v:ProgressBar) {
+                return v.mMax;
+            }
+        }).set('progress', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.setProgress(a.parseInt(value, v.mProgress));
+            }, getter(v:ProgressBar) {
+                return v.mProgress;
+            }
+        }).set('secondaryProgress', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.setSecondaryProgress(a.parseInt(value, v.mSecondaryProgress));
+            }, getter(v:ProgressBar) {
+                return v.mSecondaryProgress;
+            }
+        }).set('indeterminateDrawable', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                let drawable = a.parseDrawable(value);
+                if(drawable!=null){
+                    drawable = v.tileifyIndeterminate(drawable);
+                    v.setIndeterminateDrawable(drawable);
+                }
+            }, getter(v:ProgressBar) {
+                return v.mIndeterminateDrawable;
+            }
+        }).set('indeterminateOnly', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.mOnlyIndeterminate = a.parseBoolean(value, v.mOnlyIndeterminate);
+                v.setIndeterminate(v.mOnlyIndeterminate || v.mIndeterminate);
+            }, getter(v:ProgressBar) {
+                return v.mOnlyIndeterminate;
+            }
+        }).set('indeterminate', {
+            setter(v:ProgressBar, value:any, a:AttrBinder) {
+                v.setIndeterminate(v.mOnlyIndeterminate || a.parseBoolean(value, v.mIndeterminate));
+            }, getter(v:ProgressBar) {
+                return v.mIndeterminate;
+            }
+        });
+    }
 
     /**
      * Converts a drawable to a tiled version of itself. It will recursively

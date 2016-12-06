@@ -102,59 +102,110 @@ module android.widget{
         private mDividerPadding:number = 0;
 
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
-            this._attrBinder.addAttr('orientation', (value)=>{
-                if((value+"").toUpperCase() === 'VERTICAL' || LinearLayout.VERTICAL == value){
-                    this.setOrientation(LinearLayout.VERTICAL);
+            const a = context.obtainStyledAttributes(bindElement, defStyle);
 
-                }else if((value+"").toUpperCase() === 'HORIZONTAL' || LinearLayout.HORIZONTAL == value) {
-                    this.setOrientation(LinearLayout.HORIZONTAL);
+            const orientationS = a.getAttrValue('orientation');
+            if (orientationS) {
+                const orientation = LinearLayout[orientationS.toUpperCase()];
+                if (Number.isInteger(orientation)) {
+                    this.setOrientation(orientation);
                 }
-            }, ()=>{
-                return this.mOrientation;
-            });
-            this._attrBinder.addAttr('gravity', (value)=>{
-                this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
-            }, ()=>{
-                return this.mGravity;
-            });
-            this._attrBinder.addAttr('baselineAligned', (value)=>{
-                if(!this._attrBinder.parseBoolean(value)) this.setBaselineAligned(false);
-            });
-            this._attrBinder.addAttr('weightSum', (value)=>{
-                let weightSum = Number.parseFloat(value);
-                if(!Number.isNaN(weightSum) && weightSum!=null){
-                    this.setWeightSum(weightSum);
+            }
+
+            const gravityS = a.getAttrValue('gravity');
+            if (gravityS) {
+                this.setGravity(Gravity.parseGravity(gravityS));
+            }
+
+            let baselineAligned = a.getBoolean('baselineAligned', true);
+            if (!baselineAligned) {
+                this.setBaselineAligned(baselineAligned);
+            }
+
+            this.mWeightSum = a.getFloat('weightSum', -1.0);
+
+            this.mBaselineAlignedChildIndex = a.getInt('baselineAlignedChildIndex', -1);
+
+            this.mUseLargestChild = a.getBoolean('measureWithLargestChild', false);
+
+            this.setDividerDrawable(a.getDrawable('divider'));
+            let fieldName = ('SHOW_DIVIDER_' + a.getAttrValue('showDividers')).toUpperCase();
+            if(Number.isInteger(LinearLayout[fieldName])){
+                this.mShowDividers = LinearLayout[fieldName];
+            }
+
+            this.mDividerPadding = a.getDimensionPixelSize('dividerPadding', 0);
+
+            a.recycle();
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder().set('orientation', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    if((value+"").toUpperCase() === 'VERTICAL' || LinearLayout.VERTICAL == value){
+                        v.setOrientation(LinearLayout.VERTICAL);
+                    }else if((value+"").toUpperCase() === 'HORIZONTAL' || LinearLayout.HORIZONTAL == value) {
+                        v.setOrientation(LinearLayout.HORIZONTAL);
+                    }
+                }, getter(v:LinearLayout) {
+                    return v.mOrientation;
                 }
-            }, ()=>{
-                return this.mWeightSum;
-            });
-            this._attrBinder.addAttr('baselineAlignedChildIndex', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isSafeInteger(value)){
-                    this.mBaselineAlignedChildIndex = value;
+            }).set('gravity', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setGravity(attrBinder.parseGravity(value, v.mGravity));
+                }, getter(v:LinearLayout) {
+                    return v.mGravity;
                 }
-            });
-            this._attrBinder.addAttr('measureWithLargestChild', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isSafeInteger(value)){
-                    this.mUseLargestChild = this._attrBinder.parseBoolean(value, this.mUseLargestChild);
+            }).set('baselineAligned', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    if(!attrBinder.parseBoolean(value)) v.setBaselineAligned(false);
+                }, getter(v:LinearLayout) {
+                    return v.mBaselineAligned;
                 }
-            });
-            this._attrBinder.addAttr('divider', (value)=>{
-                this.setDividerDrawable(this._attrBinder.parseDrawable(value));
-            });
-            this._attrBinder.addAttr('showDividers', (value)=>{
-                let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
-                if(Number.isInteger(LinearLayout[fieldName])){
-                    this.setShowDividers(LinearLayout[fieldName])
+            }).set('weightSum', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setWeightSum(attrBinder.parseFloat(value, v.mWeightSum));
+                }, getter(v:LinearLayout) {
+                    return v.mWeightSum;
                 }
-            });
-            this._attrBinder.addAttr('dividerPadding', (value)=>{
-                value = Number.parseInt(value);
-                if(Number.isInteger(value)){
-                    this.setDividerPadding(value);
+            }).set('baselineAlignedChildIndex', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setBaselineAlignedChildIndex(attrBinder.parseInt(value, v.mBaselineAlignedChildIndex));
+                }, getter(v:LinearLayout) {
+                    return v.mBaselineAlignedChildIndex;
+                }
+            }).set('measureWithLargestChild', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setMeasureWithLargestChildEnabled(attrBinder.parseBoolean(value, v.mUseLargestChild));
+                }, getter(v:LinearLayout) {
+                    return v.mUseLargestChild;
+                }
+            }).set('divider', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setDividerDrawable(attrBinder.parseDrawable(value));
+                }, getter(v:LinearLayout) {
+                    return v.mDivider;
+                }
+            }).set('showDividers', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    if (Number.isInteger(parseInt(value))) {
+                        this.setShowDividers(parseInt(value))
+                    } else {
+                        let fieldName = ('SHOW_DIVIDER_' + value).toUpperCase();
+                        if(Number.isInteger(LinearLayout[fieldName])){
+                            this.setShowDividers(LinearLayout[fieldName])
+                        }
+                    }
+                }, getter(v:LinearLayout) {
+                    return v.getShowDividers();
+                }
+            }).set('dividerPadding', {
+                setter(v:LinearLayout, value:any, attrBinder:androidui.attr.AttrBinder) {
+                    v.setDividerPadding(attrBinder.parseInt(value, v.mDividerPadding));
+                }, getter(v:LinearLayout) {
+                    return v.getDividerPadding();
                 }
             });
         }

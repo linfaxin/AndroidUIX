@@ -29,6 +29,7 @@ module android.widget {
     import Drawable = android.graphics.drawable.Drawable;
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
+    import AttrBinder = androidui.attr.AttrBinder;
 
     /**
      * FrameLayout is designed to block out an area on the screen to display
@@ -65,13 +66,47 @@ module android.widget {
         mForegroundBoundsChanged = false;
         private mMatchParentChildren = new Array<View>(1);
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
-            this._attrBinder.addAttr('foregroundGravity', (value)=>{
-                this.mForegroundGravity = this._attrBinder.parseGravity(value, this.mForegroundGravity);
-            }, ()=>{
-                return this.mForegroundGravity;
-            })
+
+            const a = context.obtainStyledAttributes(bindElement, defStyle);
+            this.mForegroundGravity = Gravity.parseGravity(a.getAttrValue('foregroundGravity'), this.mForegroundGravity);
+
+            const d = a.getDrawable('foreground');
+            if (d != null) {
+                this.setForeground(d);
+            }
+
+            if (a.getBoolean('measureAllChildren', false)) {
+                this.setMeasureAllChildren(true);
+            }
+
+            this.mForegroundInPadding = a.getBoolean('foregroundInsidePadding', true);
+            a.recycle();
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder().set('foregroundGravity', {
+                setter(v:FrameLayout, value:any, attrBinder:AttrBinder) {
+                    v.mForegroundGravity = attrBinder.parseGravity(value, v.mForegroundGravity);
+                }, getter(v:FrameLayout) {
+                    return v.mForegroundGravity;
+                }
+            }).set('foreground', {
+                setter(v:FrameLayout, value:any, attrBinder:AttrBinder) {
+                    v.setForeground(attrBinder.parseDrawable(value));
+                }, getter(v:FrameLayout) {
+                    return v.getForeground();
+                }
+            }).set('measureAllChildren', {
+                setter(v:FrameLayout, value:any, attrBinder:AttrBinder) {
+                    if (attrBinder.parseBoolean(value)) {
+                        v.setMeasureAllChildren(true);
+                    }
+                }, getter(v:FrameLayout) {
+                    return v.mMeasureAllChildren;
+                }
+            });
         }
 
         /**

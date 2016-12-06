@@ -83,6 +83,7 @@ module android.widget {
     import Checkable = android.widget.Checkable;
     import ListAdapter = android.widget.ListAdapter;
     import OverScroller = android.widget.OverScroller;
+    import AttrBinder = androidui.attr.AttrBinder;
     /**
      * Base class that can be used to implement virtualized lists of items. A list does
      * not have a spatial definition here. For instance, subclases of this class can
@@ -691,88 +692,56 @@ module android.widget {
         private mPendingSync;//:AbsListView.SavedState;
 
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
-            super(context, bindElement, defStyle);
-            this.initAbsListView();
-            this.setVerticalScrollBarEnabled(true);
-            this.initializeScrollbars();
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
+           super(context, bindElement, defStyle);
+           this.initAbsListView();
 
-            this._attrBinder.addAttr('listSelector', (value)=>{
-                let d = this._attrBinder.parseDrawable(value);
-                if(d) this.setSelector(d);
-            });
-            this._attrBinder.addAttr('drawSelectorOnTop', (value)=>{
-                this.mDrawSelectorOnTop = this._attrBinder.parseBoolean(value, false);
-            });
-            this._attrBinder.addAttr('stackFromBottom', (value)=>{
-                this.setStackFromBottom(this._attrBinder.parseBoolean(value, false));
-            });
-            this._attrBinder.addAttr('scrollingCache', (value)=>{
-                this.setScrollingCacheEnabled(this._attrBinder.parseBoolean(value, true));
-            });
-            this._attrBinder.addAttr('transcriptMode', (value)=>{
-                this.setTranscriptMode(this._attrBinder.parseEnum(value,
-                    new Map<string, number>()
-                        .set("disabled", AbsListView.TRANSCRIPT_MODE_DISABLED)
-                        .set("normal", AbsListView.TRANSCRIPT_MODE_NORMAL)
-                        .set("alwaysScroll", AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL),
-                    AbsListView.TRANSCRIPT_MODE_DISABLED));
-            });
-            this._attrBinder.addAttr('cacheColorHint', (value)=>{
-                let color:number = this._attrBinder.parseColor(value, 0);
-                this.setCacheColorHint(color);
-            });
-            this._attrBinder.addAttr('fastScrollEnabled', (value)=>{
-                let enableFastScroll:boolean = this._attrBinder.parseBoolean(value, false);
-                this.setFastScrollEnabled(enableFastScroll);
-            });
-            this._attrBinder.addAttr('fastScrollAlwaysVisible', (value)=>{
-                let fastScrollAlwaysVisible:boolean = this._attrBinder.parseBoolean(value, false);
-                this.setFastScrollAlwaysVisible(fastScrollAlwaysVisible);
-            });
-            this._attrBinder.addAttr('smoothScrollbar', (value)=>{
-                let smoothScrollbar:boolean = this._attrBinder.parseBoolean(value, true);
-                this.setSmoothScrollbarEnabled(smoothScrollbar);
-            });
-            this._attrBinder.addAttr('choiceMode', (value)=>{
-                this.setChoiceMode(this._attrBinder.parseEnum(value,
-                    new Map<string, number>()
-                        .set("none", AbsListView.CHOICE_MODE_NONE)
-                        .set("singleChoice", AbsListView.CHOICE_MODE_SINGLE)
-                        .set("multipleChoice", AbsListView.CHOICE_MODE_MULTIPLE),
-                    AbsListView.CHOICE_MODE_NONE));
-            });
+           // this.mOwnerThread = Thread.currentThread();
 
+           let a = context.obtainStyledAttributes(bindElement, defStyle);
+
+           let d:Drawable = a.getDrawable('listSelector');
+           if (d != null) {
+               this.setSelector(d);
+           }
+
+           this.mDrawSelectorOnTop = a.getBoolean('drawSelectorOnTop', false);
+
+           let stackFromBottom:boolean = a.getBoolean('stackFromBottom', false);
+           this.setStackFromBottom(stackFromBottom);
+
+           let scrollingCacheEnabled:boolean = a.getBoolean('scrollingCache', true);
+           this.setScrollingCacheEnabled(scrollingCacheEnabled);
+
+           let useTextFilter:boolean = a.getBoolean('textFilterEnabled', false);
+           this.setTextFilterEnabled(useTextFilter);
+
+           let transcriptModeValue = a.getAttrValue('transcriptMode');
+           let transcriptMode:number = AbsListView.TRANSCRIPT_MODE_DISABLED;
+           if (transcriptModeValue === "disabled") transcriptMode = AbsListView.TRANSCRIPT_MODE_DISABLED;
+           else if (transcriptModeValue === "normal") transcriptMode = AbsListView.TRANSCRIPT_MODE_NORMAL;
+           else if (transcriptModeValue === "alwaysScroll") transcriptMode = AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL;
+           this.setTranscriptMode(transcriptMode);
+
+           let color:number = a.getColor('cacheColorHint', 0);
+           this.setCacheColorHint(color);
+
+           let enableFastScroll:boolean = a.getBoolean('fastScrollEnabled', false);
+           this.setFastScrollEnabled(enableFastScroll);
+
+           let smoothScrollbar:boolean = a.getBoolean('smoothScrollbar', true);
+           this.setSmoothScrollbarEnabled(smoothScrollbar);
+
+           let choiceModeValue = a.getAttrValue('choiceMode');
+           let choiceMode = AbsListView.CHOICE_MODE_NONE;
+           if (choiceModeValue === "none") choiceMode = AbsListView.CHOICE_MODE_NONE;
+           else if (choiceModeValue === "singleChoice") choiceMode = AbsListView.CHOICE_MODE_SINGLE;
+           else if (choiceModeValue === "multipleChoice") choiceMode = AbsListView.CHOICE_MODE_MULTIPLE;
+           this.setChoiceMode(choiceMode);
+           this.setFastScrollAlwaysVisible(a.getBoolean('fastScrollAlwaysVisible', false));
+
+           a.recycle();
         }
-
-        //constructor(context:Context, attrs:AttributeSet, defStyle:number) {
-        //    super(context, attrs, defStyle);
-        //    this.initAbsListView();
-        //    this.mOwnerThread = Thread.currentThread();
-        //    let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.AbsListView, defStyle, 0);
-        //    let d:Drawable = a.getDrawable(com.android.internal.R.styleable.AbsListView_listSelector);
-        //    if (d != null) {
-        //        this.setSelector(d);
-        //    }
-        //    this.mDrawSelectorOnTop = a.getBoolean(com.android.internal.R.styleable.AbsListView_drawSelectorOnTop, false);
-        //    let stackFromBottom:boolean = a.getBoolean(R.styleable.AbsListView_stackFromBottom, false);
-        //    this.setStackFromBottom(stackFromBottom);
-        //    let scrollingCacheEnabled:boolean = a.getBoolean(R.styleable.AbsListView_scrollingCache, true);
-        //    this.setScrollingCacheEnabled(scrollingCacheEnabled);
-        //    let useTextFilter:boolean = a.getBoolean(R.styleable.AbsListView_textFilterEnabled, false);
-        //    this.setTextFilterEnabled(useTextFilter);
-        //    let transcriptMode:number = a.getInt(R.styleable.AbsListView_transcriptMode, AbsListView.TRANSCRIPT_MODE_DISABLED);
-        //    this.setTranscriptMode(transcriptMode);
-        //    let color:number = a.getColor(R.styleable.AbsListView_cacheColorHint, 0);
-        //    this.setCacheColorHint(color);
-        //    let enableFastScroll:boolean = a.getBoolean(R.styleable.AbsListView_fastScrollEnabled, false);
-        //    this.setFastScrollEnabled(enableFastScroll);
-        //    let smoothScrollbar:boolean = a.getBoolean(R.styleable.AbsListView_smoothScrollbar, true);
-        //    this.setSmoothScrollbarEnabled(smoothScrollbar);
-        //    this.setChoiceMode(a.getInt(R.styleable.AbsListView_choiceMode, AbsListView.CHOICE_MODE_NONE));
-        //    this.setFastScrollAlwaysVisible(a.getBoolean(R.styleable.AbsListView_fastScrollAlwaysVisible, false));
-        //    a.recycle();
-        //}
 
         private initAbsListView():void {
             // Setting focusable in touch mode will set the focusable property to true
@@ -789,6 +758,93 @@ module android.widget {
             this.mOverflingDistance = configuration.getScaledOverflingDistance();
             this.mDensityScale = android.content.res.Resources.getDisplayMetrics().density;
             this.mLayoutMode = AbsListView.LAYOUT_NORMAL;
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder()
+                .set('listSelector', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        let d = attrBinder.parseDrawable(value);
+                        if (d) v.setSelector(d);
+                    }, getter(v: AbsListView) {
+                        return v.getSelector();
+                    }
+                })
+                .set('drawSelectorOnTop', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        v.setDrawSelectorOnTop(attrBinder.parseBoolean(value, false));
+                    }, getter(v: AbsListView) {
+                        return v.mDrawSelectorOnTop;
+                    }
+                })
+                .set('stackFromBottom', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        v.setStackFromBottom(attrBinder.parseBoolean(value, false));
+                    }, getter(v: AbsListView) {
+                        return v.isStackFromBottom();
+                    }
+                })
+                .set('scrollingCache', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        v.setScrollingCacheEnabled(attrBinder.parseBoolean(value, true));
+                    }, getter(v: AbsListView) {
+                        return v.isScrollingCacheEnabled();
+                    }
+                })
+                .set('transcriptMode', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        v.setTranscriptMode(attrBinder.parseEnum(value, new Map<string, number>()
+                                .set("disabled", AbsListView.TRANSCRIPT_MODE_DISABLED)
+                                .set("normal", AbsListView.TRANSCRIPT_MODE_NORMAL)
+                                .set("alwaysScroll", AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL),
+                            AbsListView.TRANSCRIPT_MODE_DISABLED));
+                    }, getter(v: AbsListView) {
+                        return v.getTranscriptMode();
+                    }
+                })
+                .set('cacheColorHint', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        let color: number = attrBinder.parseColor(value, 0);
+                        v.setCacheColorHint(color);
+                    }, getter(v: AbsListView) {
+                        return v.getCacheColorHint();
+                    }
+                })
+                .set('fastScrollEnabled', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        let enableFastScroll: boolean = attrBinder.parseBoolean(value, false);
+                        v.setFastScrollEnabled(enableFastScroll);
+                    }, getter(v: AbsListView) {
+                        return v.isFastScrollEnabled();
+                    }
+                })
+                .set('fastScrollAlwaysVisible', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        let fastScrollAlwaysVisible: boolean = attrBinder.parseBoolean(value, false);
+                        v.setFastScrollAlwaysVisible(fastScrollAlwaysVisible);
+                    }, getter(v: AbsListView) {
+                        return v.isFastScrollAlwaysVisible();
+                    }
+                })
+                .set('smoothScrollbar', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        let smoothScrollbar: boolean = attrBinder.parseBoolean(value, true);
+                        v.setSmoothScrollbarEnabled(smoothScrollbar);
+                    }, getter(v: AbsListView) {
+                        return v.isSmoothScrollbarEnabled();
+                    }
+                })
+                .set('choiceMode', {
+                    setter(v: AbsListView, value: any, attrBinder: AttrBinder) {
+                        v.setChoiceMode(attrBinder.parseEnum(value, new Map<string, number>()
+                                .set("none", AbsListView.CHOICE_MODE_NONE)
+                                .set("singleChoice", AbsListView.CHOICE_MODE_SINGLE)
+                                .set("multipleChoice", AbsListView.CHOICE_MODE_MULTIPLE),
+                            AbsListView.CHOICE_MODE_NONE));
+                    }, getter(v: AbsListView) {
+                        return v.getChoiceMode();
+                    }
+                });
         }
 
         setOverScrollMode(mode:number):void {

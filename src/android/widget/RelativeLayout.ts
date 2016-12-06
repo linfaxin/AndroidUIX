@@ -44,6 +44,7 @@ import Integer = java.lang.Integer;
 import System = java.lang.System;
 import HorizontalScrollView = android.widget.HorizontalScrollView;
 import ScrollView = android.widget.ScrollView;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * A Layout where the positions of the children can be described in relation to each other or to the
  * parent.
@@ -251,18 +252,36 @@ export class RelativeLayout extends ViewGroup {
     private static DEFAULT_WIDTH:number = 0x00010000;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
-
-        this._attrBinder.addAttr('ignoreGravity', (value)=>{
-            this.setIgnoreGravity(value);
-        });
-        this._attrBinder.addAttr('gravity', (value)=>{
-            this.setGravity(this._attrBinder.parseGravity(value, this.mGravity));
-        });
+        if (bindElement || defStyle) {
+            this.initFromAttributes(context, bindElement, defStyle);
+        }
         this.queryCompatibilityModes();
     }
 
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('ignoreGravity', {
+            setter(v:RelativeLayout, value:any, a:AttrBinder) {
+                v.setIgnoreGravity(value+'');
+            }, getter(v:RelativeLayout) {
+                return v.mIgnoreGravity;
+            }
+        }).set('gravity', {
+            setter(v:RelativeLayout, value:any, a:AttrBinder) {
+                v.setGravity(a.parseGravity(value, v.mGravity));
+            }, getter(v:RelativeLayout) {
+                return v.mGravity;
+            }
+        });
+    }
+
+    private initFromAttributes(context:android.content.Context, attrs:HTMLElement, defStyle?:Map<string, string>) {
+        const a = context.obtainStyledAttributes(attrs, defStyle);
+        this.mIgnoreGravity = a.getResourceId('ignoreGravity', View.NO_ID);
+        this.mGravity = Gravity.parseGravity(a.getAttrValue('gravity'), this.mGravity);
+        a.recycle();
+    }
 
     private queryCompatibilityModes():void  {
         this.mAllowBrokenMeasureSpecs = false; //version <= Build.VERSION_CODES.JELLY_BEAN_MR1;

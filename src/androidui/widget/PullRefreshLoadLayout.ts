@@ -66,17 +66,17 @@ module androidui.widget{
         private overScrollLocker:OverScrollLocker;
         private refreshLoadListener:PullRefreshLoadLayout.RefreshLoadListener;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
-            this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView(context));
-            this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView(context));
 
-            this._attrBinder.addAttr('refreshEnable', (value)=>{
-                this.setRefreshEnable(this._attrBinder.parseBoolean(value, true));
-            });
-            this._attrBinder.addAttr('loadEnable', (value)=>{
-                this.setLoadEnable(this._attrBinder.parseBoolean(value, true));
-            });
+            const a = context.obtainStyledAttributes(bindElement, defStyle);
+            if (a.getBoolean('refreshEnable', true)) {
+                this.setRefreshEnable(true);
+            }
+            if (a.getBoolean('loadEnable', true)) {
+                this.setLoadEnable(true);
+            }
+            a.recycle();
         }
 
         protected onViewAdded(child:View):void {
@@ -314,7 +314,7 @@ module androidui.widget{
                 this.headerView = null;
                 if(this.overScrollLocker) this.overScrollLocker.lockOverScrollTop(0);
             }else{
-                this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView());
+                this.setHeaderView(new PullRefreshLoadLayout.DefaultHeaderView(this.getContext()));
             }
         }
         setLoadEnable(enable:boolean):void {
@@ -325,7 +325,7 @@ module androidui.widget{
                 this.footerView = null;
                 if(this.overScrollLocker) this.overScrollLocker.lockOverScrollBottom(0);
             }else{
-                this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView());
+                this.setFooterView(new PullRefreshLoadLayout.DefaultFooterView(this.getContext()));
             }
         }
 
@@ -396,7 +396,7 @@ module androidui.widget{
         export class DefaultHeaderView extends HeaderView{
             textView:TextView;
             progressBar:ProgressBar;
-            constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
                 super(context, bindElement, defStyle);
                 this.progressBar = new ProgressBar();
                 this.progressBar.setVisibility(View.GONE);
@@ -437,7 +437,7 @@ module androidui.widget{
         export class DefaultFooterView extends FooterView{
             textView:TextView;
             progressBar:ProgressBar;
-            constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+            constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
                 super(context, bindElement, defStyle);
                 this.progressBar = new ProgressBar();
                 this.progressBar.setVisibility(View.GONE);

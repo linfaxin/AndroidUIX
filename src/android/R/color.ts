@@ -19,7 +19,7 @@ module android.R{
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     import Gravity = android.view.Gravity;
 
-    export class color{
+    export class color {
         static get textView_textColor():ColorStateList {
             let _defaultStates = [[-android.view.View.VIEW_STATE_ENABLED], []];
             let _defaultColors = [0xffc0c0c0, 0xff333333];

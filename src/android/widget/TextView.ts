@@ -466,322 +466,983 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    p.measureText("H");
     //}
 
-    private static TextViewClassAttrBind:AttrBinder.ClassBinderMap;
-
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.textViewStyle){
-        super(context, bindElement, null);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.textViewStyle){
+        super(context, bindElement, defStyle);
 
         this.mText = "";
-        const res:Resources = this.getResources();
+
+        // const res = this.getResources();
+        // const compat = res.getCompatibilityInfo();
+
         this.mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-        //this.mTextPaint.density = res.getDisplayMetrics().density;
-        //this.mTextPaint.setCompatibilityScaling(compat.applicationScale);
+        // this.mTextPaint.density = res.getDisplayMetrics().density;
+        // mTextPaint.setCompatibilityScaling(compat.applicationScale);
+
         this.mHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        //this.mHighlightPaint.setCompatibilityScaling(compat.applicationScale);
+        // mHighlightPaint.setCompatibilityScaling(compat.applicationScale);
+
         this.mMovement = this.getDefaultMovementMethod();
+
         this.mTransformation = null;
 
-        this.setTextSize(14);//init size
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        let textColorHighlight = 0;
+        let textColor:ColorStateList = null;
+        let textColorHint:ColorStateList = null;
+        let textColorLink:ColorStateList = null;
+        let textSize = 15;
+        // let fontFamily:string = null;
+        // let typefaceIndex = -1;
+        // let styleIndex = -1;
+        let allCaps = false;
+        let shadowcolor = 0;
+        let dx = 0, dy = 0, r = 0;
 
-        let text = this.mText || this.bindElement.innerText.trim();
-        this.bindElement.innerHTML = '';
-        this.setText(text, this.mBufferType);//ensure setText called
+        /*
+         * Look the appearance up without checking first if it exists because
+         * almost every TextView has one and it greatly simplifies the logic
+         * to be able to parse the appearance first and then let specific tags
+         * for this View override it.
+         * AndroidUIX note : not support text appearance now.
+         */
+        // let a = context.obtainStyledAttributes(bindElement, defStyle);
+        // let appearance = context.obtainStyledAttributes(bindElement, defStyle);
+        // let appearance:android.content.res.TypedArray = null;
+        // let ap = a.getString('textAppearance');
+        // a.recycle();
+        // if (ap) {
+        //     appearance = theme.obtainStyledAttributes(
+        //         ap, com.android.internal.R.styleable.TextAppearance);
+        // }
+        // if (appearance != null) {
+        //     for (let attr of appearance.getLowerCaseAttrNames()) {
+        //         switch (attr) {
+        //             case 'textcolorhighlight':
+        //                 textColorHighlight = appearance.getColor(attr, textColorHighlight);
+        //                 break;
+        //
+        //             case 'textcolor':
+        //                 textColor = appearance.getColorStateList(attr);
+        //                 break;
+        //
+        //             case 'textcolorhint':
+        //                 textColorHint = appearance.getColorStateList(attr);
+        //                 break;
+        //
+        //             case 'textcolorlink':
+        //                 textColorLink = appearance.getColorStateList(attr);
+        //                 break;
+        //
+        //             case 'textsize':
+        //                 textSize = appearance.getDimensionPixelSize(attr, textSize);
+        //                 break;
+        //
+        //             case 'typeface':
+        //                 typefaceIndex = appearance.getInt(attr, -1);
+        //                 break;
+        //
+        //             case 'fontfamily':
+        //                 fontFamily = appearance.getString(attr);
+        //                 break;
+        //
+        //             case 'textstyle':
+        //                 styleIndex = appearance.getInt(attr, -1);
+        //                 break;
+        //
+        //             case 'textallcaps':
+        //                 allCaps = appearance.getBoolean(attr, false);
+        //                 break;
+        //
+        //             case 'shadowcolor':
+        //                 shadowcolor = appearance.getInt(attr, 0);
+        //                 break;
+        //
+        //             case 'shadowdx':
+        //                 dx = appearance.getFloat(attr, 0);
+        //                 break;
+        //
+        //             case 'shadowdy':
+        //                 dy = appearance.getFloat(attr, 0);
+        //                 break;
+        //
+        //             case 'shadowradius':
+        //                 r = appearance.getFloat(attr, 0);
+        //                 break;
+        //         }
+        //
+        //         appearance.recycle();
+        //     }
+        // }
+
+        let editable = this.getDefaultEditable();
+        // let inputMethod:String = null;
+        let numeric = 0;
+        let digits:String = null;
+        // let phone = false;
+        // let autotext = false;
+        // let autocap = -1;
+        // let buffertype = 0;
+        // let selectallonfocus = false;
+        let drawableLeft:Drawable = null, drawableTop:Drawable = null, drawableRight:Drawable = null,
+            drawableBottom:Drawable = null, drawableStart:Drawable = null, drawableEnd:Drawable = null;
+        let drawablePadding = 0;
+        let ellipsize:TextUtils.TruncateAt;
+        let singleLine = false;
+        let maxlength = -1;
+        let text = "";
+        let hint = null;
+        // let password = false;
+        // let inputType = 0; // EditorInfo.TYPE_NULL;
+
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
+
+        for (let attr of a.getLowerCaseAttrNames()) {
+            switch (attr) {
+                case 'editable':
+                    editable = a.getBoolean(attr, editable);
+                    break;
+
+                case 'inputmethod':
+                    // inputMethod = a.getText(attr);
+                    break;
+
+                case 'numeric':
+                    numeric = a.getInt(attr, numeric);
+                    break;
+
+                case 'digits':
+                    digits = a.getText(attr);
+                    break;
+
+                case 'phonenumber':
+                    // phone = a.getBoolean(attr, phone);
+                    break;
+
+                case 'autotext':
+                    // autotext = a.getBoolean(attr, autotext);
+                    break;
+
+                case 'capitalize':
+                    // autocap = a.getInt(attr, autocap);
+                    break;
+
+                case 'buffertype':
+                    // buffertype = a.getInt(attr, buffertype);
+                    break;
+
+                case 'selectallonfocus':
+                    // selectallonfocus = a.getBoolean(attr, selectallonfocus);
+                    break;
+
+                case 'autolink':
+                    this.mAutoLinkMask = a.getInt(attr, 0);
+                    break;
+
+                case 'linksclickable':
+                    this.mLinksClickable = a.getBoolean(attr, true);
+                    break;
+
+                case 'drawableleft':
+                    drawableLeft = a.getDrawable(attr);
+                    break;
+
+                case 'drawabletop':
+                    drawableTop = a.getDrawable(attr);
+                    break;
+
+                case 'drawableright':
+                    drawableRight = a.getDrawable(attr);
+                    break;
+
+                case 'drawablebottom':
+                    drawableBottom = a.getDrawable(attr);
+                    break;
+
+                case 'drawablestart':
+                    drawableStart = a.getDrawable(attr);
+                    break;
+
+                case 'drawableend':
+                    drawableEnd = a.getDrawable(attr);
+                    break;
+
+                case 'drawablepadding':
+                    drawablePadding = a.getDimensionPixelSize(attr, drawablePadding);
+                    break;
+
+                case 'maxlines':
+                    this.setMaxLines(a.getInt(attr, -1));
+                    break;
+
+                case 'maxheight':
+                    this.setMaxHeight(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'lines':
+                    this.setLines(a.getInt(attr, -1));
+                    break;
+
+                case 'height':
+                    this.setHeight(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'minlines':
+                    this.setMinLines(a.getInt(attr, -1));
+                    break;
+
+                case 'minheight':
+                    this.setMinHeight(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'maxems':
+                    this.setMaxEms(a.getInt(attr, -1));
+                    break;
+
+                case 'maxwidth':
+                    this.setMaxWidth(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'ems':
+                    this.setEms(a.getInt(attr, -1));
+                    break;
+
+                case 'width':
+                    this.setWidth(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'minems':
+                    this.setMinEms(a.getInt(attr, -1));
+                    break;
+
+                case 'minwidth':
+                    this.setMinWidth(a.getDimensionPixelSize(attr, -1));
+                    break;
+
+                case 'gravity':
+                    this.setGravity(Gravity.parseGravity(a.getAttrValue(attr), -1));
+                    break;
+
+                case 'hint':
+                    hint = a.getText(attr);
+                    break;
+
+                case 'text':
+                    text = a.getText(attr);
+                    break;
+
+                case 'scrollhorizontally':
+                    if (a.getBoolean(attr, false)) {
+                        this.setHorizontallyScrolling(true);
+                    }
+                    break;
+
+                case 'singleline':
+                    singleLine = a.getBoolean(attr, singleLine);
+                    break;
+
+                case 'ellipsize':
+                    ellipsize = TextUtils.TruncateAt[(a.getAttrValue(attr) + '').toUpperCase()];
+                    break;
+
+                case 'marqueerepeatlimit':
+                    this.setMarqueeRepeatLimit(a.getInt(attr, this.mMarqueeRepeatLimit));
+                    break;
+
+                case 'includefontpadding':
+                    if (!a.getBoolean(attr, true)) {
+                        this.setIncludeFontPadding(false);
+                    }
+                    break;
+
+                case 'cursorvisible':
+                    if (!a.getBoolean(attr, true)) {
+                        this.setCursorVisible(false);
+                    }
+                    break;
+
+                case 'maxlength':
+                    maxlength = a.getInt(attr, -1);
+                    break;
+
+                case 'textscalex':
+                    this.setTextScaleX(a.getFloat(attr, 1.0));
+                    break;
+
+                case 'freezestext':
+                    this.mFreezesText = a.getBoolean(attr, false);
+                    break;
+
+                case 'shadowcolor':
+                    shadowcolor = a.getInt(attr, 0);
+                    break;
+
+                case 'shadowdx':
+                    dx = a.getFloat(attr, 0);
+                    break;
+
+                case 'shadowdy':
+                    dy = a.getFloat(attr, 0);
+                    break;
+
+                case 'shadowradius':
+                    r = a.getFloat(attr, 0);
+                    break;
+
+                case 'enabled':
+                    this.setEnabled(a.getBoolean(attr, this.isEnabled()));
+                    break;
+
+                case 'textcolorhighlight':
+                    textColorHighlight = a.getColor(attr, textColorHighlight);
+                    break;
+
+                case 'textcolor':
+                    textColor = a.getColorStateList(attr);
+                    break;
+
+                case 'textcolorhint':
+                    textColorHint = a.getColorStateList(attr);
+                    break;
+
+                case 'textcolorlink':
+                    textColorLink = a.getColorStateList(attr);
+                    break;
+
+                case 'textsize':
+                    textSize = a.getDimensionPixelSize(attr, textSize);
+                    break;
+
+                case 'typeface':
+                    // typefaceIndex = a.getInt(attr, typefaceIndex);
+                    break;
+
+                case 'textstyle':
+                    // styleIndex = a.getInt(attr, styleIndex);
+                    break;
+
+                case 'fontfamily':
+                    // fontFamily = a.getString(attr);
+                    break;
+
+                case 'password':
+                    // password = a.getBoolean(attr, password);
+                    break;
+
+                case 'linespacingextra':
+                    this.mSpacingAdd = a.getDimensionPixelSize(attr, Math.floor(this.mSpacingAdd));
+                    break;
+
+                case 'linespacingmultiplier':
+                    this.mSpacingMult = a.getFloat(attr, this.mSpacingMult);
+                    break;
+
+                case 'inputtype':
+                    // inputType = a.getInt(attr, EditorInfo.TYPE_NULL);
+                    break;
+
+                case 'imeoptions':
+                    // createEditorIfNeeded();
+                    // mEditor.createInputContentTypeIfNeeded();
+                    // mEditor.mInputContentType.imeOptions = a.getInt(attr,
+                    //     mEditor.mInputContentType.imeOptions);
+                    break;
+
+                case 'imeactionlabel':
+                    // createEditorIfNeeded();
+                    // mEditor.createInputContentTypeIfNeeded();
+                    // mEditor.mInputContentType.imeActionLabel = a.getText(attr);
+                    break;
+
+                case 'imeactionid':
+                    // createEditorIfNeeded();
+                    // mEditor.createInputContentTypeIfNeeded();
+                    // mEditor.mInputContentType.imeActionId = a.getInt(attr,
+                    //     mEditor.mInputContentType.imeActionId);
+                    break;
+
+                case 'privateimeoptions':
+                    // this.setPrivateImeOptions(a.getString(attr));
+                    break;
+
+                case 'editorextras':
+                    // try {
+                    //     this.setInputExtras(a.getResourceId(attr, 0));
+                    // } catch (e) {
+                    //     Log.w(LOG_TAG, "Failure reading input extras", e);
+                    // } catch (IOException e) {
+                    //     Log.w(LOG_TAG, "Failure reading input extras", e);
+                    // }
+                    break;
+
+                case 'textcursordrawable':
+                    // this.mCursorDrawableRes = a.getResourceId(attr, 0);
+                    break;
+
+                case 'textselecthandleleft':
+                    // this.mTextSelectHandleLeftRes = a.getResourceId(attr, 0);
+                    break;
+
+                case 'textselecthandleright':
+                    // this.mTextSelectHandleRightRes = a.getResourceId(attr, 0);
+                    break;
+
+                case 'textselecthandle':
+                    // this.mTextSelectHandleRes = a.getResourceId(attr, 0);
+                    break;
+
+                case 'texteditsuggestionitemlayout':
+                    // this.mTextEditSuggestionItemLayout = a.getResourceId(attr, 0);
+                    break;
+
+                case 'textisselectable':
+                    this.setTextIsSelectable(a.getBoolean(attr, false));
+                    break;
+
+                case 'textallcaps':
+                    allCaps = a.getBoolean(attr, false);
+                    break;
+            }
+        }
+        a.recycle();
+
+        let bufferType = this.mBufferType;// TextView.BufferType.EDITABLE;
+
+        // const variation =
+        //     inputType & (EditorInfo.TYPE_MASK_CLASS | EditorInfo.TYPE_MASK_VARIATION);
+        // final boolean passwordInputType = variation
+        //     == (EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_PASSWORD);
+        // final boolean webPasswordInputType = variation
+        //     == (EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_WEB_PASSWORD);
+        // final boolean numberPasswordInputType = variation
+        //     == (EditorInfo.TYPE_CLASS_NUMBER | EditorInfo.TYPE_NUMBER_VARIATION_PASSWORD);
+
+        // if (inputMethod != null) {
+        //     Class<?> c;
+        //
+        //     try {
+        //         c = Class.forName(inputMethod.toString());
+        //     } catch (ClassNotFoundException ex) {
+        //         throw new RuntimeException(ex);
+        //     }
+        //
+        //     try {
+        //         createEditorIfNeeded();
+        //         mEditor.mKeyListener = (KeyListener) c.newInstance();
+        //     } catch (InstantiationException ex) {
+        //         throw new RuntimeException(ex);
+        //     } catch (IllegalAccessException ex) {
+        //         throw new RuntimeException(ex);
+        //     }
+        //     try {
+        //         mEditor.mInputType = inputType != EditorInfo.TYPE_NULL
+        //             ? inputType
+        //             : mEditor.mKeyListener.getInputType();
+        //     } catch (IncompatibleClassChangeError e) {
+        //         mEditor.mInputType = EditorInfo.TYPE_CLASS_TEXT;
+        //     }
+        // } else if (digits != null) {
+        //     createEditorIfNeeded();
+        //     mEditor.mKeyListener = DigitsKeyListener.getInstance(digits.toString());
+        //     // If no input type was specified, we will default to generic
+        //     // text, since we can't tell the IME about the set of digits
+        //     // that was selected.
+        //     mEditor.mInputType = inputType != EditorInfo.TYPE_NULL
+        //         ? inputType : EditorInfo.TYPE_CLASS_TEXT;
+        // } else if (inputType != EditorInfo.TYPE_NULL) {
+        //     setInputType(inputType, true);
+        //     // If set, the input type overrides what was set using the deprecated singleLine flag.
+        //     singleLine = !isMultilineInputType(inputType);
+        // } else if (phone) {
+        //     createEditorIfNeeded();
+        //     mEditor.mKeyListener = DialerKeyListener.getInstance();
+        //     mEditor.mInputType = inputType = EditorInfo.TYPE_CLASS_PHONE;
+        // } else if (numeric != 0) {
+        //     createEditorIfNeeded();
+        //     mEditor.mKeyListener = DigitsKeyListener.getInstance((numeric & SIGNED) != 0,
+        //         (numeric & DECIMAL) != 0);
+        //     inputType = EditorInfo.TYPE_CLASS_NUMBER;
+        //     if ((numeric & SIGNED) != 0) {
+        //         inputType |= EditorInfo.TYPE_NUMBER_FLAG_SIGNED;
+        //     }
+        //     if ((numeric & DECIMAL) != 0) {
+        //         inputType |= EditorInfo.TYPE_NUMBER_FLAG_DECIMAL;
+        //     }
+        //     mEditor.mInputType = inputType;
+        // } else if (autotext || autocap != -1) {
+        //     TextKeyListener.Capitalize cap;
+        //
+        //     inputType = EditorInfo.TYPE_CLASS_TEXT;
+        //
+        //     switch (autocap) {
+        //         case 1:
+        //             cap = TextKeyListener.Capitalize.SENTENCES;
+        //             inputType |= EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES;
+        //             break;
+        //
+        //         case 2:
+        //             cap = TextKeyListener.Capitalize.WORDS;
+        //             inputType |= EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS;
+        //             break;
+        //
+        //         case 3:
+        //             cap = TextKeyListener.Capitalize.CHARACTERS;
+        //             inputType |= EditorInfo.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+        //             break;
+        //
+        //         default:
+        //             cap = TextKeyListener.Capitalize.NONE;
+        //             break;
+        //     }
+        //
+        //     createEditorIfNeeded();
+        //     mEditor.mKeyListener = TextKeyListener.getInstance(autotext, cap);
+        //     mEditor.mInputType = inputType;
+        // } else if (isTextSelectable()) {
+        //     // Prevent text changes from keyboard.
+        //     if (mEditor != null) {
+        //         mEditor.mKeyListener = null;
+        //         mEditor.mInputType = EditorInfo.TYPE_NULL;
+        //     }
+        //     bufferType = BufferType.SPANNABLE;
+        //     // So that selection can be changed using arrow keys and touch is handled.
+        //     setMovementMethod(ArrowKeyMovementMethod.getInstance());
+        // } else if (editable) {
+        //     createEditorIfNeeded();
+        //     mEditor.mKeyListener = TextKeyListener.getInstance();
+        //     mEditor.mInputType = EditorInfo.TYPE_CLASS_TEXT;
+        // } else {
+        //     if (mEditor != null) mEditor.mKeyListener = null;
+        //
+        //     switch (buffertype) {
+        //         case 0:
+        //             bufferType = BufferType.NORMAL;
+        //             break;
+        //         case 1:
+        //             bufferType = BufferType.SPANNABLE;
+        //             break;
+        //         case 2:
+        //             bufferType = BufferType.EDITABLE;
+        //             break;
+        //     }
+        // }
+        //
+        // if (mEditor != null) mEditor.adjustInputType(password, passwordInputType,
+        //     webPasswordInputType, numberPasswordInputType);
+        //
+        // if (selectallonfocus) {
+        //     createEditorIfNeeded();
+        //     mEditor.mSelectAllOnFocus = true;
+        //
+        //     if (bufferType == BufferType.NORMAL)
+        //         bufferType = BufferType.SPANNABLE;
+        // }
+
+        // This call will save the initial left/right drawables
+        this.setCompoundDrawablesWithIntrinsicBounds(
+            drawableLeft, drawableTop, drawableRight, drawableBottom);
+        this.setRelativeDrawablesIfNeeded(drawableStart, drawableEnd);
+        this.setCompoundDrawablePadding(drawablePadding);
+
+        // Same as setSingleLine(), but make sure the transformation method and the maximum number
+        // of lines of height are unchanged for multi-line TextViews.
+        this.setInputTypeSingleLine(singleLine);
+        this.applySingleLine(singleLine, singleLine, singleLine);
+
+        if (singleLine && this.getKeyListener() == null && ellipsize == null) {
+            ellipsize = TextUtils.TruncateAt.END; // END
+        }
+
+        switch (ellipsize) {
+            case TextUtils.TruncateAt.START:
+                this.setEllipsize(TextUtils.TruncateAt.START);
+                break;
+            case TextUtils.TruncateAt.MIDDLE:
+                this.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+                break;
+            case TextUtils.TruncateAt.END:
+                this.setEllipsize(TextUtils.TruncateAt.END);
+                break;
+            case TextUtils.TruncateAt.MARQUEE:
+                // if (ViewConfiguration.get(context).isFadingMarqueeEnabled()) {
+                //     this.setHorizontalFadingEdgeEnabled(true);
+                //     this.mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+                // } else {
+                    this.setHorizontalFadingEdgeEnabled(false);
+                    this.mMarqueeFadeMode = TextView.MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+                // }
+                this.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+                break;
+        }
+
+        this.setTextColor(textColor != null ? textColor : ColorStateList.valueOf(0xFF000000));
+        this.setHintTextColor(textColorHint);
+        this.setLinkTextColor(textColorLink);
+        if (textColorHighlight != 0) {
+            this.setHighlightColor(textColorHighlight);
+        }
+        this.setRawTextSize(textSize);
+
+        if (allCaps) {
+            this.setTransformationMethod(new AllCapsTransformationMethod(this.getContext()));
+        }
+
+        // if (password || passwordInputType || webPasswordInputType || numberPasswordInputType) {
+        //     this.setTransformationMethod(android.text.method.PasswordTransformationMethod.PasswordTransformationMethod.getInstance());
+        //     typefaceIndex = MONOSPACE;
+        // } else if (mEditor != null &&
+        //     (mEditor.mInputType & (EditorInfo.TYPE_MASK_CLASS | EditorInfo.TYPE_MASK_VARIATION))
+        //     == (EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_VARIATION_PASSWORD)) {
+        //     typefaceIndex = MONOSPACE;
+        // }
+        //
+        // setTypefaceFromAttrs(fontFamily, typefaceIndex, styleIndex);
+
+        if (shadowcolor != 0) {
+            this.setShadowLayer(r, dx, dy, shadowcolor);
+        }
+
+        // if (maxlength >= 0) {
+        //     this.setFilters(new InputFilter[] { new InputFilter.LengthFilter(maxlength) });
+        // } else {
+        //     this.setFilters(TextView.NO_FILTERS);
+        // }
+
+        this.setText(text, bufferType);
+        if (hint != null) this.setHint(hint);
+
+        // /*
+        //  * Views are not normally focusable unless specified to be.
+        //  * However, TextViews that have input or movement methods *are*
+        //  * focusable by default.
+        //  */
+        // a = context.obtainStyledAttributes(attrs,
+        //     com.android.internal.R.styleable.View,
+        //     defStyle, 0);
+        //
+        // boolean focusable = mMovement != null || getKeyListener() != null;
+        // boolean clickable = focusable;
+        // boolean longClickable = focusable;
+        //
+        // n = a.getIndexCount();
+        // for (int i = 0; i < n; i++) {
+        //     int attr = a.getIndex(i);
+        //
+        //     switch (attr) {
+        //         case com.android.internal.R.styleable.View_focusable:
+        //             focusable = a.getBoolean(attr, focusable);
+        //             break;
+        //
+        //         case com.android.internal.R.styleable.View_clickable:
+        //             clickable = a.getBoolean(attr, clickable);
+        //             break;
+        //
+        //         case com.android.internal.R.styleable.View_longClickable:
+        //             longClickable = a.getBoolean(attr, longClickable);
+        //             break;
+        //     }
+        // }
+        // a.recycle();
+        //
+        // setFocusable(focusable);
+        // setClickable(clickable);
+        // setLongClickable(longClickable);
+        //
+        // if (mEditor != null) mEditor.prepareCursorControllers();
+        //
+        // // If not explicitly specified this view is important for accessibility.
+        // if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        //     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+        // }
     }
 
 
-    protected initBindAttr():void {
-        super.initBindAttr();
-        if (!TextView.TextViewClassAttrBind) {
-            TextView.TextViewClassAttrBind = new AttrBinder.ClassBinderMap();
-            TextView.TextViewClassAttrBind.set('textColorHighlight', {
-                setter(v:TextView, value:any){
-                    v.setHighlightColor(v._attrBinder.parseColor(value, v.mHighlightColor));
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder()
+            .set('textColorHighlight', {
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setHighlightColor(attrBinder.parseColor(value, v.mHighlightColor));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getHighlightColor();
                 }
             }).set('textColor', {
-                setter(v:TextView, value:any){
-                    let color = v._attrBinder.parseColorList(value);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let color = attrBinder.parseColorList(value);
                     if (color) v.setTextColor(color);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mTextColor;
                 }
             }).set('textColorHint', {
-                setter(v:TextView, value:any){
-                    let color = v._attrBinder.parseColorList(value);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let color = attrBinder.parseColorList(value);
                     if (color) v.setHintTextColor(color);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mHintTextColor;
                 }
             }).set('textSize', {
-                setter(v:TextView, value:any){
-                    let size = v._attrBinder.parseNumberPixelSize(value, v.mTextPaint.getTextSize());
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let size = attrBinder.parseNumberPixelSize(value, v.mTextPaint.getTextSize());
                     v.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mTextPaint.getTextSize();
                 }
             }).set('textAllCaps', {
-                setter(v:TextView, value:any){
-                    v.setAllCaps(v._attrBinder.parseBoolean(value, true));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setAllCaps(attrBinder.parseBoolean(value, true));
                 }
             }).set('shadowColor', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     v.setShadowLayer(v.mShadowRadius, v.mShadowDx, v.mShadowDy,
-                        v._attrBinder.parseColor(value, v.mTextPaint.shadowColor));
+                        attrBinder.parseColor(value, v.mTextPaint.shadowColor));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getShadowColor();
                 }
             }).set('shadowDx', {
-                setter(v:TextView, value:any){
-                    let dx = v._attrBinder.parseNumberPixelSize(value, v.mShadowDx);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let dx = attrBinder.parseNumberPixelSize(value, v.mShadowDx);
                     v.setShadowLayer(v.mShadowRadius, dx, v.mShadowDy, v.mTextPaint.shadowColor);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getShadowDx();
                 }
             }).set('shadowDy', {
-                setter(v:TextView, value:any){
-                    let dy = v._attrBinder.parseNumberPixelSize(value, v.mShadowDy);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let dy = attrBinder.parseNumberPixelSize(value, v.mShadowDy);
                     v.setShadowLayer(v.mShadowRadius, v.mShadowDx, dy, v.mTextPaint.shadowColor);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getShadowDy();
                 }
             }).set('shadowRadius', {
-                setter(v:TextView, value:any){
-                    let radius = v._attrBinder.parseNumberPixelSize(value, v.mShadowRadius);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let radius = attrBinder.parseNumberPixelSize(value, v.mShadowRadius);
                     v.setShadowLayer(radius, v.mShadowDx, v.mShadowDy, v.mTextPaint.shadowColor);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getShadowRadius();
                 }
             }).set('drawableLeft', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[0];
                 }
             }).set('drawableStart', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(drawable, dr.mDrawableTop, dr.mDrawableRight, dr.mDrawableBottom);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[0];
                 }
             }).set('drawableTop', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, drawable, dr.mDrawableRight, dr.mDrawableBottom);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[1];
                 }
             }).set('drawableRight', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[2];
                 }
             }).set('drawableEnd', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, drawable, dr.mDrawableBottom);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[2];
                 }
             }).set('drawableBottom', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let dr = v.mDrawables || <TextView.Drawables>{};
-                    let drawable = v._attrBinder.parseDrawable(value);
+                    let drawable = attrBinder.parseDrawable(value);
                     v.setCompoundDrawablesWithIntrinsicBounds(dr.mDrawableLeft, dr.mDrawableTop, dr.mDrawableRight, drawable);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawables()[3];
                 }
             }).set('drawablePadding', {
-                setter(v:TextView, value:any){
-                    v.setCompoundDrawablePadding(v._attrBinder.parseNumberPixelSize(value));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setCompoundDrawablePadding(attrBinder.parseNumberPixelSize(value));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getCompoundDrawablePadding();
                 }
             }).set('maxLines', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value)) v.setMaxLines(value);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMaxLines();
                 }
             }).set('maxHeight', {
-                setter(v:TextView, value:any){
-                    v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.getMaxHeight()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMaxHeight(attrBinder.parseNumberPixelSize(value, v.getMaxHeight()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMaxHeight();
                 }
             }).set('lines', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     value = Number.parseInt(value);
                     if (Number.isInteger(value)) v.setLines(value);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     if (v.getMaxLines() === v.getMinLines()) return v.getMaxLines();
                     return null;
                 }
             }).set('height', {
-                setter(v:TextView, value:any){
-                    value = v._attrBinder.parseNumberPixelSize(value, -1);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    value = attrBinder.parseNumberPixelSize(value, -1);
                     if (value >= 0) v.setHeight(value);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     if (v.getMaxHeight() === v.getMinimumHeight()) return v.getMaxHeight();
                     return null;
                 }
             }).set('minLines', {
-                setter(v:TextView, value:any){
-                    v.setMinLines(v._attrBinder.parseInt(value, v.getMinLines()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMinLines(attrBinder.parseInt(value, v.getMinLines()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMinLines();
                 }
             }).set('minHeight', {
-                setter(v:TextView, value:any){
-                    v.setMinHeight(v._attrBinder.parseNumberPixelSize(value, v.getMinHeight()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMinHeight(attrBinder.parseNumberPixelSize(value, v.getMinHeight()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMinHeight();
                 }
             }).set('maxEms', {
-                setter(v:TextView, value:any){
-                    v.setMaxEms(v._attrBinder.parseInt(value, v.getMaxEms()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMaxEms(attrBinder.parseInt(value, v.getMaxEms()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMaxEms();
                 }
             }).set('maxWidth', {
-                setter(v:TextView, value:any){
-                    v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.getMaxWidth()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMaxWidth(attrBinder.parseNumberPixelSize(value, v.getMaxWidth()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMaxWidth();
                 }
             }).set('ems', {
-                setter(v:TextView, value:any){
-                    let ems = v._attrBinder.parseInt(value, null);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let ems = attrBinder.parseInt(value, null);
                     if (ems != null) v.setEms(ems);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     if (v.getMinEms() === v.getMaxEms()) return v.getMaxEms();
                     return null;
                 }
             }).set('width', {
-                setter(v:TextView, value:any){
-                    value = v._attrBinder.parseNumberPixelSize(value, -1);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    value = attrBinder.parseNumberPixelSize(value, -1);
                     if (value >= 0) v.setWidth(value);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     if (v.getMinWidth() === v.getMaxWidth()) return v.getMinWidth();
                     return null;
                 }
             }).set('minEms', {
-                setter(v:TextView, value:any){
-                    v.setMinEms(v._attrBinder.parseInt(value, v.getMinEms()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMinEms(attrBinder.parseInt(value, v.getMinEms()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMinEms();
                 }
             }).set('minWidth', {
-                setter(v:TextView, value:any){
-                    v.setMinWidth(v._attrBinder.parseNumberPixelSize(value, v.getMinWidth()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setMinWidth(attrBinder.parseNumberPixelSize(value, v.getMinWidth()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getMinWidth();
                 }
             }).set('gravity', {
-                setter(v:TextView, value:any){
-                    v.setGravity(v._attrBinder.parseGravity(value, v.mGravity));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setGravity(attrBinder.parseGravity(value, v.mGravity));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mGravity;
                 }
             }).set('hint', {
-                setter(v:TextView, value:any){
-                    v.setHint(v._attrBinder.parseString(value));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setHint(attrBinder.parseString(value));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getHint();
                 }
             }).set('text', {
-                setter(v:TextView, value:any){
-                    v.setText(v._attrBinder.parseString(value));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setText(attrBinder.parseString(value));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.getText();
                 }
             }).set('scrollHorizontally', {
-                setter(v:TextView, value:any){
-                    v.setHorizontallyScrolling(v._attrBinder.parseBoolean(value, false));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setHorizontallyScrolling(attrBinder.parseBoolean(value, false));
                 }
             }).set('singleLine', {
-                setter(v:TextView, value:any){
-                    v.setSingleLine(v._attrBinder.parseBoolean(value, false));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setSingleLine(attrBinder.parseBoolean(value, false));
                 }
             }).set('ellipsize', {
-                setter(v:TextView, value:any){
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
                     let ellipsize = TextUtils.TruncateAt[(value + '').toUpperCase()];
                     if (ellipsize) v.setEllipsize(ellipsize);
                 }
             }).set('marqueeRepeatLimit', {
-                setter(v:TextView, value:any){
-                    let marqueeRepeatLimit = v._attrBinder.parseInt(value, -1);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    let marqueeRepeatLimit = attrBinder.parseInt(value, -1);
                     if (marqueeRepeatLimit >= 0) v.setMarqueeRepeatLimit(marqueeRepeatLimit);
                 }
             }).set('includeFontPadding', {
-                setter(v:TextView, value:any){
-                    v.setIncludeFontPadding(v._attrBinder.parseBoolean(value, false));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setIncludeFontPadding(attrBinder.parseBoolean(value, false));
                 }
             }).set('enabled', {
-                setter(v:TextView, value:any){
-                    v.setEnabled(v._attrBinder.parseBoolean(value, v.isEnabled()));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setEnabled(attrBinder.parseBoolean(value, v.isEnabled()));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.isEnabled();
                 }
             }).set('lineSpacingExtra', {
-                setter(v:TextView, value:any){
-                    v.setLineSpacing(v._attrBinder.parseNumberPixelSize(value, v.mSpacingAdd), v.mSpacingMult);
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setLineSpacing(attrBinder.parseNumberPixelSize(value, v.mSpacingAdd), v.mSpacingMult);
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mSpacingAdd;
                 }
             }).set('lineSpacingMultiplier', {
-                setter(v:TextView, value:any){
-                    v.setLineSpacing(v.mSpacingAdd, v._attrBinder.parseFloat(value, v.mSpacingMult));
+                setter(v: TextView, value: any, attrBinder: AttrBinder) {
+                    v.setLineSpacing(v.mSpacingAdd, attrBinder.parseFloat(value, v.mSpacingMult));
                 },
-                getter(v:TextView){
+                getter(v: TextView){
                     return v.mSpacingMult;
                 }
             });
-        }
-        this._attrBinder.addClassAttrBind(TextView.TextViewClassAttrBind);
     }
 
     private setTypefaceFromAttrs(familyName:string, typefaceIndex:number, styleIndex:number):void  {
@@ -2205,46 +2866,36 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         return this.mHintTextColor != null ? this.mCurHintTextColor : this.mCurTextColor;
     }
 
-    ///**
-    // * Sets the color of links in the text.
-    // *
-    // * @see #setLinkTextColor(ColorStateList)
-    // * @see #getLinkTextColors()
-    // *
-    // * @attr ref android.R.styleable#TextView_textColorLink
-    // */
-    //setLinkTextColor(color:number):void  {
-    //    this.mLinkTextColor = ColorStateList.valueOf(color);
-    //    this.updateTextColors();
-    //}
-    //
-    ///**
-    // * Sets the color of links in the text.
-    // *
-    // * @see #setLinkTextColor(int)
-    // * @see #getLinkTextColors()
-    // * @see #setTextColor(ColorStateList)
-    // * @see #setHintTextColor(ColorStateList)
-    // *
-    // * @attr ref android.R.styleable#TextView_textColorLink
-    // */
-    //setLinkTextColor(colors:ColorStateList):void  {
-    //    this.mLinkTextColor = colors;
-    //    this.updateTextColors();
-    //}
-    //
-    ///**
-    // * @return the list of colors used to paint the links in the text, for the different states of
-    // * this TextView
-    // *
-    // * @see #setLinkTextColor(ColorStateList)
-    // * @see #setLinkTextColor(int)
-    // *
-    // * @attr ref android.R.styleable#TextView_textColorLink
-    // */
-    //getLinkTextColors():ColorStateList  {
-    //    return this.mLinkTextColor;
-    //}
+    /**
+    * Sets the color of links in the text.
+    *
+    * @see #setLinkTextColor(int)
+    * @see #getLinkTextColors()
+    * @see #setTextColor(ColorStateList)
+    * @see #setHintTextColor(ColorStateList)
+    *
+    * @attr ref android.R.styleable#TextView_textColorLink
+    */
+    setLinkTextColor(colors: number|ColorStateList): void {
+        if (typeof colors === 'number') {
+            colors = ColorStateList.valueOf(<number>colors);
+        }
+        this.mLinkTextColor = <ColorStateList>colors;
+        this.updateTextColors();
+    }
+
+    /**
+    * @return the list of colors used to paint the links in the text, for the different states of
+    * this TextView
+    *
+    * @see #setLinkTextColor(ColorStateList)
+    * @see #setLinkTextColor(int)
+    *
+    * @attr ref android.R.styleable#TextView_textColorLink
+    */
+    getLinkTextColors():ColorStateList  {
+        return this.mLinkTextColor;
+    }
 
     /**
      * Sets the horizontal alignment of the text and the

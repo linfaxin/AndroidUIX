@@ -665,7 +665,7 @@ module android.app {
 
             mRecycleOnMeasure:boolean = true;
 
-            constructor(context:Context, bindElement?:HTMLElement, defStyle?:any) {
+            constructor(context:Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
                 super(context, bindElement, defStyle);
             }
 

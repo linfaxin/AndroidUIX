@@ -19,7 +19,7 @@ module android.webkit {
         protected mClient:WebViewClient;
         private initIFrameHistoryLength = -1;
 
-        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
 
             //default size

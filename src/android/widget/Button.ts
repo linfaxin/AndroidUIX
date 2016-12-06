@@ -93,7 +93,7 @@ module android.widget{
      * </p>
      */
     export class Button extends TextView{
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle:any = android.R.attr.buttonStyle){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.buttonStyle) {
             super(context, bindElement, defStyle);
         }
     }

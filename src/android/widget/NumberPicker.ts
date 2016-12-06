@@ -72,6 +72,7 @@ module android.widget {
     import Scroller = android.widget.OverScroller;
     import TextView = android.widget.TextView;
     import R = android.R;
+    import AttrBinder = androidui.attr.AttrBinder;
     /**
      * A widget that enables the user to select a number form a predefined range.
      * There are two flavors of this widget and which one is presented to the user
@@ -454,90 +455,35 @@ module android.widget {
          * Create a new number picker
          *
          * @param context the application environment.
-         * @param attrs a collection of attributes.
+         * @param bindElement a collection of attributes.
          * @param defStyle The default style to apply to this view.
          */
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
-            this.mHasSelectorWheel = true;
-            this._attrBinder.addAttr('solidColor', (value)=>{
-                this.mSolidColor = this._attrBinder.parseColor(value) || 0;
-            });
-            this._attrBinder.addAttr('selectionDivider', (value)=>{
-                this.mSelectionDivider = this._attrBinder.parseDrawable(value);
-            });
-            this._attrBinder.addAttr('selectionDividerHeight', (value)=>{
-                const defSelectionDividerHeight = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT
-                    * this.getResources().getDisplayMetrics().density;
-                this.mSelectionDividerHeight = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerHeight);
-            });
-            this._attrBinder.addAttr('selectionDividersDistance', (value)=>{
-                const defSelectionDividerDistance = NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE
-                    * this.getResources().getDisplayMetrics().density;
-                this.mSelectionDividersDistance = this._attrBinder.parseNumberPixelSize(value, defSelectionDividerDistance);
-            });
-            this._attrBinder.addAttr('internalMinHeight', (value)=>{
-                this.mMinHeight_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
-            });
-            this._attrBinder.addAttr('internalMaxHeight', (value)=>{
-                this.mMaxHeight = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
-            });
-            this._attrBinder.addAttr('internalMinWidth', (value)=>{
-                this.mMinWidth_ = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
-            });
-            this._attrBinder.addAttr('internalMaxWidth', (value)=>{
-                this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
-            });
-            this._attrBinder.addAttr('internalMaxWidth', (value)=>{
-                this.mMaxWidth = this._attrBinder.parseNumberPixelSize(value, NumberPicker.SIZE_UNSPECIFIED);
-            });
-            this._attrBinder.addAttr('virtualButtonPressedDrawable', (value)=>{
-                this.mVirtualButtonPressedDrawable = this._attrBinder.parseDrawable(value);
-            });
-
-            //androidui add
-            this._attrBinder.addAttr('textSize', (value)=>{
-                this.mTextSize = this._attrBinder.parseNumberPixelSize(value, this.mTextSize);
-                this.mSelectorWheelPaint.setTextSize(this.mTextSize);
-            });
-            this._attrBinder.addAttr('textColor', (value)=>{
-                this.mSelectorWheelPaint.setColor(this._attrBinder.parseColor(value, this.mSelectorWheelPaint.getColor()));
-            });
-            this._attrBinder.addAttr('minValue', (value)=>{
-                this.setMinValue(this._attrBinder.parseInt(value, this.mMinValue));
-            });
-            this._attrBinder.addAttr('maxValue', (value)=>{
-                this.setMaxValue(this._attrBinder.parseInt(value, this.mMaxValue));
-            });
-            this._attrBinder.addAttr('itemCount', (value)=>{
-                this.SELECTOR_WHEEL_ITEM_COUNT = this._attrBinder.parseInt(value, this.SELECTOR_WHEEL_ITEM_COUNT);
-                this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2);
-                this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
-            });
 
             // process style attributes
-            //let attributesArray:TypedArray = context.obtainStyledAttributes(attrs, R.styleable.NumberPicker, defStyle, 0);
-            //const layoutResId:number = attributesArray.getResourceId(R.styleable.NumberPicker_internalLayout, NumberPicker.DEFAULT_LAYOUT_RESOURCE_ID);
-            //this.mHasSelectorWheel = (layoutResId != NumberPicker.DEFAULT_LAYOUT_RESOURCE_ID);
-            //this.mSolidColor = attributesArray.getColor(R.styleable.NumberPicker_solidColor, 0);
-            //this.mSelectionDivider = attributesArray.getDrawable(R.styleable.NumberPicker_selectionDivider);
-            //const defSelectionDividerHeight:number = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT, this.getResources().getDisplayMetrics()));
-            //this.mSelectionDividerHeight = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_selectionDividerHeight, defSelectionDividerHeight);
-            //const defSelectionDividerDistance:number = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE, this.getResources().getDisplayMetrics()));
-            //this.mSelectionDividersDistance = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_selectionDividersDistance, defSelectionDividerDistance);
-            //this.mMinHeight = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_internalMinHeight, NumberPicker.SIZE_UNSPECIFIED);
-            //this.mMaxHeight = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_internalMaxHeight, NumberPicker.SIZE_UNSPECIFIED);
-            //if (this.mMinHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight > this.mMaxHeight) {
-            //    throw Error(`new IllegalArgumentException("minHeight > maxHeight")`);
-            //}
-            //this.mMinWidth = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_internalMinWidth, NumberPicker.SIZE_UNSPECIFIED);
-            //this.mMaxWidth = attributesArray.getDimensionPixelSize(R.styleable.NumberPicker_internalMaxWidth, NumberPicker.SIZE_UNSPECIFIED);
-            //if (this.mMinWidth != NumberPicker.SIZE_UNSPECIFIED && this.mMaxWidth != NumberPicker.SIZE_UNSPECIFIED && this.mMinWidth > this.mMaxWidth) {
-            //    throw Error(`new IllegalArgumentException("minWidth > maxWidth")`);
-            //}
-            //this.mComputeMaxWidth = (this.mMaxWidth == NumberPicker.SIZE_UNSPECIFIED);
-            //this.mVirtualButtonPressedDrawable = attributesArray.getDrawable(R.styleable.NumberPicker_virtualButtonPressedDrawable);
-            //attributesArray.recycle();
+            let attributesArray = context.obtainStyledAttributes(bindElement, defStyle);
+            // const layoutResId:number = attributesArray.getResourceId('internalLayout', NumberPicker.DEFAULT_LAYOUT_RESOURCE_ID);
+            this.mHasSelectorWheel = true; // (layoutResId != NumberPicker.DEFAULT_LAYOUT_RESOURCE_ID);
+            this.mSolidColor = attributesArray.getColor('solidColor', 0);
+            this.mSelectionDivider = attributesArray.getDrawable('selectionDivider');
+            const defSelectionDividerHeight:number = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT, this.getResources().getDisplayMetrics()));
+            this.mSelectionDividerHeight = attributesArray.getDimensionPixelSize('selectionDividerHeight', defSelectionDividerHeight);
+            const defSelectionDividerDistance:number = Math.floor(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, NumberPicker.UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE, this.getResources().getDisplayMetrics()));
+            this.mSelectionDividersDistance = attributesArray.getDimensionPixelSize('selectionDividersDistance', defSelectionDividerDistance);
+            this.mMinHeight = attributesArray.getDimensionPixelSize('internalMinHeight', NumberPicker.SIZE_UNSPECIFIED);
+            this.mMaxHeight = attributesArray.getDimensionPixelSize('internalMaxHeight', NumberPicker.SIZE_UNSPECIFIED);
+            if (this.mMinHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight > this.mMaxHeight) {
+               throw Error(`new IllegalArgumentException("minHeight > maxHeight")`);
+            }
+            this.mMinWidth = attributesArray.getDimensionPixelSize('internalMinWidth', NumberPicker.SIZE_UNSPECIFIED);
+            this.mMaxWidth = attributesArray.getDimensionPixelSize('internalMaxWidth', NumberPicker.SIZE_UNSPECIFIED);
+            if (this.mMinWidth != NumberPicker.SIZE_UNSPECIFIED && this.mMaxWidth != NumberPicker.SIZE_UNSPECIFIED && this.mMinWidth > this.mMaxWidth) {
+               throw Error(`new IllegalArgumentException("minWidth > maxWidth")`);
+            }
+            this.mComputeMaxWidth = (this.mMaxWidth == NumberPicker.SIZE_UNSPECIFIED);
+            this.mVirtualButtonPressedDrawable = attributesArray.getDrawable('virtualButtonPressedDrawable');
+            attributesArray.recycle();
 
             this.mTextSize = Math.floor(16 * this.getResources().getDisplayMetrics().density);
             // create the selector wheel paint
@@ -550,7 +496,6 @@ module android.widget {
             paint.setColor(Color.DKGRAY);
             this.mSelectorWheelPaint = paint;
             this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
-            this.applyDefaultAttributes(R.attr.numberPickerStyle);
 
             if (this.mMinHeight_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight_ > this.mMaxHeight) {
                 throw Error(`new IllegalArgumentException("minHeight > maxHeight")`);
@@ -650,6 +595,73 @@ module android.widget {
             //if (this.getImportantForAccessibility() == NumberPicker.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
             //    this.setImportantForAccessibility(NumberPicker.IMPORTANT_FOR_ACCESSIBILITY_YES);
             //}
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder().set('solidColor', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mSolidColor = attrBinder.parseColor(value, v.mSolidColor);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mSolidColor;
+                }
+            }).set('selectionDivider', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mSelectionDivider = attrBinder.parseDrawable(value);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mSelectionDivider;
+                }
+            }).set('selectionDividerHeight', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mSelectionDividerHeight = attrBinder.parseNumberPixelSize(value, v.mSelectionDividerHeight);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mSelectionDividerHeight;
+                }
+            }).set('selectionDividersDistance', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mSelectionDividersDistance = attrBinder.parseNumberPixelSize(value, v.mSelectionDividersDistance);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mSelectionDividersDistance;
+                }
+            }).set('internalMinHeight', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mMinHeight_ = attrBinder.parseNumberPixelSize(value, v.mMinHeight_);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mMinHeight_;
+                }
+            }).set('internalMaxHeight', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mMaxHeight = attrBinder.parseNumberPixelSize(value, v.mMaxHeight);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mMaxHeight;
+                }
+            }).set('internalMinWidth', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mMinWidth_ = attrBinder.parseNumberPixelSize(value, v.mMinWidth_);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mMinWidth_;
+                }
+            }).set('internalMaxWidth', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mMaxWidth = attrBinder.parseNumberPixelSize(value, v.mMaxWidth);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mMaxWidth;
+                }
+            }).set('virtualButtonPressedDrawable', {
+                setter(v:NumberPicker, value:any, attrBinder:AttrBinder) {
+                    v.mVirtualButtonPressedDrawable = attrBinder.parseDrawable(value);
+                    v.invalidate();
+                }, getter(v:NumberPicker) {
+                    return v.mVirtualButtonPressedDrawable;
+                }
+            });
         }
 
         protected onLayout(changed:boolean, left:number, top:number, right:number, bottom:number):void  {
@@ -1417,15 +1429,15 @@ module android.widget {
             if (maxSize == NumberPicker.SIZE_UNSPECIFIED) {
                 return measureSpec;
             }
-            const size:number = NumberPicker.MeasureSpec.getSize(measureSpec);
-            const mode:number = NumberPicker.MeasureSpec.getMode(measureSpec);
+            const size:number = View.MeasureSpec.getSize(measureSpec);
+            const mode:number = View.MeasureSpec.getMode(measureSpec);
             switch(mode) {
-                case NumberPicker.MeasureSpec.EXACTLY:
+                case View.MeasureSpec.EXACTLY:
                     return measureSpec;
-                case NumberPicker.MeasureSpec.AT_MOST:
-                    return NumberPicker.MeasureSpec.makeMeasureSpec(Math.min(size, maxSize), NumberPicker.MeasureSpec.EXACTLY);
-                case NumberPicker.MeasureSpec.UNSPECIFIED:
-                    return NumberPicker.MeasureSpec.makeMeasureSpec(maxSize, NumberPicker.MeasureSpec.EXACTLY);
+                case View.MeasureSpec.AT_MOST:
+                    return View.MeasureSpec.makeMeasureSpec(Math.min(size, maxSize), View.MeasureSpec.EXACTLY);
+                case View.MeasureSpec.UNSPECIFIED:
+                    return View.MeasureSpec.makeMeasureSpec(maxSize, View.MeasureSpec.EXACTLY);
                 default:
                     throw Error(`new IllegalArgumentException("Unknown measure mode: " + mode)`);
             }
@@ -2107,7 +2119,7 @@ module android.widget {
 
             private mIncrement:boolean;
 
-            private setStep(increment:boolean):void  {
+            setStep(increment:boolean):void  {
                 this.mIncrement = increment;
             }
 

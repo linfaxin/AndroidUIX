@@ -116,7 +116,7 @@ export class DrawerLayout extends ViewGroup {
      * Length of time to delay before peeking the drawer.
      */
     // ms
-    private static PEEK_DELAY:number = 160;
+    static PEEK_DELAY:number = 160;
 
     /**
      * Minimum velocity that will be detected as a fling
@@ -127,7 +127,7 @@ export class DrawerLayout extends ViewGroup {
     /**
      * Experimental feature.
      */
-    private static ALLOW_EDGE_LOCK:boolean = false;
+    static ALLOW_EDGE_LOCK:boolean = false;
 
     private static CHILDREN_DISALLOW_INTERCEPT:boolean = true;
 
@@ -174,7 +174,7 @@ export class DrawerLayout extends ViewGroup {
     private mShadowRight:Drawable;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
 
         const density:number = this.getResources().getDisplayMetrics().density;
@@ -539,23 +539,23 @@ export class DrawerLayout extends ViewGroup {
     }
 
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
-        let widthMode:number = DrawerLayout.MeasureSpec.getMode(widthMeasureSpec);
-        let heightMode:number = DrawerLayout.MeasureSpec.getMode(heightMeasureSpec);
-        let widthSize:number = DrawerLayout.MeasureSpec.getSize(widthMeasureSpec);
-        let heightSize:number = DrawerLayout.MeasureSpec.getSize(heightMeasureSpec);
-        if (widthMode != DrawerLayout.MeasureSpec.EXACTLY || heightMode != DrawerLayout.MeasureSpec.EXACTLY) {
+        let widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        let heightMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
+        let widthSize:number = View.MeasureSpec.getSize(widthMeasureSpec);
+        let heightSize:number = View.MeasureSpec.getSize(heightMeasureSpec);
+        if (widthMode != View.MeasureSpec.EXACTLY || heightMode != View.MeasureSpec.EXACTLY) {
             if (this.isInEditMode()) {
                 // It will crash on a real device.
-                if (widthMode == DrawerLayout.MeasureSpec.AT_MOST) {
-                    widthMode = DrawerLayout.MeasureSpec.EXACTLY;
-                } else if (widthMode == DrawerLayout.MeasureSpec.UNSPECIFIED) {
-                    widthMode = DrawerLayout.MeasureSpec.EXACTLY;
+                if (widthMode == View.MeasureSpec.AT_MOST) {
+                    widthMode = View.MeasureSpec.EXACTLY;
+                } else if (widthMode == View.MeasureSpec.UNSPECIFIED) {
+                    widthMode = View.MeasureSpec.EXACTLY;
                     widthSize = 300;
                 }
-                if (heightMode == DrawerLayout.MeasureSpec.AT_MOST) {
-                    heightMode = DrawerLayout.MeasureSpec.EXACTLY;
-                } else if (heightMode == DrawerLayout.MeasureSpec.UNSPECIFIED) {
-                    heightMode = DrawerLayout.MeasureSpec.EXACTLY;
+                if (heightMode == View.MeasureSpec.AT_MOST) {
+                    heightMode = View.MeasureSpec.EXACTLY;
+                } else if (heightMode == View.MeasureSpec.UNSPECIFIED) {
+                    heightMode = View.MeasureSpec.EXACTLY;
                     heightSize = 300;
                 }
             } else {
@@ -574,8 +574,8 @@ export class DrawerLayout extends ViewGroup {
             const lp:DrawerLayout.LayoutParams = <DrawerLayout.LayoutParams> child.getLayoutParams();
             if (this.isContentView(child)) {
                 // Content views get measured at exactly the layout's size.
-                const contentWidthSpec:number = DrawerLayout.MeasureSpec.makeMeasureSpec(widthSize - lp.leftMargin - lp.rightMargin, DrawerLayout.MeasureSpec.EXACTLY);
-                const contentHeightSpec:number = DrawerLayout.MeasureSpec.makeMeasureSpec(heightSize - lp.topMargin - lp.bottomMargin, DrawerLayout.MeasureSpec.EXACTLY);
+                const contentWidthSpec:number = View.MeasureSpec.makeMeasureSpec(widthSize - lp.leftMargin - lp.rightMargin, View.MeasureSpec.EXACTLY);
+                const contentHeightSpec:number = View.MeasureSpec.makeMeasureSpec(heightSize - lp.topMargin - lp.bottomMargin, View.MeasureSpec.EXACTLY);
                 child.measure(contentWidthSpec, contentHeightSpec);
             } else if (this.isDrawerView(child)) {
                 const childGravity:number = this.getDrawerViewAbsoluteGravity(child) & Gravity.HORIZONTAL_GRAVITY_MASK;

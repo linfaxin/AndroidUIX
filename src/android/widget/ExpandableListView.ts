@@ -48,6 +48,7 @@ import ListAdapter = android.widget.ListAdapter;
 import ListView = android.widget.ListView;
 import ScrollView = android.widget.ScrollView;
 import Long = goog.math.Long;
+    import AttrBinder = androidui.attr.AttrBinder;
 
 /**
  * A view that shows items in a vertically scrolling two-level list. This
@@ -227,77 +228,81 @@ export class ExpandableListView extends ListView {
     // Bounds of the indicator to be drawn
     private mIndicatorRect:Rect = new Rect();
 
-
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.expandableListViewStyle){
-        super(context, bindElement, null);
-
-        this._attrBinder.addAttr('groupIndicator', (value)=>{
-            this.setGroupIndicator(this._attrBinder.parseDrawable(value));
-        }, ()=>{
-            return this.mGroupIndicator;
-        });
-        this._attrBinder.addAttr('childIndicator', (value)=>{
-            this.setChildIndicator(this._attrBinder.parseDrawable(value));
-        }, ()=>{
-            return this.mChildIndicator;
-        });
-        this._attrBinder.addAttr('indicatorLeft', (value)=>{
-            this.setIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, 0), this.mIndicatorRight);
-        }, ()=>{
-            return this.mIndicatorLeft;
-        });
-        this._attrBinder.addAttr('indicatorRight', (value)=>{
-            let num = this._attrBinder.parseNumberPixelOffset(value, 0);
-            if (num == 0 && this.mGroupIndicator != null) {
-                num = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
-            }
-            this.setIndicatorBounds(this.mIndicatorLeft, num);
-        }, ()=>{
-            return this.mIndicatorRight;
-        });
-        this._attrBinder.addAttr('childIndicatorLeft', (value)=>{
-            this.setChildIndicatorBounds(this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT), this.mChildIndicatorRight);
-        }, ()=>{
-            return this.mChildIndicatorLeft;
-        });
-        this._attrBinder.addAttr('childIndicatorRight', (value)=>{
-            let num = this._attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
-            if (num == 0 && this.mChildIndicator != null) {
-                num = this.mChildIndicatorLeft + this.mChildIndicator.getIntrinsicWidth();
-            }
-            this.setIndicatorBounds(this.mChildIndicatorLeft, num);
-        }, ()=>{
-            return this.mChildIndicatorRight;
-        });
-
-        this._attrBinder.addAttr('childDivider', (value)=>{
-            this.setChildDivider(this._attrBinder.parseDrawable(value));
-        });
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+    constructor(context:android.content.Context, attrs?:HTMLElement, defStyle=android.R.attr.expandableListViewStyle) {
+       super(context, attrs, defStyle);
+       let a = context.obtainStyledAttributes(attrs, defStyle);
+       this.mGroupIndicator = a.getDrawable('groupIndicator');
+       this.mChildIndicator = a.getDrawable('childIndicator');
+       this.mIndicatorLeft = a.getDimensionPixelSize('indicatorLeft', 0);
+       this.mIndicatorRight = a.getDimensionPixelSize('indicatorRight', 0);
+       if (this.mIndicatorRight == 0 && this.mGroupIndicator != null) {
+           this.mIndicatorRight = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
+       }
+       this.mChildIndicatorLeft = a.getDimensionPixelSize('childIndicatorLeft', ExpandableListView.CHILD_INDICATOR_INHERIT);
+       this.mChildIndicatorRight = a.getDimensionPixelSize('childIndicatorRight', ExpandableListView.CHILD_INDICATOR_INHERIT);
+       this.mChildDivider = a.getDrawable('childDivider');
+       if (!this.isRtlCompatibilityMode()) {
+           this.mIndicatorStart = a.getDimensionPixelSize('indicatorStart', ExpandableListView.INDICATOR_UNDEFINED);
+           this.mIndicatorEnd = a.getDimensionPixelSize('indicatorEnd', ExpandableListView.INDICATOR_UNDEFINED);
+           this.mChildIndicatorStart = a.getDimensionPixelSize('childIndicatorStart', ExpandableListView.CHILD_INDICATOR_INHERIT);
+           this.mChildIndicatorEnd = a.getDimensionPixelSize('childIndicatorEnd', ExpandableListView.CHILD_INDICATOR_INHERIT);
+       }
+       a.recycle();
     }
 
-    //constructor( context:Context, attrs:AttributeSet, defStyle:number) {
-    //    super(context, attrs, defStyle);
-    //    let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.ExpandableListView, defStyle, 0);
-    //    this.mGroupIndicator = a.getDrawable(com.android.internal.R.styleable.ExpandableListView_groupIndicator);
-    //    this.mChildIndicator = a.getDrawable(com.android.internal.R.styleable.ExpandableListView_childIndicator);
-    //    this.mIndicatorLeft = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_indicatorLeft, 0);
-    //    this.mIndicatorRight = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_indicatorRight, 0);
-    //    if (this.mIndicatorRight == 0 && this.mGroupIndicator != null) {
-    //        this.mIndicatorRight = this.mIndicatorLeft + this.mGroupIndicator.getIntrinsicWidth();
-    //    }
-    //    this.mChildIndicatorLeft = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_childIndicatorLeft, ExpandableListView.CHILD_INDICATOR_INHERIT);
-    //    this.mChildIndicatorRight = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_childIndicatorRight, ExpandableListView.CHILD_INDICATOR_INHERIT);
-    //    this.mChildDivider = a.getDrawable(com.android.internal.R.styleable.ExpandableListView_childDivider);
-    //    if (!this.isRtlCompatibilityMode()) {
-    //        this.mIndicatorStart = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_indicatorStart, ExpandableListView.INDICATOR_UNDEFINED);
-    //        this.mIndicatorEnd = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_indicatorEnd, ExpandableListView.INDICATOR_UNDEFINED);
-    //        this.mChildIndicatorStart = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_childIndicatorStart, ExpandableListView.CHILD_INDICATOR_INHERIT);
-    //        this.mChildIndicatorEnd = a.getDimensionPixelSize(com.android.internal.R.styleable.ExpandableListView_childIndicatorEnd, ExpandableListView.CHILD_INDICATOR_INHERIT);
-    //    }
-    //    a.recycle();
-    //}
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('groupIndicator', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                v.setGroupIndicator(attrBinder.parseDrawable(value));
+            }, getter(v:ExpandableListView) {
+                return v.mGroupIndicator;
+            }
+        }).set('childIndicator', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                v.setChildIndicator(attrBinder.parseDrawable(value));
+            }, getter(v:ExpandableListView) {
+                return v.mChildIndicator;
+            }
+        }).set('indicatorLeft', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                v.setIndicatorBounds(attrBinder.parseNumberPixelOffset(value, 0), v.mIndicatorRight);
+            }, getter(v:ExpandableListView) {
+                return v.mIndicatorLeft;
+            }
+        }).set('indicatorRight', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                let num = attrBinder.parseNumberPixelOffset(value, 0);
+                if (num == 0 && v.mGroupIndicator != null) {
+                    num = v.mIndicatorLeft + v.mGroupIndicator.getIntrinsicWidth();
+                }
+                this.setIndicatorBounds(v.mIndicatorLeft, num);
+            }, getter(v:ExpandableListView) {
+                return v.mIndicatorRight;
+            }
+        }).set('childIndicatorLeft', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                v.setChildIndicatorBounds(attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT), v.mChildIndicatorRight);
+            }, getter(v:ExpandableListView) {
+                return v.mChildIndicatorLeft;
+            }
+        }).set('childIndicatorRight', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                let num = attrBinder.parseNumberPixelOffset(value, ExpandableListView.CHILD_INDICATOR_INHERIT);
+                if (num == 0 && v.mChildIndicator != null) {
+                    num = v.mChildIndicatorLeft + v.mChildIndicator.getIntrinsicWidth();
+                }
+                v.setIndicatorBounds(v.mChildIndicatorLeft, num);
+            }, getter(v:ExpandableListView) {
+                return v.mChildIndicatorRight;
+            }
+        }).set('childDivider', {
+            setter(v:ExpandableListView, value:any, attrBinder:AttrBinder) {
+                v.setChildDivider(attrBinder.parseDrawable(value));
+            }, getter(v:ExpandableListView) {
+                return v.mChildDivider;
+            }
+        });
+    }
 
     /**
      * Return true if we are in RTL compatibility mode (either before Jelly Bean MR1 or

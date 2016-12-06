@@ -51,7 +51,7 @@ import TextView = android.widget.TextView;
  */
 export class RadioButton extends CompoundButton {
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.radiobuttonStyle){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle = android.R.attr.radiobuttonStyle) {
         super(context, bindElement, defStyle);
     }
 

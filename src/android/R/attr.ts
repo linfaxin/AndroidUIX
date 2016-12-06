@@ -26,12 +26,6 @@ module android.R {
 
     export class attr {
 
-        static _viewStyle:any = {};
-        static get viewStyle(){
-            return attr._viewStyle;
-        }
-
-
         static get textViewStyle() {
             return {
                 textSize: '14sp',
@@ -289,6 +283,12 @@ module android.R {
             }
         }
 
+        static get scrollViewStyle() {
+            return {
+                scrollbars: 'vertical',
+                fadingEdge: 'vertical',
+            };
+        }
     }
 
     export module attr{

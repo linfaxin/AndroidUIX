@@ -37,6 +37,7 @@ import Integer = java.lang.Integer;
 import InputType = android.text.InputType;
 import PasswordTransformationMethod = android.text.method.PasswordTransformationMethod;
 import Platform = androidui.util.Platform;
+    import AttrBinder = androidui.attr.AttrBinder;
 
 
 /**
@@ -62,62 +63,35 @@ export class EditText extends TextView {
     private mMaxLength = Integer.MAX_VALUE;
 
     constructor(context:Context, bindElement?:HTMLElement, defStyle:any=android.R.attr.editTextStyle) {
-        super(context, bindElement, null);
+        super(context, bindElement, defStyle);
 
-        let a = this._attrBinder;
-        a.addAttr('inputType', (value)=>{
-            switch (value + ''){
-                case 'none':
-                    this.setInputType(InputType.TYPE_NULL);
-                    break;
-                case 'text':
-                    this.setInputType(InputType.TYPE_CLASS_TEXT);
-                    break;
-                case 'textUri':
-                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-                    break;
-                case 'textEmailAddress':
-                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-                    break;
-                case 'textPassword':
-                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    break;
-                case 'textVisiblePassword':
-                    this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                    break;
-                case 'number':
-                    this.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    break;
-                case 'numberSigned':
-                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
-                    break;
-                case 'numberDecimal':
-                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                    break;
-                case 'numberPassword':
-                    this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-                    break;
-                case 'phone':
-                    this.setInputType(InputType.TYPE_CLASS_PHONE);
-                    break;
-                case 'datetime':
-                    this.setInputType(InputType.TYPE_CLASS_DATETIME);
-                    break;
-                case 'date':
-                    this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
-                    break;
-                case 'time':
-                    this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
-                    break;
-            }
-        });
-        a.addAttr('maxLength', (value)=>{
-            this.mMaxLength = a.parseInt(value, this.mMaxLength);
-        });
-
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
+        const inputTypeS = a.getAttrValue("inputType");
+        if (inputTypeS) {
+            this._setInputType(inputTypeS);
+        }
+        this.mMaxLength = a.getInteger('maxLength', this.mMaxLength);
     }
 
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('inputType', {
+            setter(v:EditText, value:any, attrBinder:AttrBinder) {
+                if (Number.isInteger(Number.parseInt(value))) {
+                    v.setInputType(Number.parseInt(value));
+                } else {
+                    v._setInputType(value + '');
+                }
+            }, getter(v:EditText) {
+                return v.getInputType();
+            }
+        }).set('maxLength', {
+            setter(v:EditText, value:any, attrBinder:AttrBinder) {
+                v.mMaxLength = attrBinder.parseInt(value, v.mMaxLength);
+            }, getter(v:EditText) {
+                return v.mMaxLength;
+            }
+        });
+    }
 
     protected initBindElement(bindElement:HTMLElement):void {
         super.initBindElement(bindElement);
@@ -407,6 +381,52 @@ export class EditText extends TextView {
         super.setSingleLine(singleLine);
     }
 
+    _setInputType(value:string):void {
+        switch (value + ''){
+            case 'none':
+                this.setInputType(InputType.TYPE_NULL);
+                break;
+            case 'text':
+                this.setInputType(InputType.TYPE_CLASS_TEXT);
+                break;
+            case 'textUri':
+                this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                break;
+            case 'textEmailAddress':
+                this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                break;
+            case 'textPassword':
+                this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                break;
+            case 'textVisiblePassword':
+                this.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                break;
+            case 'number':
+                this.setInputType(InputType.TYPE_CLASS_NUMBER);
+                break;
+            case 'numberSigned':
+                this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                break;
+            case 'numberDecimal':
+                this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                break;
+            case 'numberPassword':
+                this.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+                break;
+            case 'phone':
+                this.setInputType(InputType.TYPE_CLASS_PHONE);
+                break;
+            case 'datetime':
+                this.setInputType(InputType.TYPE_CLASS_DATETIME);
+                break;
+            case 'date':
+                this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                break;
+            case 'time':
+                this.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                break;
+        }
+    }
     /**
      * Set the type of the content with a constant as defined for {@link EditorInfo#inputType}. This
      * will take care of changing the key listener, by calling {@link #setKeyListener(KeyListener)},

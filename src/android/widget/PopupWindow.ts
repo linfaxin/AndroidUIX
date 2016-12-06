@@ -223,7 +223,7 @@ export class PopupWindow implements Window.Callback{
      * 
      * <p>The popup does not provide a background.</p>
      */
-     constructor(context:Context, styleAttr?:R.attr.popupWindowStyleType);
+     constructor(context:Context, styleAttr?:Map<string, string>);
      constructor(...args) {
          if(args[0] instanceof Context) {
              let context = <Context>args[0];
@@ -233,9 +233,9 @@ export class PopupWindow implements Window.Callback{
              this.mWindowManager = context.getWindowManager();//<WindowManager> context.getSystemService(Context.WINDOW_SERVICE);
              this.mPopupWindow = new Window(context);
              this.mPopupWindow.setCallback(this);
-             //let a:TypedArray = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.PopupWindow, defStyleAttr, defStyleRes);
-             this.mBackground = styleAttr.popupBackground;
-             this.mEnterAnimation = styleAttr.popupEnterAnimation;
+             let a = context.obtainStyledAttributes(null, styleAttr);
+             this.mBackground = a.getDrawable('popupBackground');
+             this.mEnterAnimation = styleAttr.popupEnterAnimation; // FIXME animation
              this.mExitAnimation = styleAttr.popupExitAnimation;
 
              // at least one other drawable, intended for the 'below-anchor state'.

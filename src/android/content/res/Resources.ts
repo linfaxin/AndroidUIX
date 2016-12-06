@@ -18,7 +18,7 @@ module android.content.res{
     export class Resources{
         private static instance = new Resources();
         // Pool of TypedArrays targeted to this Resources object.
-        private mTypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(5);
+        mTypedArrayPool:SynchronizedPool<TypedArray> = new SynchronizedPool<TypedArray>(5);
 
         private displayMetrics:DisplayMetrics;
         private context:Context;
@@ -31,6 +31,7 @@ module android.content.res{
         constructor(context?:Context) {
             this.context = context;
 
+            // FIXME will memory leak (Activity ref with window)
             window.addEventListener('resize', ()=>{
                 if(this.displayMetrics){
                     this.fillDisplayMetrics(this.displayMetrics);
@@ -417,6 +418,12 @@ module android.content.res{
          */
         public obtainAttributes(attrs:HTMLElement):TypedArray {
             return TypedArray.obtain(this, attrs);
+        }
+        /**
+         * Retrieve styled attribute information.
+         */
+        public obtainStyledAttributes(attrs:HTMLElement, defStyleAttr:Map<string, string>):TypedArray {
+            return TypedArray.obtain(this, attrs, defStyleAttr);
         }
 
 

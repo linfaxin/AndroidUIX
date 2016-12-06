@@ -32,6 +32,7 @@ import MotionEvent = android.view.MotionEvent;
 import ViewConfiguration = android.view.ViewConfiguration;
 import Integer = java.lang.Integer;
 import ProgressBar = android.widget.ProgressBar;
+    import AttrBinder = androidui.attr.AttrBinder;
 
 export abstract class AbsSeekBar extends ProgressBar {
 
@@ -65,21 +66,42 @@ export abstract class AbsSeekBar extends ProgressBar {
     private mIsDragging:boolean;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
-        super(context, bindElement, null);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
+        super(context, bindElement, defStyle);
 
-        let a = this._attrBinder;
-        a.addAttr('thumb', (value)=>{
-            this.setThumb(a.parseDrawable(value));
-        }, ()=>this.mThumb);
-        a.addAttr('thumbOffset', (value)=>{
-            this.setThumbOffset(a.parseNumberPixelOffset(value));
-        }, ()=>this.mThumbOffset);
-        a.addAttr('disabledAlpha', (value)=>{
-            this.mDisabledAlpha = a.parseFloat(value, 0.5);
-        }, ()=>this.mThumbOffset);
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
+        const thumb = a.getDrawable('thumb');
+        this.setThumb(thumb); // will guess mThumbOffset if thumb != null...
+        // ...but allow layout to override this
+        const thumbOffset = a.getDimensionPixelOffset('thumbOffset', this.getThumbOffset());
+        this.setThumbOffset(thumbOffset);
+        a.recycle();
 
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        a = context.obtainStyledAttributes(bindElement, defStyle);
+        this.mDisabledAlpha = a.getFloat('disabledAlpha', 0.5);
+        a.recycle();
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('thumb', {
+            setter(v:AbsSeekBar, value:any, attrBinder:AttrBinder) {
+                v.setThumb(attrBinder.parseDrawable(value));
+            }, getter(v:AbsSeekBar) {
+                return v.mThumb;
+            }
+        }).set('thumbOffset', {
+            setter(v:AbsSeekBar, value:any, attrBinder:AttrBinder) {
+                v.setThumbOffset(attrBinder.parseNumberPixelOffset(value));
+            }, getter(v:AbsSeekBar) {
+                return v.mThumbOffset;
+            }
+        }).set('disabledAlpha', {
+            setter(v:AbsSeekBar, value:any, attrBinder:AttrBinder) {
+                v.mDisabledAlpha = attrBinder.parseFloat(value, 0.5);
+            }, getter(v:AbsSeekBar) {
+                return v.mDisabledAlpha;
+            }
+        });
     }
 
     /**

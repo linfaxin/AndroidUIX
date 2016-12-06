@@ -42,6 +42,7 @@ import ArrayAdapter = android.widget.ArrayAdapter;
 import Spinner = android.widget.Spinner;
 import SpinnerAdapter = android.widget.SpinnerAdapter;
 import Context = android.content.Context;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * An abstract base class for spinner widgets. SDK users will probably not
  * need to use this class.
@@ -74,19 +75,31 @@ export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
     private mTouchFrame:Rect;
 
 
-    constructor(context:Context, bindElement?:HTMLElement, defStyle?:any) {
-        super(context, bindElement, null);
+    constructor(context:Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
+        super(context, bindElement, defStyle);
         this.initAbsSpinner();
-        let a = this._attrBinder;
-        a.addAttr('entries', (value)=>{
-            let entries:string[] = a.parseStringArray(value);
-            if (entries != null) {
-                let adapter:ArrayAdapter<string> = new ArrayAdapter<string>(context, R.layout.simple_spinner_item, null, entries);
-                adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
-                this.setAdapter(adapter);
+
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
+        const entries = a.getTextArray('entries');
+        if (entries != null) {
+            const adapter = new ArrayAdapter<string>(context, R.layout.simple_spinner_item, entries);
+            adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
+            this.setAdapter(adapter);
+        }
+        a.recycle();
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('entries', {
+            setter(v:AbsSpinner, value:any, attrBinder:AttrBinder) {
+                let entries:string[] = attrBinder.parseStringArray(value);
+                if (entries != null) {
+                    let adapter: ArrayAdapter<string> = new ArrayAdapter<string>(v.getContext(), R.layout.simple_spinner_item, null, entries);
+                    adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
+                    v.setAdapter(adapter);
+                }
             }
         });
-        if(defStyle) this.applyDefaultAttributes(defStyle);
     }
 
     /**
@@ -156,7 +169,7 @@ export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
      * plus padding. 
      */
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
-        let widthMode:number = AbsSpinner.MeasureSpec.getMode(widthMeasureSpec);
+        let widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
         let widthSize:number;
         let heightSize:number;
         this.mSpinnerPadding.left = this.mPaddingLeft > this.mSelectionLeftPadding ? this.mPaddingLeft : this.mSelectionLeftPadding;
@@ -197,7 +210,7 @@ export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
         if (needsMeasuring) {
             // No views -- just use padding
             preferredHeight = this.mSpinnerPadding.top + this.mSpinnerPadding.bottom;
-            if (widthMode == AbsSpinner.MeasureSpec.UNSPECIFIED) {
+            if (widthMode == View.MeasureSpec.UNSPECIFIED) {
                 preferredWidth = this.mSpinnerPadding.left + this.mSpinnerPadding.right;
             }
         }

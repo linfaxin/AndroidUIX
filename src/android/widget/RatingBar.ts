@@ -22,6 +22,7 @@ module android.widget {
 import AbsSeekBar = android.widget.AbsSeekBar;
 import ProgressBar = android.widget.ProgressBar;
 import SeekBar = android.widget.SeekBar;
+    import AttrBinder = androidui.attr.AttrBinder;
 /**
  * A RatingBar is an extension of SeekBar and ProgressBar that shows a rating in
  * stars. The user can touch/drag or use arrow keys to set the rating when using
@@ -56,24 +57,29 @@ export class RatingBar extends AbsSeekBar {
     private mOnRatingBarChangeListener:RatingBar.OnRatingBarChangeListener;
 
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.ratingBarStyle){
-        super(context, bindElement, null);
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.ratingBarStyle) {
+        super(context, bindElement, defStyle);
 
-        const a = this._attrBinder;
-        a.addAttr('numStars', (value)=>{
-            this.setNumStars(a.parseInt(value, this.mNumStars));
-        }, ()=>this.mNumStars);
-        a.addAttr('isIndicator', (value)=>{
-            this.setIsIndicator(a.parseBoolean(value, !this.mIsUserSeekable));
-        }, ()=>!this.mIsUserSeekable);
-        a.addAttr('stepSize', (value)=>{
-            this.setStepSize(a.parseFloat(value, 0.5));
-        }, ()=>this.getStepSize());
-        a.addAttr('rating', (value)=>{
-            this.setRating(a.parseFloat(value, this.getRating()));
-        }, ()=>this.getRating());
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
+        const numStars = a.getInt('numStars', this.mNumStars);
+        this.setIsIndicator(a.getBoolean('isIndicator', !this.mIsUserSeekable));
+        const rating = a.getFloat('rating', -1);
+        const stepSize = a.getFloat('stepSize', -1);
+        a.recycle();
 
-        if(defStyle) this.applyDefaultAttributes(defStyle);
+        if (numStars > 0 && numStars != this.mNumStars) {
+            this.setNumStars(numStars);
+        }
+
+        if (stepSize >= 0) {
+            this.setStepSize(stepSize);
+        } else {
+            this.setStepSize(0.5);
+        }
+
+        if (rating >= 0) {
+            this.setRating(rating);
+        }
 
         // A touch inside a star fill up to that fractional area (slightly more
         // than 1 so boundaries round up).
@@ -81,7 +87,35 @@ export class RatingBar extends AbsSeekBar {
 
     }
 
-    //constructor( context:Context, attrs:AttributeSet, defStyle:number) {
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('numStars', {
+            setter(v:RatingBar, value:any, a:AttrBinder) {
+                v.setNumStars(a.parseInt(value, v.mNumStars));
+            }, getter(v:RatingBar) {
+                return v.mNumStars;
+            }
+        }).set('isIndicator', {
+            setter(v:RatingBar, value:any, a:AttrBinder) {
+                v.setIsIndicator(a.parseBoolean(value, !v.mIsUserSeekable));
+            }, getter(v:RatingBar) {
+                return v.isIndicator();
+            }
+        }).set('stepSize', {
+            setter(v:RatingBar, value:any, a:AttrBinder) {
+                v.setStepSize(a.parseFloat(value, 0.5));
+            }, getter(v:RatingBar) {
+                return v.getStepSize();
+            }
+        }).set('rating', {
+            setter(v:RatingBar, value:any, a:AttrBinder) {
+                v.setRating(a.parseFloat(value, v.getRating()));
+            }, getter(v:RatingBar) {
+                return v.getRating();
+            }
+        });
+    }
+
+//constructor( context:Context, attrs:AttributeSet, defStyle:number) {
     //    super(context, attrs, defStyle);
     //    let a:TypedArray = context.obtainStyledAttributes(attrs, R.styleable.RatingBar, defStyle, 0);
     //    const numStars:number = a.getInt(R.styleable.RatingBar_numStars, this.mNumStars);

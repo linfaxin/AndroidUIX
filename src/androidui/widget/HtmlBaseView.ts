@@ -19,7 +19,7 @@ module androidui.widget {
     export class HtmlBaseView extends View {
         private mHtmlTouchAble = false;
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?:any) {
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
         }
 

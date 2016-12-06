@@ -22,7 +22,7 @@ module androidui.widget {
 
     export class HtmlView extends HtmlBaseView {
 
-        constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
         }
 

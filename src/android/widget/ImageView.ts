@@ -118,77 +118,114 @@ export class ImageView extends View {
     //    ImageView.ScaleType.FIT_START, ImageView.ScaleType.FIT_CENTER, ImageView.ScaleType.FIT_END, ImageView.ScaleType.CENTER,
     //    ImageView.ScaleType.CENTER_CROP, ImageView.ScaleType.CENTER_INSIDE ];
 
-    private static ImageViewClassAttrBind:AttrBinder.ClassBinderMap;
-
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>){
         super(context, bindElement, defStyle);
         this.initImageView();
 
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
+        let d = a.getDrawable('src');
+        if (d != null) {
+            this.setImageDrawable(d);
+        }
+
+        this.mBaselineAlignBottom = a.getBoolean('baselineAlignBottom', false);
+
+        this.mBaseline = a.getDimensionPixelSize('baseline', -1);
+
+        this.setAdjustViewBounds(a.getBoolean('adjustViewBounds', false));
+
+        this.setMaxWidth(a.getDimensionPixelSize('maxWidth', Integer.MAX_VALUE));
+
+        this.setMaxHeight(a.getDimensionPixelSize('maxHeight', Integer.MAX_VALUE));
+
+        let scaleType = ImageView.parseScaleType(a.getString('scaleType'), null);
+        if (scaleType != null) {
+            this.setScaleType(scaleType);
+        }
+
+        // AndroidUI ignore: not support now.
+        // let tint = a.getInt('tint', 0);
+        // if (tint != 0) {
+        //     this.setColorFilter(tint);
+        // }
+
+        let alpha = a.getInt('drawableAlpha', 255);
+        if (alpha != 255) {
+            this.setAlpha(alpha);
+        }
+
+        this.mCropToPadding = a.getBoolean('cropToPadding', false);
+
+        a.recycle();
+
+        //need inflate syntax/reader for matrix
     }
 
-    protected initBindAttr():void {
-        super.initBindAttr();
-        if (!ImageView.ImageViewClassAttrBind) {
-            ImageView.ImageViewClassAttrBind = new AttrBinder.ClassBinderMap();
-            ImageView.ImageViewClassAttrBind.set('src', {
-                setter(v:ImageView, value:any) {
-                    let d = v._attrBinder.parseDrawable(value);
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder()
+            .set('src', {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    let d = attrBinder.parseDrawable(value);
                     if (d) v.setImageDrawable(d);
                     else v.setImageURI(value);
-                }, getter(v:ImageView) {
+                }, getter(v: ImageView) {
                     return v.mDrawable;
                 }
             }).set('baselineAlignBottom', {
-                setter(v:ImageView, value:any) {
-                    v.setBaselineAlignBottom(v._attrBinder.parseBoolean(value, v.mBaselineAlignBottom));
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    v.setBaselineAlignBottom(attrBinder.parseBoolean(value, v.mBaselineAlignBottom));
+                }, getter(v: ImageView) {
+                    return v.getBaselineAlignBottom();
                 }
             }).set('baseline', {
-                setter(v:ImageView, value:any) {
-                    v.setBaseline(v._attrBinder.parseNumberPixelSize(value, v.mBaseline));
-                }, getter(v:ImageView) {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    v.setBaseline(attrBinder.parseNumberPixelSize(value, v.mBaseline));
+                }, getter(v: ImageView) {
                     return v.mBaseline;
                 }
             }).set('adjustViewBounds', {
-                setter(v:ImageView, value:any) {
-                    v.setAdjustViewBounds(v._attrBinder.parseBoolean(value, false));
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    v.setAdjustViewBounds(attrBinder.parseBoolean(value, false));
+                }, getter(v: ImageView) {
+                    return v.getAdjustViewBounds();
                 }
             }).set('maxWidth', {
-                setter(v:ImageView, value:any) {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
                     let baseValue = v.getParent() instanceof View ? (<View><any>v.getParent()).getWidth() : 0;
-                    v.setMaxWidth(v._attrBinder.parseNumberPixelSize(value, v.mMaxWidth, baseValue));
-                }, getter(v:ImageView) {
+                    v.setMaxWidth(attrBinder.parseNumberPixelSize(value, v.mMaxWidth, baseValue));
+                }, getter(v: ImageView) {
                     return v.mMaxWidth;
                 }
             }).set('maxHeight', {
-                setter(v:ImageView, value:any) {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
                     let baseValue = v.getParent() instanceof View ? (<View><any>v.getParent()).getHeight() : 0;
-                    v.setMaxHeight(v._attrBinder.parseNumberPixelSize(value, v.mMaxHeight, baseValue));
-                }, getter(v:ImageView) {
+                    v.setMaxHeight(attrBinder.parseNumberPixelSize(value, v.mMaxHeight, baseValue));
+                }, getter(v: ImageView) {
                     return v.mMaxHeight;
                 }
             }).set('scaleType', {
-                setter(v:ImageView, value:any) {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
                     if (typeof value === 'number') {
                         v.setScaleType(value);
                     } else {
                         v.setScaleType(ImageView.parseScaleType(value, v.mScaleType));
                     }
-                }, getter(v:ImageView) {
+                }, getter(v: ImageView) {
                     return v.mScaleType;
                 }
             }).set('drawableAlpha', {
-                setter(v:ImageView, value:any) {
-                    v.setImageAlpha(v._attrBinder.parseInt(value, v.mAlpha));
-                }, getter(v:ImageView) {
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    v.setImageAlpha(attrBinder.parseInt(value, v.mAlpha));
+                }, getter(v: ImageView) {
                     return v.mAlpha;
                 }
             }).set('cropToPadding', {
-                setter(v:ImageView, value:any) {
-                    v.setCropToPadding(v._attrBinder.parseBoolean(value, false));
+                setter(v: ImageView, value: any, attrBinder:AttrBinder) {
+                    v.setCropToPadding(attrBinder.parseBoolean(value, false));
+                }, getter(v: ImageView) {
+                    return v.getCropToPadding();
                 }
             });
-        }
-        this._attrBinder.addClassAttrBind(ImageView.ImageViewClassAttrBind);
     }
 
     private initImageView():void  {
@@ -671,8 +708,8 @@ export class ImageView extends View {
         let resizeWidth:boolean = false;
         // We are allowed to change the view's height
         let resizeHeight:boolean = false;
-        const widthSpecMode:number = ImageView.MeasureSpec.getMode(widthMeasureSpec);
-        const heightSpecMode:number = ImageView.MeasureSpec.getMode(heightMeasureSpec);
+        const widthSpecMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        const heightSpecMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
         if (this.mDrawable == null) {
             // If no drawable, its intrinsic size is 0.
             this.mDrawableWidth = -1;
@@ -687,8 +724,8 @@ export class ImageView extends View {
                 h = 1;
             // ratio of our drawable. See if that is possible.
             if (this.mAdjustViewBounds) {
-                resizeWidth = widthSpecMode != ImageView.MeasureSpec.EXACTLY;
-                resizeHeight = heightSpecMode != ImageView.MeasureSpec.EXACTLY;
+                resizeWidth = widthSpecMode != View.MeasureSpec.EXACTLY;
+                resizeHeight = heightSpecMode != View.MeasureSpec.EXACTLY;
                 desiredAspect = <number> w / <number> h;
             }
         }
@@ -754,22 +791,22 @@ export class ImageView extends View {
 
     private resolveAdjustedSize(desiredSize:number, maxSize:number, measureSpec:number):number  {
         let result:number = desiredSize;
-        let specMode:number = ImageView.MeasureSpec.getMode(measureSpec);
-        let specSize:number = ImageView.MeasureSpec.getSize(measureSpec);
+        let specMode:number = View.MeasureSpec.getMode(measureSpec);
+        let specSize:number = View.MeasureSpec.getSize(measureSpec);
         switch(specMode) {
-            case ImageView.MeasureSpec.UNSPECIFIED:
+            case View.MeasureSpec.UNSPECIFIED:
                 /* Parent says we can be as big as we want. Just don't be larger
                    than max size imposed on ourselves.
                 */
                 result = Math.min(desiredSize, maxSize);
                 break;
-            case ImageView.MeasureSpec.AT_MOST:
+            case View.MeasureSpec.AT_MOST:
                 // Parent says we can be as big as we want, up to specSize. 
                 // Don't be larger than specSize, and don't be larger than 
                 // the max size imposed on ourselves.
                 result = Math.min(Math.min(desiredSize, specSize), maxSize);
                 break;
-            case ImageView.MeasureSpec.EXACTLY:
+            case View.MeasureSpec.EXACTLY:
                 // No choice. Do what we are told.
                 result = specSize;
                 break;

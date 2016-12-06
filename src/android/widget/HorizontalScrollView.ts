@@ -169,22 +169,23 @@ export class HorizontalScrollView extends FrameLayout {
 
     //private mSavedState:HorizontalScrollView.SavedState;
 
-    constructor(context?:android.content.Context, bindElement?:HTMLElement, defStyle?){
+    constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
         this.initScrollView();
-        this._attrBinder.addAttr('fillViewport', (value)=>{
-            this.setFillViewport(this._attrBinder.parseBoolean(value));
-        });
+        let a = context.obtainStyledAttributes(bindElement, defStyle);
+        this.setFillViewport(a.getBoolean('fillViewport', false));
+        a.recycle();
     }
 
-    //constructor( context:Context, attrs:AttributeSet, defStyle:number) {
-    //    super(context, attrs, defStyle);
-    //    this.initScrollView();
-    //    let a:TypedArray = context.obtainStyledAttributes(attrs, android.R.styleable.HorizontalScrollView, defStyle, 0);
-    //    this.setFillViewport(a.getBoolean(android.R.styleable.HorizontalScrollView_fillViewport, false));
-    //    a.recycle();
-    //}
-
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('', {
+            setter(v:HorizontalScrollView, value:any, attrBinder:androidui.attr.AttrBinder) {
+                v.setFillViewport(attrBinder.parseBoolean(value));
+            }, getter(v:HorizontalScrollView) {
+                return v.isFillViewport();
+            }
+        });
+    }
 
     protected getLeftFadingEdgeStrength():number  {
         if (this.getChildCount() == 0) {
@@ -301,8 +302,8 @@ export class HorizontalScrollView extends FrameLayout {
         if (!this.mFillViewport) {
             return;
         }
-        const widthMode:number = HorizontalScrollView.MeasureSpec.getMode(widthMeasureSpec);
-        if (widthMode == HorizontalScrollView.MeasureSpec.UNSPECIFIED) {
+        const widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        if (widthMode == View.MeasureSpec.UNSPECIFIED) {
             return;
         }
         if (this.getChildCount() > 0) {
@@ -313,7 +314,7 @@ export class HorizontalScrollView extends FrameLayout {
                 let childHeightMeasureSpec:number = HorizontalScrollView.getChildMeasureSpec(heightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
                 width -= this.mPaddingLeft;
                 width -= this.mPaddingRight;
-                let childWidthMeasureSpec:number = HorizontalScrollView.MeasureSpec.makeMeasureSpec(width, HorizontalScrollView.MeasureSpec.EXACTLY);
+                let childWidthMeasureSpec:number = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY);
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             }
         }
@@ -1123,14 +1124,14 @@ export class HorizontalScrollView extends FrameLayout {
         let childWidthMeasureSpec:number;
         let childHeightMeasureSpec:number;
         childHeightMeasureSpec = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom, lp.height);
-        childWidthMeasureSpec = HorizontalScrollView.MeasureSpec.makeMeasureSpec(0, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+        childWidthMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 
     protected measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number, parentHeightMeasureSpec:number, heightUsed:number):void  {
         const lp:ViewGroup.MarginLayoutParams = <ViewGroup.MarginLayoutParams> child.getLayoutParams();
         const childHeightMeasureSpec:number = HorizontalScrollView.getChildMeasureSpec(parentHeightMeasureSpec, this.mPaddingTop + this.mPaddingBottom + lp.topMargin + lp.bottomMargin + heightUsed, lp.height);
-        const childWidthMeasureSpec:number = HorizontalScrollView.MeasureSpec.makeMeasureSpec(lp.leftMargin + lp.rightMargin, HorizontalScrollView.MeasureSpec.UNSPECIFIED);
+        const childWidthMeasureSpec:number = View.MeasureSpec.makeMeasureSpec(lp.leftMargin + lp.rightMargin, View.MeasureSpec.UNSPECIFIED);
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 
