@@ -49,7 +49,7 @@ module android.view{
             mDrawables:Set<Drawable>;
 
             constructor(hostView:View) {
-                super();
+                super(hostView.getContext());
                 this.mHostView = hostView;
                 this.mAttachInfo = hostView.mAttachInfo;
                 this.mRight = hostView.getWidth();

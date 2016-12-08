@@ -233,6 +233,13 @@ module android.content.res {
             return this.getInt(attrName, defValue);
         }
 
+        public getLayoutDimension(attrName:string, defValue:number):number {
+            this.checkRecycled();
+            let value = this.getAttrValue(attrName);
+            if (value === 'wrap_content') return -2;
+            if (value === 'fill_parent' || value === 'match_parent') return -1;
+            return AttrValueParser.parseDimension(this.mResources, value, defValue);
+        }
 
         /**
          * Retrieve a dimensional unit attribute at <var>index</var>.  Unit

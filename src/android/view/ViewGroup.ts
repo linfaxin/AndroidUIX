@@ -186,13 +186,14 @@ module android.view {
                     case 'animationcache':
                         this.setAnimationCacheEnabled(a.getBoolean(attr, true));
                         break;
-                    case 'persistentdrawingcache':
+                    case 'persistentdrawingcache': {
                         let value = a.getAttrValue(attr);
-                        if(value === 'none') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
-                        else if(value === 'animation') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
-                        else if(value === 'scrolling') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
-                        else if(value === 'all') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
+                        if (value === 'none') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_NO_CACHE);
+                        else if (value === 'animation') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ANIMATION_CACHE);
+                        else if (value === 'scrolling') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_SCROLLING_CACHE);
+                        else if (value === 'all') this.setPersistentDrawingCache(ViewGroup.PERSISTENT_ALL_CACHES);
                         break;
+                    }
                     case 'addstatesfromchildren':
                         this.setAddStatesFromChildren(a.getBoolean(attr, false));
                         break;
@@ -205,12 +206,13 @@ module android.view {
                         //     setLayoutAnimation(AnimationUtils.loadLayoutAnimation(mContext, id));
                         // }
                         break;
-                    case 'descendantfocusability':
+                    case 'descendantfocusability': {
                         let value = a.getAttrValue(attr);
-                        if(value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-                        else if(value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-                        else if(value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+                        if (value == 'beforeDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+                        else if (value == 'afterDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+                        else if (value == 'blocksDescendants') this.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
                         break;
+                    }
                     case 'splitmotionevents':
                         this.setMotionEventSplittingEnabled(a.getBoolean(attr, false));
                         break;

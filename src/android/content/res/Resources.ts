@@ -333,6 +333,21 @@ module android.content.res{
             throw new Error("NotFoundException: Resource " + refString + " is not found");
         }
 
+        /**
+         * @param refString @anim/xxx, @android:anim/xxx
+         */
+        getAnimation(refString:string):android.view.animation.Animation {
+            if(!refString || !refString.trim().startsWith('@')) return null;
+            if(refString.startsWith('@android:anim/')){
+                refString = refString.substring('@android:anim/'.length);
+                return android.R.anim[refString];
+            }
+            // if(refString.startsWith('@anim/')){
+            //     refString = refString.substring('@anim/'.length);
+            //     return window.R.anim[refString];
+            // }
+        }
+
         private getStyleAsMap(refString:string):Map<string, string>{
             if(!refString.startsWith('@style/')){
                 refString = '@style/' + refString;

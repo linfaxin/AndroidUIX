@@ -153,9 +153,9 @@ export class Spinner extends AbsSpinner implements OnClickListener {
             }
 
             case Spinner.MODE_DROPDOWN: {
-                const popup = new Spinner.DropdownPopup(context, bindElement, defStyle);
+                const popup = new Spinner.DropdownPopup(context, defStyle, this);
 
-                this.mDropDownWidth = a.getDimension('dropDownWidth', ViewGroup.LayoutParams.WRAP_CONTENT); // getLayoutDimension
+                this.mDropDownWidth = a.getLayoutDimension('dropDownWidth', ViewGroup.LayoutParams.WRAP_CONTENT);
                 popup.setBackgroundDrawable(a.getDrawable('popupBackground'));
                 const verticalOffset = a.getDimensionPixelOffset('dropDownVerticalOffset', 0);
                 if (verticalOffset != 0) {
@@ -1004,7 +1004,7 @@ export class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPop
 
     //private mAdapter:ListAdapter;
 
-    constructor(context:Context, defStyleRes:R.attr.popupWindowStyleType, arg:Spinner) {
+    constructor(context:Context, defStyleRes:Map<string, string>, arg:Spinner) {
         super(context, defStyleRes);
         this._Spinner_this = arg;
 

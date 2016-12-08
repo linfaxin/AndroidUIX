@@ -112,41 +112,32 @@ export class ArrayAdapter<T> extends BaseAdapter {
 
     private mInflater:LayoutInflater;
 
-    ///**
-    // * Constructor
-    // *
-    // * @param context The current context.
-    // * @param resource The resource ID for a layout file containing a TextView to use when
-    // *                 instantiating views.
-    // */
-    //constructor( context:Context, resource:number) {
-    //    this.init(context, resource, 0, new ArrayList<T>());
-    //}
-    //
-    ///**
-    // * Constructor
-    // *
-    // * @param context The current context.
-    // * @param resource The resource ID for a layout file containing a layout to use when
-    // *                 instantiating views.
-    // * @param textViewResourceId The id of the TextView within the layout resource to be populated
-    // */
-    //constructor( context:Context, resource:number, textViewResourceId:number) {
-    //    this.init(context, resource, textViewResourceId, new ArrayList<T>());
-    //}
-    //
-    ///**
-    // * Constructor
-    // *
-    // * @param context The current context.
-    // * @param resource The resource ID for a layout file containing a TextView to use when
-    // *                 instantiating views.
-    // * @param objects The objects to represent in the ListView.
-    // */
-    //constructor( context:Context, resource:number, objects:T[]) {
-    //    this.init(context, resource, 0, Arrays.asList(objects));
-    //}
-
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     * @param resource The resource ID for a layout file containing a TextView to use when
+     *                 instantiating views.
+     */
+    constructor(context: Context, resource: string);
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     * @param resource The resource ID for a layout file containing a layout to use when
+     *                 instantiating views.
+     * @param textViewResourceId The id of the TextView within the layout resource to be populated
+     */
+    constructor(context: Context, resource: string, textViewResourceId: string);
+    /**
+     * Constructor
+     *
+     * @param context The current context.
+     * @param resource The resource ID for a layout file containing a TextView to use when
+     *                 instantiating views.
+     * @param objects The objects to represent in the ListView.
+     */
+    constructor(context: Context, resource: string, objects: T[]);
     /**
      * Constructor
      *
@@ -156,9 +147,20 @@ export class ArrayAdapter<T> extends BaseAdapter {
      * @param textViewResourceId The id of the TextView within the layout resource to be populated
      * @param objects The objects to represent in the ListView.
      */
-    constructor(context:Context, resource:string, textViewResourceId:string, objects:T[]|List<T>) {
+    constructor(context: Context, resource: string, textViewResourceId: string, objects: T[]|List<T>);
+    constructor(...args) {
         super();
-        this.init(context, resource, textViewResourceId, objects);
+        if (args.length === 2) {
+            this.init(args[0], args[1], null, new ArrayList<T>());
+        } else if (args.length === 3) {
+            if (args[2] instanceof Array) {
+                this.init(args[0], args[1], null, <List<T>>Arrays.asList(args[2]));
+            } else {
+                this.init(args[0], args[1], args[2], new ArrayList<T>());
+            }
+        } else if (args.length === 4) {
+            this.init(args[0], args[1], args[2], args[3]);
+        }
     }
 
     /**

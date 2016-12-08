@@ -398,15 +398,15 @@ module androidui.widget{
             progressBar:ProgressBar;
             constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
                 super(context, bindElement, defStyle);
-                this.progressBar = new ProgressBar();
+                this.progressBar = new ProgressBar(context);
                 this.progressBar.setVisibility(View.GONE);
-                this.textView = new TextView();
+                this.textView = new TextView(context);
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 const pad = 16 * density;
                 this.textView.setPadding(pad/2, pad, pad/2, pad);
                 this.textView.setGravity(Gravity.CENTER);
 
-                let linear = new LinearLayout();
+                let linear = new LinearLayout(context);
                 linear.addView(this.progressBar, 32 * density, 32 * density);
                 linear.addView(this.textView);
                 linear.setGravity(Gravity.CENTER);
@@ -439,15 +439,15 @@ module androidui.widget{
             progressBar:ProgressBar;
             constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
                 super(context, bindElement, defStyle);
-                this.progressBar = new ProgressBar();
+                this.progressBar = new ProgressBar(context);
                 this.progressBar.setVisibility(View.GONE);
-                this.textView = new TextView();
+                this.textView = new TextView(context);
                 let density = android.content.res.Resources.getDisplayMetrics().density;
                 const pad = 16 * density;
                 this.textView.setPadding(pad/2, pad, pad/2, pad);
                 this.textView.setGravity(Gravity.CENTER);
 
-                let linear = new LinearLayout();
+                let linear = new LinearLayout(context);
                 linear.addView(this.progressBar);
                 linear.addView(this.textView);
                 linear.setGravity(Gravity.CENTER);

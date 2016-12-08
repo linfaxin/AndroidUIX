@@ -16,13 +16,13 @@
 
 ///<reference path="../../os/SystemClock.ts"/>
 
-module android.view.animation{
+module android.view.animation {
     import SystemClock = android.os.SystemClock;
     /**
      * Defines common utilities for working with animations.
      *
      */
-    export class AnimationUtils{
+    export class AnimationUtils {
         /**
          * Returns the current animation time in milliseconds. This time should be used when invoking
          * {@link Animation#setStartTime(long)}. Refer to {@link android.os.SystemClock} for more
@@ -35,6 +35,18 @@ module android.view.animation{
          */
         static currentAnimationTimeMillis():number {
             return SystemClock.uptimeMillis();
+        }
+
+        /**
+         * Loads an {@link Animation} object from a resource
+         *
+         * @param context Application context used to access resources
+         * @param id The resource id of the animation to load
+         * @return The animation object reference by the specified id
+         * @throws NotFoundException when the animation cannot be loaded
+         */
+        public static loadAnimation(context:android.content.Context, id:string):Animation {
+            return context.getResources().getAnimation(id);
         }
     }
 }

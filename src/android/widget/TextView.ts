@@ -7179,7 +7179,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
      * was not set directly.
      */
     static getTextColors():ColorStateList  {
-        return android.R.attr.textViewStyle.textColor;
+        return android.R.color.textView_textColor;
     }
 
     /**

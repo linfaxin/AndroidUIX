@@ -255,7 +255,10 @@ export class RelativeLayout extends ViewGroup {
     constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
         if (bindElement || defStyle) {
-            this.initFromAttributes(context, bindElement, defStyle);
+            const a = context.obtainStyledAttributes(bindElement, defStyle);
+            this.mIgnoreGravity = a.getResourceId('ignoreGravity', View.NO_ID);
+            this.mGravity = Gravity.parseGravity(a.getAttrValue('gravity'), this.mGravity);
+            a.recycle();
         }
         this.queryCompatibilityModes();
     }
@@ -274,13 +277,6 @@ export class RelativeLayout extends ViewGroup {
                 return v.mGravity;
             }
         });
-    }
-
-    private initFromAttributes(context:android.content.Context, attrs:HTMLElement, defStyle?:Map<string, string>) {
-        const a = context.obtainStyledAttributes(attrs, defStyle);
-        this.mIgnoreGravity = a.getResourceId('ignoreGravity', View.NO_ID);
-        this.mGravity = Gravity.parseGravity(a.getAttrValue('gravity'), this.mGravity);
-        a.recycle();
     }
 
     private queryCompatibilityModes():void  {

@@ -61,6 +61,7 @@ import Integer = java.lang.Integer;
 import FrameLayout = android.widget.FrameLayout;
 import Spinner = android.widget.Spinner;
 import TextView = android.widget.TextView;
+    import AnimationUtils = android.view.animation.AnimationUtils;
 /**
  * <p>A popup window that can be used to display an arbitrary view. The popup
  * window is a floating container that appears on top of the current
@@ -235,8 +236,8 @@ export class PopupWindow implements Window.Callback{
              this.mPopupWindow.setCallback(this);
              let a = context.obtainStyledAttributes(null, styleAttr);
              this.mBackground = a.getDrawable('popupBackground');
-             this.mEnterAnimation = styleAttr.popupEnterAnimation; // FIXME animation
-             this.mExitAnimation = styleAttr.popupExitAnimation;
+             this.mEnterAnimation = AnimationUtils.loadAnimation(context, a.getAttrValue('popupEnterAnimation'));
+             this.mExitAnimation = AnimationUtils.loadAnimation(context, a.getAttrValue('popupExitAnimation'));
 
              // at least one other drawable, intended for the 'below-anchor state'.
              //if (this.mBackground instanceof StateListDrawable) {
