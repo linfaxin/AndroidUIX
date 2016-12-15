@@ -17,8 +17,8 @@ module androidui.image{
     export class NetDrawable extends Drawable {
         private mState:State;
         private mLoadListener:NetDrawable.LoadListener;
-        private mImageWidth = 0;
-        private mImageHeight = 0;
+        protected mImageWidth = 0;
+        protected mImageHeight = 0;
         private mTileModeX:NetDrawable.TileMode;
         private mTileModeY:NetDrawable.TileMode;
         private mTmpTileBound:Rect;

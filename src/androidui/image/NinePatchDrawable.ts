@@ -49,7 +49,7 @@ module androidui.image {
 
         protected onLoad():void {
             //parse nine patch border now.
-            let image:NetImage = this.mState.mImage;
+            let image:NetImage = this.getImage();
 
             let ninePatchBorderInfo = NinePatchDrawable.GlobalBorderInfoCache.get(image.src);
             if(ninePatchBorderInfo){
@@ -105,15 +105,18 @@ module androidui.image {
             let imageWidth = this.mImageWidth;
             let imageHeight = this.mImageHeight;
             if(imageHeight<=0 || imageWidth<=0) return;
-            let image = this.mState.mImage;
+            let image = this.getImage();
             let bound = this.getBounds();
+            const staticRatioScale = android.content.res.Resources.getDisplayMetrics().density / image.getImageRatio();
 
-            let staticWidthSum = this.mNinePatchBorderInfo.getHorizontalStaticLengthSum();
-            let staticHeightSum = this.mNinePatchBorderInfo.getVerticalStaticLengthSum();
-            let extraWidth = bound.width() - staticWidthSum;
-            let extraHeight = bound.height() - staticHeightSum;
-            let staticWidthPartScale = (extraWidth>=0 || staticWidthSum==0) ? 1 : bound.width()/staticWidthSum;
-            let staticHeightPartScale = (extraHeight>=0 || staticHeightSum==0) ? 1 : bound.height()/staticHeightSum;
+            const staticWidthSum = this.mNinePatchBorderInfo.getHorizontalStaticLengthSum();
+            const staticHeightSum = this.mNinePatchBorderInfo.getVerticalStaticLengthSum();
+            let extraWidth = bound.width() - Math.floor(staticWidthSum * staticRatioScale);
+            let extraHeight = bound.height() - Math.floor(staticHeightSum * staticRatioScale);
+            let staticWidthPartScale = (extraWidth>=0 || staticWidthSum==0) ? 1 : bound.width() / staticWidthSum;
+            let staticHeightPartScale = (extraHeight>=0 || staticHeightSum==0) ? 1 : bound.height() / staticHeightSum;
+            staticWidthPartScale *= staticRatioScale;
+            staticHeightPartScale *= staticRatioScale;
             const scaleHorizontalWeightSum = this.mNinePatchBorderInfo.getHorizontalScaleLengthSum();
             const scaleVerticalWeightSum = this.mNinePatchBorderInfo.getVerticalScaleLengthSum();
 
@@ -176,7 +179,10 @@ module androidui.image {
         getPadding(padding:android.graphics.Rect):boolean {
             let info = this.mNinePatchBorderInfo;
             if(!info) return false;
-            padding.set(info.getPaddingLeft(), info.getPaddingTop(), info.getPaddingRight(), info.getPaddingBottom());
+            let imageRatio = this.getImage() && this.getImage().getImageRatio() || 1;
+            const staticRatioScale = android.content.res.Resources.getDisplayMetrics().density / imageRatio;
+            padding.set(Math.floor(info.getPaddingLeft() * staticRatioScale), Math.floor(info.getPaddingTop() * staticRatioScale),
+                Math.floor(info.getPaddingRight() * staticRatioScale), Math.floor(info.getPaddingBottom() * staticRatioScale));
             return true;
         }
     }
