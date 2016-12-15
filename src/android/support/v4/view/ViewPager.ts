@@ -2539,6 +2539,10 @@ module android.support.v4.view {
             return p instanceof ViewPager.LayoutParams && super.checkLayoutParams(p);
         }
 
+        public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+            return new ViewPager.LayoutParams(this.getContext(), attrs);
+        }
+
         private static isImplDecor(view:View):boolean {
             return view[SymbolDecor] || view.constructor[SymbolDecor];
         }
@@ -2549,6 +2553,7 @@ module android.support.v4.view {
 
     export module ViewPager {
 
+        import AttrBinder = androidui.attr.AttrBinder;
         /**
          * Callback interface for responding to changing state of the selected page.
          */
@@ -2684,12 +2689,29 @@ module android.support.v4.view {
              */
             childIndex = 0;
 
-            constructor() {
-                super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-                this._attrBinder.addAttr('gravity', (value)=>{
-                    this.gravity = this._attrBinder.parseGravity(value, this.gravity);
-                }, ()=>{
-                    return this.gravity;
+            constructor();
+            constructor(context:android.content.Context, attrs:HTMLElement);
+            constructor(...args) {
+                super(null); // first line must call super
+                if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) {
+                    const c = <android.content.Context>args[0];
+                    const attrs = <HTMLElement>args[1];
+                    super(c, attrs);
+                    const a = c.obtainStyledAttributes(attrs);
+                    this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), Gravity.TOP);
+                    a.recycle();
+                } else if (args.length === 0) {
+                    super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                }
+            }
+
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+                return super.createClassAttrBinder().set('layout_gravity', {
+                    setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                        param.gravity = attrBinder.parseGravity(value, param.gravity);
+                    }, getter(param:LayoutParams) {
+                        return param.gravity;
+                    }
                 });
             }
         }

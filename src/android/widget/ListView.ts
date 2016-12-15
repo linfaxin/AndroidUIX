@@ -1552,7 +1552,8 @@ export class ListView extends AbsListView {
             p = <AbsListView.LayoutParams> this.generateDefaultLayoutParams();
         }
         if(!(p instanceof AbsListView.LayoutParams)){
-            throw Error('ClassCaseException('+p.constructor.name+' can\'t case to AbsListView.LayoutParams)');
+            const name = p instanceof Function ? (<Function>p).constructor.name : p + '';
+            throw Error('ClassCaseException(' + name + ' can\'t case to AbsListView.LayoutParams)');
         }
         p.viewType = this.mAdapter.getItemViewType(position);
         if ((recycled && !p.forceAdd) || (p.recycledHeaderFooter && p.viewType == AdapterView.ITEM_VIEW_TYPE_HEADER_OR_FOOTER)) {
@@ -1906,14 +1907,19 @@ export class ListView extends AbsListView {
                     }
                     break;
                 case KeyEvent.KEYCODE_TAB:
+                    // XXX Sometimes it is useful to be able to TAB through the items in
+                    //     a ListView sequentially.  Unfortunately this can create an
+                    //     asymmetry in TAB navigation order unless the list selection
+                    //     always reverts to the top or bottom when receiving TAB focus from
+                    //     another widget.  Leaving this behavior disabled for now but
                     //     perhaps it should be configurable (and more comprehensive).
-                    if (false) {
-                        if (event.hasNoModifiers()) {
-                            handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(ListView.FOCUS_DOWN);
-                        } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
-                            handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(ListView.FOCUS_UP);
-                        }
-                    }
+                    // if (false) {
+                    //     if (event.hasNoModifiers()) {
+                    //         handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(ListView.FOCUS_DOWN);
+                    //     } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                    //         handled = this.resurrectSelectionIfNeeded() || this.arrowScroll(ListView.FOCUS_UP);
+                    //     }
+                    // }
                     break;
             }
         }

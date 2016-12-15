@@ -279,8 +279,7 @@ export abstract class AbsSpinner extends AdapterView<SpinnerAdapter> {
         }
     }
 
-    abstract 
-    layoutSpinner(delta:number, animate:boolean):void;
+    abstract layoutSpinner(delta:number, animate:boolean):void;
 
     getSelectedView():View  {
         if (this.mItemCount > 0 && this.mSelectedPosition >= 0) {
@@ -411,7 +410,7 @@ export module AbsSpinner{
 //    }
 //
 //    static CREATOR:Parcelable.Creator<SavedState> = (()=>{
-//        const _this=this;
+//        const inner_this=this;
 //        class _Inner extends Parcelable.Creator<SavedState> {
 //
 //            createFromParcel(_in:Parcel):SavedState  {

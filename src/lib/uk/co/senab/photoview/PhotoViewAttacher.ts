@@ -194,12 +194,12 @@ module uk.co.senab.photoview {
             this.mScaleDragDetector = new GestureDetector();
             this.mScaleDragDetector.setOnGestureListener(this);
             this.mGestureDetector = new android.view.GestureDetector((()=> {
-                const _this = this;
+                const inner_this = this;
                 class _Inner extends android.view.GestureDetector.SimpleOnGestureListener {
                     // forward long click listener
                     onLongPress(e:MotionEvent):void {
-                        if (null != _this.mLongClickListener) {
-                            _this.mLongClickListener.onLongClick(_this.getImageView());
+                        if (null != inner_this.mLongClickListener) {
+                            inner_this.mLongClickListener.onLongClick(inner_this.getImageView());
                         }
                     }
                 }

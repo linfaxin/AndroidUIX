@@ -983,10 +983,10 @@ export class ListPopupWindow {
      */
     createDragToOpenListener(src:View):OnTouchListener  {
         return (()=>{
-            const _this=this;
+            const inner_this=this;
             class _Inner extends ListPopupWindow.ForwardingListener {
                 getPopup():ListPopupWindow  {
-                    return _this;
+                    return inner_this;
                 }
             }
             return new _Inner(src);
@@ -1011,13 +1011,13 @@ export class ListPopupWindow {
              * waiting for the normal UI pipeline to do it's job which is slower than this method.
              */
             this.mShowDropDownRunnable = (()=>{
-                const _this=this;
+                const inner_this=this;
                 class _Inner implements Runnable {
                     run():void  {
                         // View layout should be all done before displaying the drop down.
-                        let view:View = _this.getAnchorView();
+                        let view:View = inner_this.getAnchorView();
                         if (view != null && view.isAttachedToWindow()) {
-                            _this.show();
+                            inner_this.show();
                         }
                     }
                 }
@@ -1032,12 +1032,12 @@ export class ListPopupWindow {
             this.mDropDownList.setFocusable(true);
             this.mDropDownList.setFocusableInTouchMode(true);
             this.mDropDownList.setOnItemSelectedListener((()=>{
-                const _this=this;
+                const inner_this=this;
                 class _Inner implements AdapterView.OnItemSelectedListener {
 
                     onItemSelected(parent:AdapterView<any>, view:View, position:number, id:number):void  {
                         if (position != -1) {
-                            let dropDownList:ListPopupWindow.DropDownListView = _this.mDropDownList;
+                            let dropDownList:ListPopupWindow.DropDownListView = inner_this.mDropDownList;
                             if (dropDownList != null) {
                                 dropDownList.mListSelectionHidden = false;
                             }
@@ -1354,7 +1354,7 @@ export class DropDownListView extends ListView {
 
     ///** Wrapper around Drawable's <code>alpha</code> property. */
     //private static DRAWABLE_ALPHA:IntProperty<Drawable> = (()=>{
-    //    const _this=this;
+    //    const inner_this=this;
     //    class _Inner extends IntProperty<Drawable> {
     //
     //        setValue(object:Drawable, value:number):void  {
@@ -1494,11 +1494,11 @@ export class DropDownListView extends ListView {
         //anim.setDuration(DropDownListView.CLICK_ANIM_DURATION);
         //anim.setInterpolator(new AccelerateDecelerateInterpolator());
         //anim.addListener((()=>{
-        //    const _this=this;
+        //    const inner_this=this;
         //    class _Inner extends AnimatorListenerAdapter {
         //
         //        onAnimationEnd(animation:Animator):void  {
-        //            _this.performItemClick(child, position, id);
+        //            inner_this.performItemClick(child, position, id);
         //        }
         //    }
         //    return new _Inner();

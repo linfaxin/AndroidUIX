@@ -489,7 +489,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         let textColor:ColorStateList = null;
         let textColorHint:ColorStateList = null;
         let textColorLink:ColorStateList = null;
-        let textSize = 15;
+        let textSize = 14 * this.getResources().getDisplayMetrics().density;
         // let fontFamily:string = null;
         // let typefaceIndex = -1;
         // let styleIndex = -1;
@@ -3464,11 +3464,11 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //        const error:CharSequence = ss.error;
     //        // Display the error later, after the first layout pass
     //        this.post((()=>{
-    //            const _this=this;
+    //            const inner_this=this;
     //            class _Inner extends Runnable {
     //
     //                run():void  {
-    //                    _this.setError(error);
+    //                    inner_this.setError(error);
     //                }
     //            }
     //            return new _Inner();
@@ -5677,11 +5677,11 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             if (overflow > 0.0 && overflow <= TextView.Marquee.MARQUEE_DELTA_MAX) {
                 this.mTextPaint.setTextScaleX(1.0 - overflow - 0.005);
                 this.post((()=>{
-                    const _this=this;
+                    const inner_this=this;
                     class _Inner implements Runnable {
 
                         run():void  {
-                            _this.requestLayout();
+                            inner_this.requestLayout();
                         }
                     }
                     return new _Inner();
@@ -5741,10 +5741,10 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     private static UNKNOWN_BORING:BoringLayout.Metrics = new BoringLayout.Metrics();
 
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
-        let widthMode:number = TextView.MeasureSpec.getMode(widthMeasureSpec);
-        let heightMode:number = TextView.MeasureSpec.getMode(heightMeasureSpec);
-        let widthSize:number = TextView.MeasureSpec.getSize(widthMeasureSpec);
-        let heightSize:number = TextView.MeasureSpec.getSize(heightMeasureSpec);
+        let widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        let heightMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
+        let widthSize:number = View.MeasureSpec.getSize(widthMeasureSpec);
+        let heightSize:number = View.MeasureSpec.getSize(heightMeasureSpec);
         let width:number;
         let height:number;
         let boring:BoringLayout.Metrics = TextView.UNKNOWN_BORING;
@@ -5754,7 +5754,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         }
         let des:number = -1;
         let fromexisting:boolean = false;
-        if (widthMode == TextView.MeasureSpec.EXACTLY) {
+        if (widthMode == View.MeasureSpec.EXACTLY) {
             // Parent has told us how big to be. So be it.
             width = widthSize;
         } else {
@@ -5819,7 +5819,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             }
             // Check against our minimum width
             width = Math.max(width, this.getSuggestedMinimumWidth());
-            if (widthMode == TextView.MeasureSpec.AT_MOST) {
+            if (widthMode == View.MeasureSpec.AT_MOST) {
                 width = Math.min(widthSize, width);
             }
         }
@@ -5845,7 +5845,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             // Nothing has changed
             }
         }
-        if (heightMode == TextView.MeasureSpec.EXACTLY) {
+        if (heightMode == View.MeasureSpec.EXACTLY) {
             // Parent has told us how big to be. So be it.
             height = heightSize;
             this.mDesiredHeightAtMeasure = -1;
@@ -5853,7 +5853,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
             let desired:number = this.getDesiredHeight();
             height = desired;
             this.mDesiredHeightAtMeasure = desired;
-            if (heightMode == TextView.MeasureSpec.AT_MOST) {
+            if (heightMode == View.MeasureSpec.AT_MOST) {
                 height = Math.min(desired, heightSize);
             }
         }
@@ -7296,11 +7296,11 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
     //    // to lock around updateTextServicesLocaleLocked() to prevent it from
     //    // being executed n times in parallel.
     //    AsyncTask.execute((()=>{
-    //        const _this=this;
+    //        const inner_this=this;
     //        class _Inner extends Runnable {
     //
     //            run():void  {
-    //                _this.updateTextServicesLocaleLocked();
+    //                inner_this.updateTextServicesLocaleLocked();
     //            }
     //        }
     //        return new _Inner();
@@ -8293,7 +8293,7 @@ export interface OnEditorActionListener {
 //    }
 //
 //    static CREATOR:Parcelable.Creator<SavedState> = (()=>{
-//        const _this=this;
+//        const inner_this=this;
 //        class _Inner extends Parcelable.Creator<SavedState> {
 //
 //            createFromParcel(_in:Parcel):SavedState  {

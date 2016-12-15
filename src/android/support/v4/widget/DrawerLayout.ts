@@ -46,6 +46,9 @@ import ViewParent = android.view.ViewParent;
 import Integer = java.lang.Integer;
 import Runnable = java.lang.Runnable;
 import ViewDragHelper = android.support.v4.widget.ViewDragHelper;
+import AttrBinder = androidui.attr.AttrBinder;
+import Context = android.content.Context;
+
 /**
  * DrawerLayout acts as a top-level container for window content that allows for
  * interactive "drawer" views to be pulled out from the edge of the window.
@@ -1083,6 +1086,10 @@ export class DrawerLayout extends ViewGroup {
         return p instanceof DrawerLayout.LayoutParams && super.checkLayoutParams(p);
     }
 
+    public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+        return new DrawerLayout.LayoutParams(this.getContext(), attrs);
+    }
+
     private hasVisibleDrawer():boolean  {
         return this.findVisibleDrawer() != null;
     }
@@ -1134,7 +1141,7 @@ export class DrawerLayout extends ViewGroup {
 }
 
 export module DrawerLayout{
-/**
+    /**
      * Listener for monitoring events about drawers.
      */
 export interface DrawerListener {
@@ -1200,11 +1207,11 @@ export class ViewDragCallback extends ViewDragHelper.Callback {
     private mDragger:ViewDragHelper;
 
     private mPeekRunnable:Runnable = (()=>{
-        const _this=this;
+        const inner_this=this;
         class _Inner implements Runnable {
 
             run():void  {
-                _this.peekDrawer();
+                inner_this.peekDrawer();
             }
         }
         return new _Inner();
@@ -1350,17 +1357,45 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
 
     knownOpen:boolean;
 
-    constructor();
+    constructor(context:Context, attrs:HTMLElement);
     constructor(width:number, height:number);
     constructor(width:number, height:number, gravity:number);
     constructor(source:ViewGroup.LayoutParams);
     constructor(source:ViewGroup.MarginLayoutParams);
     constructor(source:LayoutParams);
     constructor(...args){
-        super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass gravity to super
+        super(null); // first line must call super
+        if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+            const c = <Context>args[0];
+            const attrs = <HTMLElement>args[1];
+            super(c, attrs);
 
-        this._attrBinder.addAttr('gravity', (value)=>{
-            this.gravity = this._attrBinder.parseGravity(value, this.gravity);
+            const a = c.obtainStyledAttributes(attrs);
+            this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), Gravity.NO_GRAVITY);
+            a.recycle();
+        } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
+            super(args[0], args[1]);
+            this.gravity = args[2];
+        } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+            super(args[0], args[1]);
+        } else if (args[0] instanceof DrawerLayout.LayoutParams) {
+            const source = <DrawerLayout.LayoutParams>args[0];
+            super(source);
+            this.gravity = source.gravity;
+        } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
+            super(args[0]);
+        } else if (args[0] instanceof ViewGroup.LayoutParams) {
+            super(args[0]);
+        }
+    }
+
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('layout_gravity', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                param.gravity = attrBinder.parseGravity(value, param.gravity);
+            }, getter(param:LayoutParams) {
+                return param.gravity;
+            }
         });
     }
 }

@@ -143,11 +143,15 @@ module android.R {
             .set('thumb', '@null')
             .set('isIndicator', 'true');
 
-        static gridViewStyle = new Map<string, string>()
+        static absListViewStyle = new Map<string, string>()
+            .set('scrollbars', 'vertical')
+            .set('fadingEdge', 'vertical');
+
+        static gridViewStyle = new Map<string, string>(attr.absListViewStyle)
             .set('listSelector', '@android:drawable/list_selector_background')
             .set('numColumns', '1');
 
-        static listViewStyle = new Map<string, string>()
+        static listViewStyle = new Map<string, string>(attr.absListViewStyle)
             .set('divider', '@android:drawable/list_divider')
             .set('listSelector', '@android:drawable/list_selector_background')
             .set('dividerHeight', '1');

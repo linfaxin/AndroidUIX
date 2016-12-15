@@ -314,8 +314,8 @@ module android.widget {
             if (!this.mFillViewport) {
                 return;
             }
-            const heightMode: number = ScrollView.MeasureSpec.getMode(heightMeasureSpec);
-            if (heightMode == ScrollView.MeasureSpec.UNSPECIFIED) {
+            const heightMode: number = View.MeasureSpec.getMode(heightMeasureSpec);
+            if (heightMode == View.MeasureSpec.UNSPECIFIED) {
                 return;
             }
             if (this.getChildCount() > 0) {
@@ -326,7 +326,7 @@ module android.widget {
                     let childWidthMeasureSpec: number = ScrollView.getChildMeasureSpec(widthMeasureSpec, this.mPaddingLeft + this.mPaddingRight, lp.width);
                     height -= this.mPaddingTop;
                     height -= this.mPaddingBottom;
-                    let childHeightMeasureSpec: number = ScrollView.MeasureSpec.makeMeasureSpec(height, ScrollView.MeasureSpec.EXACTLY);
+                    let childHeightMeasureSpec: number = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY);
                     child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
                 }
             }
@@ -1106,14 +1106,14 @@ module android.widget {
             let childWidthMeasureSpec: number;
             let childHeightMeasureSpec: number;
             childWidthMeasureSpec = ScrollView.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft + this.mPaddingRight, lp.width);
-            childHeightMeasureSpec = ScrollView.MeasureSpec.makeMeasureSpec(0, ScrollView.MeasureSpec.UNSPECIFIED);
+            childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
 
         protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void {
             const lp: ViewGroup.MarginLayoutParams = <ViewGroup.MarginLayoutParams> child.getLayoutParams();
             const childWidthMeasureSpec: number = ScrollView.getChildMeasureSpec(parentWidthMeasureSpec, this.mPaddingLeft + this.mPaddingRight + lp.leftMargin + lp.rightMargin + widthUsed, lp.width);
-            const childHeightMeasureSpec: number = ScrollView.MeasureSpec.makeMeasureSpec(lp.topMargin + lp.bottomMargin, ScrollView.MeasureSpec.UNSPECIFIED);
+            const childHeightMeasureSpec: number = View.MeasureSpec.makeMeasureSpec(lp.topMargin + lp.bottomMargin, View.MeasureSpec.UNSPECIFIED);
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
 
@@ -1533,7 +1533,7 @@ module android.widget {
     //         }
     //
     //         static CREATOR:Parcelable.Creator<SavedState> = (()=>{
-    //             const _this=this;
+    //             const inner_this=this;
     //             class _Inner extends Parcelable.Creator<SavedState> {
     //
     //                 createFromParcel(_in:Parcel):SavedState  {

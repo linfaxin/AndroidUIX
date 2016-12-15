@@ -2974,15 +2974,15 @@ module android.widget {
                                         this.removeCallbacks(this.mTouchModeReset);
                                     }
                                     this.mTouchModeReset = (()=> {
-                                        const _this = this;
+                                        const inner_this = this;
                                         class _Inner implements Runnable {
 
                                             run():void {
-                                                _this.mTouchModeReset = null;
-                                                _this.mTouchMode = AbsListView.TOUCH_MODE_REST;
+                                                inner_this.mTouchModeReset = null;
+                                                inner_this.mTouchMode = AbsListView.TOUCH_MODE_REST;
                                                 child.setPressed(false);
-                                                _this.setPressed(false);
-                                                if (!_this.mDataChanged && _this.isAttachedToWindow()) {
+                                                inner_this.setPressed(false);
+                                                if (!inner_this.mDataChanged && inner_this.isAttachedToWindow()) {
                                                     performClick.run();
                                                 }
                                             }
@@ -3487,18 +3487,18 @@ module android.widget {
             if (!this.isHardwareAccelerated()) {
                 if (this.mClearScrollingCache == null) {
                     this.mClearScrollingCache = (()=> {
-                        const _this = this;
+                        const inner_this = this;
                         class _Inner implements Runnable {
 
                             run():void {
-                                if (_this.mCachingStarted) {
-                                    _this.mCachingStarted = _this.mCachingActive = false;
-                                    _this.setChildrenDrawnWithCacheEnabled(false);
-                                    if ((_this.mPersistentDrawingCache & AbsListView.PERSISTENT_SCROLLING_CACHE) == 0) {
-                                        _this.setChildrenDrawingCacheEnabled(false);
+                                if (inner_this.mCachingStarted) {
+                                    inner_this.mCachingStarted = inner_this.mCachingActive = false;
+                                    inner_this.setChildrenDrawnWithCacheEnabled(false);
+                                    if ((inner_this.mPersistentDrawingCache & AbsListView.PERSISTENT_SCROLLING_CACHE) == 0) {
+                                        inner_this.setChildrenDrawingCacheEnabled(false);
                                     }
-                                    if (!_this.isAlwaysDrawnWithCacheEnabled()) {
-                                        _this.invalidate();
+                                    if (!inner_this.isAlwaysDrawnWithCacheEnabled()) {
+                                        inner_this.invalidate();
                                     }
                                 }
                             }
@@ -4397,9 +4397,9 @@ module android.widget {
             return new AbsListView.LayoutParams(p);
         }
 
-        //generateLayoutParams(attrs:AttributeSet):AbsListView.LayoutParams {
-        //    return new AbsListView.LayoutParams(this.getContext(), attrs);
-        //}
+        generateLayoutParamsFromAttr(attrs:HTMLElement):ViewGroup.LayoutParams {
+           return new AbsListView.LayoutParams(this.getContext(), attrs);
+        }
 
         protected checkLayoutParams(p:ViewGroup.LayoutParams):boolean {
             return p instanceof AbsListView.LayoutParams;
@@ -4861,25 +4861,25 @@ module android.widget {
             private mLastFlingY:number = 0;
 
             private mCheckFlywheel:Runnable = (()=> {
-                const _this = this;
+                const inner_this = this;
                 class _Inner implements Runnable {
 
                     run():void {
-                        const activeId:number = _this._AbsListView_this.mActivePointerId;
-                        const vt:VelocityTracker = _this._AbsListView_this.mVelocityTracker;
-                        const scroller:OverScroller = _this.mScroller;
+                        const activeId:number = inner_this._AbsListView_this.mActivePointerId;
+                        const vt:VelocityTracker = inner_this._AbsListView_this.mVelocityTracker;
+                        const scroller:OverScroller = inner_this.mScroller;
                         if (vt == null || activeId == AbsListView.INVALID_POINTER) {
                             return;
                         }
-                        vt.computeCurrentVelocity(1000, _this._AbsListView_this.mMaximumVelocity);
+                        vt.computeCurrentVelocity(1000, inner_this._AbsListView_this.mMaximumVelocity);
                         const yvel:number = -vt.getYVelocity(activeId);
-                        if (Math.abs(yvel) >= _this._AbsListView_this.mMinimumVelocity && scroller.isScrollingInDirection(0, yvel)) {
+                        if (Math.abs(yvel) >= inner_this._AbsListView_this.mMinimumVelocity && scroller.isScrollingInDirection(0, yvel)) {
                             // Keep the fling alive a little longer
-                            _this._AbsListView_this.postDelayed(_this, FlingRunnable.FLYWHEEL_TIMEOUT);
+                            inner_this._AbsListView_this.postDelayed(inner_this, FlingRunnable.FLYWHEEL_TIMEOUT);
                         } else {
-                            _this.endFling();
-                            _this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_SCROLL;
-                            _this._AbsListView_this.reportScrollStateChange(OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
+                            inner_this.endFling();
+                            inner_this._AbsListView_this.mTouchMode = AbsListView.TOUCH_MODE_SCROLL;
+                            inner_this._AbsListView_this.reportScrollStateChange(OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
                         }
                     }
                 }
@@ -5149,11 +5149,11 @@ module android.widget {
                 if (this._AbsListView_this.mDataChanged) {
                     // Wait until we're back in a stable state to try this.
                     this._AbsListView_this.mPositionScrollAfterLayout = (()=> {
-                        const _this = this;
+                        const inner_this = this;
                         class _Inner implements Runnable {
 
                             run():void {
-                                _this.start(position);
+                                inner_this.start(position);
                             }
                         }
                         return new _Inner();
@@ -5199,11 +5199,11 @@ module android.widget {
                 if (this._AbsListView_this.mDataChanged) {
                     // Wait until we're back in a stable state to try this.
                     this._AbsListView_this.mPositionScrollAfterLayout = (()=> {
-                        const _this = this;
+                        const inner_this = this;
                         class _Inner implements Runnable {
 
                             run():void {
-                                _this.start(position, boundPosition);
+                                inner_this.start(position, boundPosition);
                             }
                         }
                         return new _Inner();
@@ -5270,11 +5270,11 @@ module android.widget {
                     // Wait until we're back in a stable state to try this.
                     const postOffset:number = offset;
                     this._AbsListView_this.mPositionScrollAfterLayout = (()=> {
-                        const _this = this;
+                        const inner_this = this;
                         class _Inner implements Runnable {
 
                             run():void {
-                                _this.startWithOffset(position, postOffset, duration);
+                                inner_this.startWithOffset(position, postOffset, duration);
                             }
                         }
                         return new _Inner();
@@ -5579,14 +5579,21 @@ module android.widget {
              */
             itemId:number = -1;
 
-            constructor();
+            constructor(context:android.content.Context, attrs:HTMLElement);
             constructor(w:number, h:number);
             constructor(w:number, h:number, viewType:number);
             constructor(source:ViewGroup.LayoutParams);
             constructor(...args){
-                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass viewType to super
-                if(args.length===3){
+                super(null); // first line must call super
+                if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) {
+                    super(args[0], args[1]);
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
+                    super(args[0], args[1]);
                     this.viewType = args[2];
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+                    super(args[0], args[1]);
+                } else if (args[0] instanceof ViewGroup.LayoutParams) {
+                    super(args[0]);
                 }
             }
         }

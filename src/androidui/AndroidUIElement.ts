@@ -7,15 +7,15 @@
 module androidui{
 
     if (typeof HTMLDivElement !== 'function'){
-        var _HTMLDivElement = function(){};
-        _HTMLDivElement.prototype = HTMLDivElement.prototype;
+        const _HTMLDivElement = function(){};
+        _HTMLDivElement.prototype = (<any>HTMLDivElement).prototype;
         HTMLDivElement = <any>_HTMLDivElement;
     }
 
     /**
      * Root Element of a android ui.
      */
-    export class AndroidUIElement extends HTMLDivElement{
+    export class AndroidUIElement extends HTMLDivElement {
         AndroidUI:AndroidUI;
 
         createdCallback():void{

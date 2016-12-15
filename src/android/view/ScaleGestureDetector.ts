@@ -367,13 +367,13 @@ export class ScaleGestureDetector {
         this.mQuickScaleEnabled = scales;
         if (this.mQuickScaleEnabled && this.mGestureDetector == null) {
             let gestureListener:GestureDetector.SimpleOnGestureListener = (()=>{
-                const _this=this;
+                const inner_this=this;
                 class _Inner extends GestureDetector.SimpleOnGestureListener {
 
                     onDoubleTap(e:MotionEvent):boolean  {
                         // Double tap: start watching for a swipe
-                        _this.mDoubleTapEvent = e;
-                        _this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
+                        inner_this.mDoubleTapEvent = e;
+                        inner_this.mDoubleTapMode = ScaleGestureDetector.DOUBLE_TAP_MODE_IN_PROGRESS;
                         return true;
                     }
                 }

@@ -31,8 +31,7 @@ export abstract class CharacterStyle {
         static type = Symbol();
         mType = CharacterStyle.type;
 
-        abstract
-        updateDrawState(tp:TextPaint):void ;
+        abstract updateDrawState(tp:TextPaint):void;
 
         /**
          * A given CharacterStyle can only applied to a single region of a given

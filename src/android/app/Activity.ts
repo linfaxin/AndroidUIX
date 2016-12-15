@@ -1732,7 +1732,7 @@ module android.app{
         }
 
         dispatchActivityResult(who:string, requestCode:number, resultCode:number, data:Intent):void  {
-            if (false) Log.v(Activity.TAG, "Dispatching result: who=" + who + ", reqCode=" + requestCode + ", resCode=" + resultCode + ", data=" + data);
+            // if (false) Log.v(Activity.TAG, "Dispatching result: who=" + who + ", reqCode=" + requestCode + ", resCode=" + resultCode + ", data=" + data);
             //this.mFragments.noteStateNotSaved();
             //if (who == null) {
                 this.onActivityResult(requestCode, resultCode, data);

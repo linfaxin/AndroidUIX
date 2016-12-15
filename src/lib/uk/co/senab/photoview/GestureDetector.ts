@@ -59,12 +59,12 @@ export class GestureDetector {
         this.mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
         this.mTouchSlop = configuration.getScaledTouchSlop();
 
-        const _this=this;
+        const inner_this=this;
         let scaleListener:ScaleGestureDetector.OnScaleGestureListener = {
             onScale(detector:ScaleGestureDetector):boolean  {
                 let scaleFactor:number = detector.getScaleFactor();
                 if (Number.isNaN(scaleFactor) || !Number.isFinite(scaleFactor)) return false;
-                _this.mListener.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
+                inner_this.mListener.onScale(scaleFactor, detector.getFocusX(), detector.getFocusY());
                 return true;
             },
             onScaleBegin(detector:ScaleGestureDetector):boolean  {

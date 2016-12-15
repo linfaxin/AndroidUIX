@@ -174,10 +174,10 @@ export class ViewDragHelper {
     })();
 
     private mSetIdleRunnable:Runnable = (()=>{
-        const _this=this;
+        const inner_this=this;
         class _Inner implements Runnable {
             run():void  {
-                _this.setDragState(ViewDragHelper.STATE_IDLE);
+                inner_this.setDragState(ViewDragHelper.STATE_IDLE);
             }
         }
         return new _Inner();

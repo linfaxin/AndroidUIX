@@ -138,7 +138,8 @@ export class MeasuredText {
                     endInPara = len;
                 for (let j:number = startInPara; j < endInPara; j++) {
                     // object replacement character
-                    this.mChars[j] = '￼';
+                    // this.mChars[j] = '￼';
+                    this.mChars = this.mChars.substring(0, j) + ' ' + this.mChars.substring(j+1);
                 }
             }
         }

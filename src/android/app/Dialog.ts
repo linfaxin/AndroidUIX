@@ -134,11 +134,11 @@ module android.app {
         //private mActionMode:ActionMode;
 
         private mDismissAction:Runnable = (()=> {
-            const _this = this;
+            const inner_this = this;
             class _Inner implements Runnable {
 
                 run():void {
-                    _this.dismissDialog();
+                    inner_this.dismissDialog();
                 }
             }
             return new _Inner();

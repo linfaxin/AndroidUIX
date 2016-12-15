@@ -222,6 +222,10 @@ export class RadioGroup extends LinearLayout {
         this.mOnCheckedChangeListener = listener;
     }
 
+    public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+        return new RadioGroup.LayoutParams(this.getContext(), attrs);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -237,6 +241,20 @@ export class RadioGroup extends LinearLayout {
 
 export module RadioGroup{
 export class LayoutParams extends LinearLayout.LayoutParams {
+
+    protected setBaseAttributes(a: android.content.res.TypedArray, widthAttr: string, heightAttr: string): void {
+        if (a.hasValue(widthAttr)) {
+            this.width = a.getLayoutDimension(widthAttr, LayoutParams.WRAP_CONTENT);
+        } else {
+            this.width = LayoutParams.WRAP_CONTENT;
+        }
+
+        if (a.hasValue(heightAttr)) {
+            this.height = a.getLayoutDimension(heightAttr, LayoutParams.WRAP_CONTENT);
+        } else {
+            this.height = LayoutParams.WRAP_CONTENT;
+        }
+    }
 }
 /**
      * <p>Interface definition for a callback to be invoked when the checked

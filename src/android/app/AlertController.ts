@@ -159,23 +159,23 @@ module android.app {
         private mHandler:Handler;
 
         mButtonHandler:View.OnClickListener = (()=> {
-            const _this = this;
+            const inner_this = this;
             class _Inner implements View.OnClickListener {
 
                 onClick(v:View):void {
                     let m:Message = null;
-                    if (v == _this.mButtonPositive && _this.mButtonPositiveMessage != null) {
-                        m = Message.obtain(_this.mButtonPositiveMessage);
-                    } else if (v == _this.mButtonNegative && _this.mButtonNegativeMessage != null) {
-                        m = Message.obtain(_this.mButtonNegativeMessage);
-                    } else if (v == _this.mButtonNeutral && _this.mButtonNeutralMessage != null) {
-                        m = Message.obtain(_this.mButtonNeutralMessage);
+                    if (v == inner_this.mButtonPositive && inner_this.mButtonPositiveMessage != null) {
+                        m = Message.obtain(inner_this.mButtonPositiveMessage);
+                    } else if (v == inner_this.mButtonNegative && inner_this.mButtonNegativeMessage != null) {
+                        m = Message.obtain(inner_this.mButtonNegativeMessage);
+                    } else if (v == inner_this.mButtonNeutral && inner_this.mButtonNeutralMessage != null) {
+                        m = Message.obtain(inner_this.mButtonNeutralMessage);
                     }
                     if (m != null) {
                         m.sendToTarget();
                     }
                     // Post a message so we dismiss after the above handlers are executed
-                    _this.mHandler.obtainMessage(AlertController.ButtonHandler.MSG_DISMISS_DIALOG, _this.mDialogInterface).sendToTarget();
+                    inner_this.mHandler.obtainMessage(AlertController.ButtonHandler.MSG_DISMISS_DIALOG, inner_this.mDialogInterface).sendToTarget();
                 }
             }
             return new _Inner();
@@ -818,12 +818,12 @@ module android.app {
                 if (this.mIsMultiChoice) {
                     //if (this.mCursor == null) {
                     adapter = (()=> {
-                        const _this = this;
+                        const inner_this = this;
                         class _Inner extends ArrayAdapter<string> {
                             getView(position:number, convertView:View, parent:ViewGroup):View {
                                 let view:View = super.getView(position, convertView, parent);
-                                if (_this.mCheckedItems != null) {
-                                    let isItemChecked:boolean = _this.mCheckedItems[position];
+                                if (inner_this.mCheckedItems != null) {
+                                    let isItemChecked:boolean = inner_this.mCheckedItems[position];
                                     if (isItemChecked) {
                                         listView.setItemChecked(position, true);
                                     }
@@ -835,7 +835,7 @@ module android.app {
                     })();
                     //} else {
                     //    adapter = (()=>{
-                    //        const _this=this;
+                    //        const inner_this=this;
                     //        class _Inner extends CursorAdapter {
                     //
                     //            private mLabelIndex:number = 0;
@@ -844,8 +844,8 @@ module android.app {
                     //
                     //            {
                     //                const cursor:Cursor = this.getCursor();
-                    //                mLabelIndex = cursor.getColumnIndexOrThrow(_this.mLabelColumn);
-                    //                mIsCheckedIndex = cursor.getColumnIndexOrThrow(_this.mIsCheckedColumn);
+                    //                mLabelIndex = cursor.getColumnIndexOrThrow(inner_this.mLabelColumn);
+                    //                mIsCheckedIndex = cursor.getColumnIndexOrThrow(inner_this.mIsCheckedColumn);
                     //            }
                     //
                     //            bindView(view:View, context:Context, cursor:Cursor):void  {
@@ -855,7 +855,7 @@ module android.app {
                     //            }
                     //
                     //            newView(context:Context, cursor:Cursor, parent:ViewGroup):View  {
-                    //                return _this.mInflater.inflate(dialog.mMultiChoiceItemLayout, parent, false);
+                    //                return inner_this.mInflater.inflate(dialog.mMultiChoiceItemLayout, parent, false);
                     //            }
                     //        }
                     //        return new _Inner(this.mContext, this.mCursor, false);
@@ -877,12 +877,12 @@ module android.app {
                  */
                 dialog.mAdapter = adapter;
                 dialog.mCheckedItem = this.mCheckedItem;
-                const _this = this;
+                const inner_this = this;
                 if (this.mOnClickListener != null) {
                     listView.setOnItemClickListener({
                         onItemClick(parent:AdapterView<any>, v:View, position:number, id:number):void {
-                            _this.mOnClickListener.onClick(dialog.mDialogInterface, position);
-                            if (!_this.mIsSingleChoice) {
+                            inner_this.mOnClickListener.onClick(dialog.mDialogInterface, position);
+                            if (!inner_this.mIsSingleChoice) {
                                 dialog.mDialogInterface.dismiss();
                             }
                         }
@@ -890,10 +890,10 @@ module android.app {
                 } else if (this.mOnCheckboxClickListener != null) {
                     listView.setOnItemClickListener({
                         onItemClick(parent:AdapterView<any>, v:View, position:number, id:number):void {
-                            if (_this.mCheckedItems != null) {
-                                _this.mCheckedItems[position] = listView.isItemChecked(position);
+                            if (inner_this.mCheckedItems != null) {
+                                inner_this.mCheckedItems[position] = listView.isItemChecked(position);
                             }
-                            _this.mOnCheckboxClickListener.onClick(dialog.mDialogInterface, position, listView.isItemChecked(position));
+                            inner_this.mOnCheckboxClickListener.onClick(dialog.mDialogInterface, position, listView.isItemChecked(position));
                         }
                     });
                 }

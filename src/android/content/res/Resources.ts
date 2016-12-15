@@ -71,7 +71,8 @@ module android.content.res{
             displayMetrics.heightPixels = contentEle.offsetHeight * density;
         }
 
-        private getDefStyle(refString:string):any{
+        getDefStyle(refString:string):any {
+            if (refString === '@null') return null;
             if(refString.startsWith('@android:attr/')){
                 refString = refString.substring('@android:attr/'.length);
                 return android.R.attr[refString];
@@ -82,6 +83,7 @@ module android.content.res{
          * @param refString @drawable/xxx, @android:drawable/xxx
          */
         getDrawable(refString:string):Drawable {
+            if (refString === '@null') return null;
             if(refString.startsWith('@android:drawable/')){
                 refString = refString.substring('@android:drawable/'.length);
                 return android.R.drawable[refString] || android.R.image[refString];
@@ -110,9 +112,12 @@ module android.content.res{
             ele = this.getValue(refString);
             if(ele){
                 let text = ele.innerText;
-                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')
-                    || text.startsWith('@android:color/') || text.startsWith('@color/')){
+                if(text.startsWith('@android:drawable/') || text.startsWith('@drawable/')) {
                     return this.getDrawable(text);
+                }
+                if(text.startsWith('@android:color/') || text.startsWith('@color/')) {
+                    let color = this.getColor(text);
+                    return new ColorDrawable(color);
                 }
                 return Drawable.createFromXml(this, ele);
             }
@@ -159,6 +164,7 @@ module android.content.res{
          * @param refString @color/xxx @android:color/xxx
          */
         getColorStateList(refString:string):ColorStateList {
+            if (refString === '@null') return null;
             if(refString.startsWith('@android:color/')){
                 refString = refString.substring('@android:color/'.length);
                 let color = android.R.color[refString];
@@ -320,6 +326,7 @@ module android.content.res{
          */
         getLayout(refString:string):HTMLElement {
             if(!refString || !refString.trim().startsWith('@')) return null;
+            if (refString === '@null') return null;
 
             if(refString.startsWith('@android:layout/')){
                 refString = refString.substring('@android:layout/'.length);
@@ -337,6 +344,7 @@ module android.content.res{
          * @param refString @anim/xxx, @android:anim/xxx
          */
         getAnimation(refString:string):android.view.animation.Animation {
+            if (refString === '@null') return null;
             if(!refString || !refString.trim().startsWith('@')) return null;
             if(refString.startsWith('@android:anim/')){
                 refString = refString.substring('@android:anim/'.length);
@@ -349,6 +357,7 @@ module android.content.res{
         }
 
         private getStyleAsMap(refString:string):Map<string, string>{
+            if (refString === '@null') return null;
             if(!refString.startsWith('@style/')){
                 refString = '@style/' + refString;
             }
@@ -393,6 +402,7 @@ module android.content.res{
          * @param refString @layout/xxx, @drawable/xxx, @color/xxx
          */
         getXml(refString:string):HTMLElement {
+            if (refString === '@null') return null;
             if(Resources._AppBuildXmlFinder) return Resources._AppBuildXmlFinder(refString);
         }
 
@@ -405,6 +415,7 @@ module android.content.res{
          *                    will be filled in with the reference itself.
          */
         getValue(refString:string, resolveRefs=true):HTMLElement {
+            if (refString === '@null') return null;
             if(Resources._AppBuildValueFinder){
                 let ele = Resources._AppBuildValueFinder(refString);
                 if(!ele) return null;
@@ -439,18 +450,6 @@ module android.content.res{
          */
         public obtainStyledAttributes(attrs:HTMLElement, defStyleAttr:Map<string, string>):TypedArray {
             return TypedArray.obtain(this, attrs, defStyleAttr);
-        }
-
-
-
-        static set buildDrawableFinder(value){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
-        }
-        static set buildLayoutFinder(value){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
-        }
-        static get buildResourcesElement(){
-            throw Error('Error: old build tool not support. Please update your build_res.js file.');
         }
 
     }

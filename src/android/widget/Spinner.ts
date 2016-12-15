@@ -721,14 +721,14 @@ export class Spinner extends AbsSpinner implements OnClickListener {
     //        let vto:ViewTreeObserver = this.getViewTreeObserver();
     //        if (vto != null) {
     //            const listener:OnGlobalLayoutListener = (()=>{
-    //                const _this=this;
+    //                const inner_this=this;
     //                class _Inner extends OnGlobalLayoutListener {
     //
     //                    onGlobalLayout():void  {
-    //                        if (!_this.mPopup.isShowing()) {
-    //                            _this.mPopup.showPopup(_this.getTextDirection(), _this.getTextAlignment());
+    //                        if (!inner_this.mPopup.isShowing()) {
+    //                            inner_this.mPopup.showPopup(inner_this.getTextDirection(), inner_this.getTextAlignment());
     //                        }
-    //                        const vto:ViewTreeObserver = _this.getViewTreeObserver();
+    //                        const vto:ViewTreeObserver = inner_this.getViewTreeObserver();
     //                        if (vto != null) {
     //                            vto.removeOnGlobalLayoutListener(this);
     //                        }
@@ -763,7 +763,7 @@ export module Spinner{
 //    }
 //
 //    static CREATOR:Parcelable.Creator<AbsSpinner.SavedState> = (()=>{
-//        const _this=this;
+//        const inner_this=this;
 //        class _Inner extends Parcelable.Creator<AbsSpinner.SavedState> {
 //
 //            createFromParcel(_in:Parcel):AbsSpinner.SavedState  {
@@ -1012,15 +1012,15 @@ export class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPop
         this.setModal(true);
         this.setPromptPosition(DropdownPopup.POSITION_PROMPT_ABOVE);
         this.setOnItemClickListener((()=>{
-            const _this=this;
+            const inner_this=this;
             class _Inner implements AdapterView.OnItemClickListener {
 
                 onItemClick(parent:AdapterView<any>, v:View, position:number, id:number):void  {
-                    _this._Spinner_this.setSelection(position);
-                    if (_this._Spinner_this.mOnItemClickListener != null) {
-                        _this._Spinner_this.performItemClick(v, position, _this.mAdapter.getItemId(position));
+                    inner_this._Spinner_this.setSelection(position);
+                    if (inner_this._Spinner_this.mOnItemClickListener != null) {
+                        inner_this._Spinner_this.performItemClick(v, position, inner_this.mAdapter.getItemId(position));
                     }
-                    _this.dismiss();
+                    inner_this.dismiss();
                 }
             }
             return new _Inner();
@@ -1093,17 +1093,17 @@ export class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPop
         const vto:ViewTreeObserver = this._Spinner_this.getViewTreeObserver();
         if (vto != null) {
             const layoutListener:android.view.ViewTreeObserver.OnGlobalLayoutListener = (()=>{
-                const _this=this;
+                const inner_this=this;
                 class _Inner implements android.view.ViewTreeObserver.OnGlobalLayoutListener {
 
                     onGlobalLayout():void  {
-                        if (!_this._Spinner_this.isVisibleToUser()) {
-                            _this.dismiss();
+                        if (!inner_this._Spinner_this.isVisibleToUser()) {
+                            inner_this.dismiss();
                         } else {
-                            _this.computeContentWidth();
+                            inner_this.computeContentWidth();
                             // Use super.show here to update; we don't want to move the selected
                             // position or adjust other things that would be reset otherwise.
-                            _this.show();
+                            inner_this.show();
                         }
                     }
                 }
@@ -1111,10 +1111,10 @@ export class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPop
             })();
             vto.addOnGlobalLayoutListener(layoutListener);
             this.setOnDismissListener((()=>{
-                const _this=this;
+                const inner_this=this;
                 class _Inner implements PopupWindow.OnDismissListener {
                     onDismiss():void  {
-                        const vto:ViewTreeObserver = _this._Spinner_this.getViewTreeObserver();
+                        const vto:ViewTreeObserver = inner_this._Spinner_this.getViewTreeObserver();
                         if (vto != null) {
                             vto.removeOnGlobalLayoutListener(layoutListener);
                         }

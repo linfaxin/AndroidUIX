@@ -18,7 +18,6 @@
 
 
 module android.R{
-    import View = android.view.View;
     import Resources = android.content.res.Resources;
     import Color = android.graphics.Color;
     import Drawable = android.graphics.drawable.Drawable;
@@ -32,28 +31,25 @@ module android.R{
     import RoundRectDrawable = android.graphics.drawable.RoundRectDrawable;
     import ShadowDrawable = android.graphics.drawable.ShadowDrawable;
     import Gravity = android.view.Gravity;
-    window.addEventListener('AndroidUILoadFinish', ()=>{
-        eval('View = android.view.View;');//real import now
-    });
 
 
     const density = Resources.getDisplayMetrics().density;
     export class drawable{
         static get btn_default():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
-            stateList.addState([-View.VIEW_STATE_WINDOW_FOCUSED, -View.VIEW_STATE_ENABLED], R.image.btn_default_disabled_holo_light);
-            stateList.addState([View.VIEW_STATE_PRESSED], R.image.btn_default_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_default_focused_holo_light);
-            stateList.addState([View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED], R.image.btn_default_disabled_focused_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_WINDOW_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_WINDOW_FOCUSED, -android.view.View.VIEW_STATE_ENABLED], R.image.btn_default_disabled_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_PRESSED], R.image.btn_default_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_default_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_ENABLED], R.image.btn_default_normal_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED], R.image.btn_default_disabled_focused_holo_light);
             stateList.addState([], R.image.btn_default_disabled_holo_light);
             return stateList;
         }
 
         static get editbox_background():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([View.VIEW_STATE_FOCUSED], R.image.editbox_background_focus_yellow);
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED], R.image.editbox_background_focus_yellow);
             stateList.addState([], R.image.editbox_background_normal);
             return stateList;
         }
@@ -61,27 +57,27 @@ module android.R{
         static get btn_check():Drawable {
             let stateList = new StateListDrawable();
             //Enabled states
-            stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_pressed_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_on_pressed_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_off_pressed_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_focused_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_on_focused_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_off_focused_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_on_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_check_off_holo_light);
 
             //Disabled states
-            stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_on_disabled_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_off_disabled_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_on_disabled_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_check_off_disabled_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_check_on_disabled_focused_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_check_off_disabled_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED], R.image.btn_check_on_disabled_focused_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED], R.image.btn_check_off_disabled_focused_holo_light);
 
-            stateList.addState([-View.VIEW_STATE_CHECKED], R.image.btn_check_off_disabled_holo_light);
-            stateList.addState([View.VIEW_STATE_CHECKED], R.image.btn_check_on_disabled_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED], R.image.btn_check_off_disabled_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED], R.image.btn_check_on_disabled_holo_light);
 
             return stateList;
         }
@@ -89,27 +85,27 @@ module android.R{
         static get btn_radio():Drawable {
             let stateList = new StateListDrawable();
             //Enabled states
-            stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_pressed_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_PRESSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_on_pressed_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_off_pressed_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_focused_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_on_focused_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_off_focused_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_on_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_ENABLED], R.image.btn_radio_off_holo_light);
 
             //Disabled states
-            stateList.addState([View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_on_disabled_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, -View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_off_disabled_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_on_disabled_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, -android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_radio_off_disabled_holo_light);
 
-            stateList.addState([View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_radio_on_disabled_focused_holo_light);
-            stateList.addState([-View.VIEW_STATE_CHECKED, View.VIEW_STATE_FOCUSED], R.image.btn_radio_off_disabled_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED], R.image.btn_radio_on_disabled_focused_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED, android.view.View.VIEW_STATE_FOCUSED], R.image.btn_radio_off_disabled_focused_holo_light);
 
-            stateList.addState([-View.VIEW_STATE_CHECKED], R.image.btn_radio_off_disabled_holo_light);
-            stateList.addState([View.VIEW_STATE_CHECKED], R.image.btn_radio_on_disabled_holo_light);
+            stateList.addState([-android.view.View.VIEW_STATE_CHECKED], R.image.btn_radio_off_disabled_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_CHECKED], R.image.btn_radio_on_disabled_holo_light);
 
             return stateList;
         }
@@ -237,22 +233,22 @@ module android.R{
 
         static get ratingbar_full_empty_holo_light():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
-            //stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
-            //stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_SELECTED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_pressed_holo_light);
+            //stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
+            //stateList.addState([android.view.View.VIEW_STATE_SELECTED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_off_focused_holo_light);
             stateList.addState([], R.image.btn_rating_star_off_normal_holo_light);
             return stateList;
         }
         
         static get ratingbar_full_filled_holo_light():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([View.VIEW_STATE_PRESSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
-            stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
-            //stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
-            //stateList.addState([View.VIEW_STATE_SELECTED, View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_PRESSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            stateList.addState([android.view.View.VIEW_STATE_SELECTED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_pressed_holo_light);
+            //stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
+            //stateList.addState([android.view.View.VIEW_STATE_SELECTED, android.view.View.VIEW_STATE_WINDOW_FOCUSED], R.image.btn_rating_star_on_focused_holo_light);
             stateList.addState([], R.image.btn_rating_star_on_normal_holo_light);
             return stateList;
         }
@@ -298,9 +294,9 @@ module android.R{
 
         static get scrubber_control_selector_holo():Drawable {
             let stateList = new StateListDrawable();
-            stateList.addState([-View.VIEW_STATE_ENABLED], R.image.scrubber_control_disabled_holo);
-            stateList.addState([View.VIEW_STATE_PRESSED], R.image.scrubber_control_pressed_holo);
-            stateList.addState([View.VIEW_STATE_SELECTED], R.image.scrubber_control_focused_holo);
+            stateList.addState([-android.view.View.VIEW_STATE_ENABLED], R.image.scrubber_control_disabled_holo);
+            stateList.addState([android.view.View.VIEW_STATE_PRESSED], R.image.scrubber_control_pressed_holo);
+            stateList.addState([android.view.View.VIEW_STATE_SELECTED], R.image.scrubber_control_focused_holo);
             stateList.addState([], R.image.scrubber_control_normal_holo);
             return stateList;
         }
@@ -362,10 +358,10 @@ module android.R{
 
         static get item_background(){
             let stateList = new StateListDrawable();
-            stateList.addState([View.VIEW_STATE_FOCUSED, -View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
-            stateList.addState([View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
-            stateList.addState([-View.VIEW_STATE_FOCUSED, View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
-            stateList.addState([View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, -android.view.View.VIEW_STATE_ENABLED], new ColorDrawable(0xffebebeb));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
+            stateList.addState([-android.view.View.VIEW_STATE_FOCUSED, android.view.View.VIEW_STATE_PRESSED], new ColorDrawable(0x88888888));
+            stateList.addState([android.view.View.VIEW_STATE_FOCUSED], new ColorDrawable(0xffaaaaaa));
             stateList.addState([], new ColorDrawable(Color.TRANSPARENT));
             return stateList;
         }

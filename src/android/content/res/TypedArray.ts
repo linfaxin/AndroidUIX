@@ -40,12 +40,24 @@ module android.content.res {
             const attrMap = new Map<string, string>();
             if (defStyleAttr) {
                 for(let [key, value] of defStyleAttr.entries()) {
-                    attrMap.set(key.toLowerCase(), value);
+                    let attrName = key.split(":").pop().toLowerCase();//remove namespace 'android:'
+                    attrMap.set(attrName, value);
                 }
             }
             if (xml) {
+                const refStyleString = xml.getAttribute('android:style');
+                if (refStyleString) {
+                    const map = res.getStyleAsMap(refStyleString);
+                    if (map) {
+                        for(let [key, value] of map.entries()) {
+                            let attrName = key.split(":").pop().toLowerCase();//remove namespace 'android:'
+                            attrMap.set(attrName, value);
+                        }
+                    }
+                }
                 for (let attr of Array.from(xml.attributes)) {
-                    attrMap.set(attr.name, attr.value);
+                    let attrName = attr.name.split(":").pop().toLowerCase();//remove namespace 'android:'
+                    attrMap.set(attrName, attr.value);
                 }
             }
 
@@ -108,12 +120,13 @@ module android.content.res {
         }
 
         public getAttrValue(attrName:string):string {
+            attrName = attrName.split(":").pop().toLowerCase();//remove namespace 'android:'
             return this.attrMap && this.attrMap.get(attrName && attrName.toLowerCase());
         }
 
         public getResourceId(attrName:string, defaultResourceId:string):string {
             if (this.hasValueOrEmpty(attrName)) {
-                return this.getString(attrName);
+                return this.getAttrValue(attrName);
             }
             return defaultResourceId;
         }

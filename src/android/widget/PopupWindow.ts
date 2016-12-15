@@ -185,14 +185,14 @@ export class PopupWindow implements Window.Callback{
     private mAnchor:WeakReference<View>;
 
     private mOnScrollChangedListener:ViewTreeObserver.OnScrollChangedListener = (()=>{
-        const _this=this;
+        const inner_this=this;
         class _Inner implements ViewTreeObserver.OnScrollChangedListener {
             onScrollChanged():void  {
-                let anchor:View = _this.mAnchor != null ? _this.mAnchor.get() : null;
-                if (anchor != null && _this.mPopupView != null) {
-                    let p:WindowManager.LayoutParams = <WindowManager.LayoutParams> _this.mPopupView.getLayoutParams();
-                    _this.updateAboveAnchor(_this.findDropDownPosition(anchor, p, _this.mAnchorXoff, _this.mAnchorYoff, _this.mAnchoredGravity));
-                    _this.update(p.x, p.y, -1, -1, true);
+                let anchor:View = inner_this.mAnchor != null ? inner_this.mAnchor.get() : null;
+                if (anchor != null && inner_this.mPopupView != null) {
+                    let p:WindowManager.LayoutParams = <WindowManager.LayoutParams> inner_this.mPopupView.getLayoutParams();
+                    inner_this.updateAboveAnchor(inner_this.findDropDownPosition(anchor, p, inner_this.mAnchorXoff, inner_this.mAnchorYoff, inner_this.mAnchoredGravity));
+                    inner_this.update(p.x, p.y, -1, -1, true);
                 }
             }
         }

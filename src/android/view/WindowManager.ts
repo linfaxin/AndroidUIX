@@ -252,6 +252,74 @@ export module WindowManager{
             }
         }
 
+        protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void {
+            this.layoutChildren(left, top, right, bottom, false /* no force left gravity */);
+        }
+
+        layoutChildren(left: number, top: number, right: number, bottom: number, forceLeftGravity: boolean): void {
+            const count = this.getChildCount();
+
+            const parentLeft = this.getPaddingLeftWithForeground();
+            const parentRight = right - left - this.getPaddingRightWithForeground();
+
+            const parentTop = this.getPaddingTopWithForeground();
+            const parentBottom = bottom - top - this.getPaddingBottomWithForeground();
+
+            this.mForegroundBoundsChanged = true;
+
+            for (let i = 0; i < count; i++) {
+                let child = this.getChildAt(i);
+                if (child.getVisibility() != View.GONE) {
+                    const lp = <WindowManager.LayoutParams> child.getLayoutParams();
+
+                    const width = child.getMeasuredWidth();
+                    const height = child.getMeasuredHeight();
+
+                    let childLeft;
+                    let childTop;
+
+                    let gravity = lp.gravity;
+                    if (gravity == -1) {
+                        gravity = Layout.DEFAULT_CHILD_GRAVITY;
+                    }
+
+                    //const layoutDirection = getLayoutDirection();
+                    const absoluteGravity = gravity;//Gravity.getAbsoluteGravity(gravity, layoutDirection);
+                    const verticalGravity = gravity & Gravity.VERTICAL_GRAVITY_MASK;
+
+                    switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
+                        case Gravity.CENTER_HORIZONTAL:
+                            childLeft = parentLeft + (parentRight - parentLeft - width) / 2 + lp.leftMargin - lp.rightMargin;
+                            break;
+                        case Gravity.RIGHT:
+                            if (!forceLeftGravity) {
+                                childLeft = parentRight - width - lp.rightMargin - lp.x;
+                                break;
+                            }
+                        case Gravity.LEFT:
+                        default:
+                            childLeft = parentLeft + lp.leftMargin + lp.x;
+                    }
+
+                    switch (verticalGravity) {
+                        case Gravity.TOP:
+                            childTop = parentTop + lp.topMargin + lp.y;
+                            break;
+                        case Gravity.CENTER_VERTICAL:
+                            childTop = parentTop + (parentBottom - parentTop - height) / 2 + lp.topMargin - lp.bottomMargin;
+                            break;
+                        case Gravity.BOTTOM:
+                            childTop = parentBottom - height - lp.bottomMargin - lp.x;
+                            break;
+                        default:
+                            childTop = parentTop + lp.topMargin;
+                    }
+
+                    child.layout(childLeft, childTop, childLeft + width, childTop + height);
+                }
+            }
+        }
+
         tagName():string {
             return 'windowsGroup';
         }
@@ -1898,43 +1966,6 @@ export class LayoutParams extends android.widget.FrameLayout.LayoutParams {
     //}
 
     private mTitle:string = "";
-
-
-    public get leftMargin():number {
-        if( (this.gravity & Gravity.LEFT)!=0 ) return super.leftMargin + this.x;
-        return super.leftMargin;
-    }
-
-    public get topMargin():number {
-        if( (this.gravity & Gravity.TOP)!=0 ) return super.topMargin + this.y;
-        return super.topMargin;
-    }
-
-    public get rightMargin():number {
-        if( (this.gravity & Gravity.RIGHT)!=0 ) return super.rightMargin + this.x;
-        return super.rightMargin;
-    }
-
-    public get bottomMargin():number {
-        if( (this.gravity & Gravity.BOTTOM)!=0 ) return super.bottomMargin + this.y;
-        return super.bottomMargin;
-    }
-
-    public set leftMargin(value) {
-        super.leftMargin = value;
-    }
-
-    public set topMargin(value) {
-        super.topMargin = value;
-    }
-
-    public set rightMargin(value) {
-        super.rightMargin = value;
-    }
-
-    public set bottomMargin(value) {
-        super.bottomMargin = value;
-    }
 
     private isFocusable():boolean {
         return (this.flags & LayoutParams.FLAG_NOT_FOCUSABLE) == 0;

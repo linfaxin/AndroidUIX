@@ -32,7 +32,7 @@ export abstract class MetricAffectingSpan extends CharacterStyle implements Upda
         static type = Symbol();
         mType = MetricAffectingSpan.type;
 
-        abstract updateMeasureState(p:TextPaint):void ;
+        abstract updateMeasureState(p:TextPaint):void;
 
         /**
          * Returns "this" for most MetricAffectingSpans, but for

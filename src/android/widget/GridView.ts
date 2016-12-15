@@ -926,11 +926,11 @@ export class GridView extends AbsListView {
     protected onMeasure(widthMeasureSpec:number, heightMeasureSpec:number):void  {
         // Sets up mListPadding
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        let widthMode:number = GridView.MeasureSpec.getMode(widthMeasureSpec);
-        let heightMode:number = GridView.MeasureSpec.getMode(heightMeasureSpec);
-        let widthSize:number = GridView.MeasureSpec.getSize(widthMeasureSpec);
-        let heightSize:number = GridView.MeasureSpec.getSize(heightMeasureSpec);
-        if (widthMode == GridView.MeasureSpec.UNSPECIFIED) {
+        let widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        let heightMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
+        let widthSize:number = View.MeasureSpec.getSize(widthMeasureSpec);
+        let heightSize:number = View.MeasureSpec.getSize(heightMeasureSpec);
+        if (widthMode == View.MeasureSpec.UNSPECIFIED) {
             if (this.mColumnWidth > 0) {
                 widthSize = this.mColumnWidth + this.mListPadding.left + this.mListPadding.right;
             } else {
@@ -953,8 +953,8 @@ export class GridView extends AbsListView {
             }
             p.viewType = this.mAdapter.getItemViewType(0);
             p.forceAdd = true;
-            let childHeightSpec:number = GridView.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(0, GridView.MeasureSpec.UNSPECIFIED), 0, p.height);
-            let childWidthSpec:number = GridView.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(this.mColumnWidth, GridView.MeasureSpec.EXACTLY), 0, p.width);
+            let childHeightSpec:number = GridView.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), 0, p.height);
+            let childWidthSpec:number = GridView.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(this.mColumnWidth, View.MeasureSpec.EXACTLY), 0, p.width);
             child.measure(childWidthSpec, childHeightSpec);
             childHeight = child.getMeasuredHeight();
             childState = GridView.combineMeasuredStates(childState, child.getMeasuredState());
@@ -962,10 +962,10 @@ export class GridView extends AbsListView {
                 this.mRecycler.addScrapView(child, -1);
             }
         }
-        if (heightMode == GridView.MeasureSpec.UNSPECIFIED) {
+        if (heightMode == View.MeasureSpec.UNSPECIFIED) {
             heightSize = this.mListPadding.top + this.mListPadding.bottom + childHeight + this.getVerticalFadingEdgeLength() * 2;
         }
-        if (heightMode == GridView.MeasureSpec.AT_MOST) {
+        if (heightMode == View.MeasureSpec.AT_MOST) {
             let ourSize:number = this.mListPadding.top + this.mListPadding.bottom;
             const numColumns:number = this.mNumColumns;
             for (let i:number = 0; i < count; i += numColumns) {
@@ -980,7 +980,7 @@ export class GridView extends AbsListView {
             }
             heightSize = ourSize;
         }
-        if (widthMode == GridView.MeasureSpec.AT_MOST && this.mRequestedNumColumns != GridView.AUTO_FIT) {
+        if (widthMode == View.MeasureSpec.AT_MOST && this.mRequestedNumColumns != GridView.AUTO_FIT) {
             let ourSize:number = (this.mRequestedNumColumns * this.mColumnWidth) + ((this.mRequestedNumColumns - 1) * this.mHorizontalSpacing) + this.mListPadding.left + this.mListPadding.right;
             if (ourSize > widthSize || didNotInitiallyFit) {
                 widthSize |= GridView.MEASURED_STATE_TOO_SMALL;
@@ -1234,8 +1234,8 @@ export class GridView extends AbsListView {
             }
         }
         if (needToMeasure) {
-            let childHeightSpec:number = ViewGroup.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(0, GridView.MeasureSpec.UNSPECIFIED), 0, p.height);
-            let childWidthSpec:number = ViewGroup.getChildMeasureSpec(GridView.MeasureSpec.makeMeasureSpec(this.mColumnWidth, GridView.MeasureSpec.EXACTLY), 0, p.width);
+            let childHeightSpec:number = ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), 0, p.height);
+            let childWidthSpec:number = ViewGroup.getChildMeasureSpec(View.MeasureSpec.makeMeasureSpec(this.mColumnWidth, View.MeasureSpec.EXACTLY), 0, p.width);
             child.measure(childWidthSpec, childHeightSpec);
         } else {
             this.cleanupLayoutState(child);
@@ -1410,14 +1410,19 @@ export class GridView extends AbsListView {
                     }
                     break;
                 case KeyEvent.KEYCODE_TAB:
+                    // XXX Sometimes it is useful to be able to TAB through the items in
+                    //     a GridView sequentially.  Unfortunately this can create an
+                    //     asymmetry in TAB navigation order unless the list selection
+                    //     always reverts to the top or bottom when receiving TAB focus from
+                    //     another widget.  Leaving this behavior disabled for now but
                     //     perhaps it should be configurable (and more comprehensive).
-                    if (false) {
-                        if (event.hasNoModifiers()) {
-                            handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_FORWARD);
-                        } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
-                            handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_BACKWARD);
-                        }
-                    }
+                    // if (false) {
+                    //     if (event.hasNoModifiers()) {
+                    //         handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_FORWARD);
+                    //     } else if (event.hasModifiers(KeyEvent.META_SHIFT_ON)) {
+                    //         handled = this.resurrectSelectionIfNeeded() || this.sequenceScroll(GridView.FOCUS_BACKWARD);
+                    //     }
+                    // }
                     break;
             }
         }

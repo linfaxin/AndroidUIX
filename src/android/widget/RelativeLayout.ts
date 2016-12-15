@@ -44,7 +44,9 @@ import Integer = java.lang.Integer;
 import System = java.lang.System;
 import HorizontalScrollView = android.widget.HorizontalScrollView;
 import ScrollView = android.widget.ScrollView;
-    import AttrBinder = androidui.attr.AttrBinder;
+import AttrBinder = androidui.attr.AttrBinder;
+import Context = android.content.Context;
+
 /**
  * A Layout where the positions of the children can be described in relation to each other or to the
  * parent.
@@ -84,7 +86,7 @@ import ScrollView = android.widget.ScrollView;
  */
 export class RelativeLayout extends ViewGroup {
 
-    static TRUE:number = -1;
+    static TRUE:string = "";
 
     /**
      * Rule that aligns a child's right edge with another child's left edge.
@@ -205,7 +207,7 @@ export class RelativeLayout extends ViewGroup {
      */
     static ALIGN_PARENT_END:number = 21;
 
-    private static VERB_COUNT:number = 22;
+    static VERB_COUNT:number = 22;
 
     private static RULES_VERTICAL:number[] = [ RelativeLayout.ABOVE, RelativeLayout.BELOW, RelativeLayout.ALIGN_BASELINE, RelativeLayout.ALIGN_TOP, RelativeLayout.ALIGN_BOTTOM ];
 
@@ -397,21 +399,21 @@ export class RelativeLayout extends ViewGroup {
         let myHeight:number = -1;
         let width:number = 0;
         let height:number = 0;
-        const widthMode:number = RelativeLayout.MeasureSpec.getMode(widthMeasureSpec);
-        const heightMode:number = RelativeLayout.MeasureSpec.getMode(heightMeasureSpec);
-        const widthSize:number = RelativeLayout.MeasureSpec.getSize(widthMeasureSpec);
-        const heightSize:number = RelativeLayout.MeasureSpec.getSize(heightMeasureSpec);
+        const widthMode:number = View.MeasureSpec.getMode(widthMeasureSpec);
+        const heightMode:number = View.MeasureSpec.getMode(heightMeasureSpec);
+        const widthSize:number = View.MeasureSpec.getSize(widthMeasureSpec);
+        const heightSize:number = View.MeasureSpec.getSize(heightMeasureSpec);
         // Record our dimensions if they are known;
-        if (widthMode != RelativeLayout.MeasureSpec.UNSPECIFIED) {
+        if (widthMode != View.MeasureSpec.UNSPECIFIED) {
             myWidth = widthSize;
         }
-        if (heightMode != RelativeLayout.MeasureSpec.UNSPECIFIED) {
+        if (heightMode != View.MeasureSpec.UNSPECIFIED) {
             myHeight = heightSize;
         }
-        if (widthMode == RelativeLayout.MeasureSpec.EXACTLY) {
+        if (widthMode == View.MeasureSpec.EXACTLY) {
             width = myWidth;
         }
-        if (heightMode == RelativeLayout.MeasureSpec.EXACTLY) {
+        if (heightMode == View.MeasureSpec.EXACTLY) {
             height = myHeight;
         }
         this.mHasBaselineAlignedChild = false;
@@ -429,8 +431,8 @@ export class RelativeLayout extends ViewGroup {
         if ((horizontalGravity || verticalGravity) && this.mIgnoreGravity != View.NO_ID) {
             ignore = this.findViewById(this.mIgnoreGravity);
         }
-        const isWrapContentWidth:boolean = widthMode != RelativeLayout.MeasureSpec.EXACTLY;
-        const isWrapContentHeight:boolean = heightMode != RelativeLayout.MeasureSpec.EXACTLY;
+        const isWrapContentWidth:boolean = widthMode != View.MeasureSpec.EXACTLY;
+        const isWrapContentHeight:boolean = heightMode != View.MeasureSpec.EXACTLY;
         // We need to know our size for doing the correct computation of children positioning in RTL
         // mode but there is no practical way to get it instead of running the code below.
         // So, instead of running the code twice, we just set the width to a "default display width"
@@ -657,17 +659,17 @@ export class RelativeLayout extends ViewGroup {
         let childHeightMeasureSpec:number;
         if (myHeight < 0 && !this.mAllowBrokenMeasureSpecs) {
             if (params.height >= 0) {
-                childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(params.height, RelativeLayout.MeasureSpec.EXACTLY);
+                childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(params.height, View.MeasureSpec.EXACTLY);
             } else {
                 // Negative values in a mySize/myWidth/myWidth value in RelativeLayout measurement
                 // is code for, "we got an unspecified mode in the RelativeLayout's measurespec."
                 // Carry it forward.
-                childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(0, RelativeLayout.MeasureSpec.UNSPECIFIED);
+                childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             }
         } else if (params.width == RelativeLayout.LayoutParams.MATCH_PARENT) {
-            childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(maxHeight, RelativeLayout.MeasureSpec.EXACTLY);
+            childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.EXACTLY);
         } else {
-            childHeightMeasureSpec = RelativeLayout.MeasureSpec.makeMeasureSpec(maxHeight, RelativeLayout.MeasureSpec.AT_MOST);
+            childHeightMeasureSpec = View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.AT_MOST);
         }
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
@@ -691,10 +693,10 @@ export class RelativeLayout extends ViewGroup {
     private getChildMeasureSpec(childStart:number, childEnd:number, childSize:number, startMargin:number, endMargin:number, startPadding:number, endPadding:number, mySize:number):number  {
         if (mySize < 0 && !this.mAllowBrokenMeasureSpecs) {
             if (childSize >= 0) {
-                return RelativeLayout.MeasureSpec.makeMeasureSpec(childSize, RelativeLayout.MeasureSpec.EXACTLY);
+                return View.MeasureSpec.makeMeasureSpec(childSize, View.MeasureSpec.EXACTLY);
             }
             // Carry it forward.
-            return RelativeLayout.MeasureSpec.makeMeasureSpec(0, RelativeLayout.MeasureSpec.UNSPECIFIED);
+            return View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         }
         let childSpecMode:number = 0;
         let childSpecSize:number = 0;
@@ -712,12 +714,12 @@ export class RelativeLayout extends ViewGroup {
         let maxAvailable:number = tempEnd - tempStart;
         if (childStart >= 0 && childEnd >= 0) {
             // Constraints fixed both edges, so child must be an exact size
-            childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+            childSpecMode = View.MeasureSpec.EXACTLY;
             childSpecSize = maxAvailable;
         } else {
             if (childSize >= 0) {
                 // Child wanted an exact size. Give as much as possible
-                childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+                childSpecMode = View.MeasureSpec.EXACTLY;
                 if (maxAvailable >= 0) {
                     // We have a maxmum size in this dimension.
                     childSpecSize = Math.min(maxAvailable, childSize);
@@ -728,23 +730,23 @@ export class RelativeLayout extends ViewGroup {
             } else if (childSize == RelativeLayout.LayoutParams.MATCH_PARENT) {
                 // Child wanted to be as big as possible. Give all available
                 // space
-                childSpecMode = RelativeLayout.MeasureSpec.EXACTLY;
+                childSpecMode = View.MeasureSpec.EXACTLY;
                 childSpecSize = maxAvailable;
             } else if (childSize == RelativeLayout.LayoutParams.WRAP_CONTENT) {
                 // our max size
                 if (maxAvailable >= 0) {
                     // We have a maximum size in this dimension.
-                    childSpecMode = RelativeLayout.MeasureSpec.AT_MOST;
+                    childSpecMode = View.MeasureSpec.AT_MOST;
                     childSpecSize = maxAvailable;
                 } else {
                     // We can grow in this dimension. Child can be as big as it
                     // wants
-                    childSpecMode = RelativeLayout.MeasureSpec.UNSPECIFIED;
+                    childSpecMode = View.MeasureSpec.UNSPECIFIED;
                     childSpecSize = 0;
                 }
             }
         }
-        return RelativeLayout.MeasureSpec.makeMeasureSpec(childSpecSize, childSpecMode);
+        return View.MeasureSpec.makeMeasureSpec(childSpecSize, childSpecMode);
     }
 
     private positionChildHorizontal(child:View, params:RelativeLayout.LayoutParams, myWidth:number, wrapContent:boolean):boolean  {
@@ -964,6 +966,10 @@ export class RelativeLayout extends ViewGroup {
         }
     }
 
+    public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+        return new RelativeLayout.LayoutParams(this.getContext(), attrs);
+    }
+
     /**
      * Returns a set of layout parameters with a width of
      * {@link android.view.ViewGroup.LayoutParams#WRAP_CONTENT},
@@ -1051,7 +1057,7 @@ export module RelativeLayout{
 //        return 0;
 //    }
 //}
-/**
+        /**
      * Per-child layout information associated with RelativeLayout.
      *
      * @attr ref android.R.styleable#RelativeLayout_Layout_layout_alignWithParentIfMissing
@@ -1084,10 +1090,10 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
 
     private mInitialRules:string[] = new Array<string>(RelativeLayout.VERB_COUNT);
 
-    private mLeft:number = 0;
-    private mTop:number = 0;
-    private mRight:number = 0;
-    private mBottom:number = 0;
+    mLeft:number = 0;
+    mTop:number = 0;
+    mRight:number = 0;
+    mBottom:number = 0;
 
     private mStart:number = LayoutParams.DEFAULT_MARGIN_RELATIVE;
 
@@ -1191,99 +1197,264 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
     //    a.recycle();
     //}
 
+    constructor(context:Context, attrs:HTMLElement);
     constructor(w:number, h:number);
+    constructor(source:RelativeLayout.LayoutParams);
     constructor(source:ViewGroup.LayoutParams);
-    constructor(...args);
+    constructor(source:ViewGroup.MarginLayoutParams);
     constructor(...args){
-        super(...args);
-        if(args[0] instanceof LayoutParams){
-            let source = <LayoutParams>args[0];
+        super(null); // first line must call super
+        if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+            const c = <Context>args[0];
+            const attrs = <HTMLElement>args[1];
+            super(c, attrs);
+            let a = c.obtainStyledAttributes(attrs);
+            // const targetSdkVersion:number = c.getApplicationInfo().targetSdkVersion;
+            this.mIsRtlCompatibilityMode = false;//(targetSdkVersion < JELLY_BEAN_MR1 || !c.getApplicationInfo().hasRtlSupport());
+            const rules:string[] = this.mRules;
+            //noinspection MismatchedReadAndWriteOfArray
+            const initialRules:string[] = this.mInitialRules;
+            for (let attr of a.getLowerCaseAttrNames()) {
+                switch(attr) {
+                    case 'layout_alignwithparentifmissing':
+                        this.alignWithParent = a.getBoolean(attr, false);
+                        break;
+                    case 'layout_toleftof':
+                        rules[RelativeLayout.LEFT_OF] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_torightof':
+                        rules[RelativeLayout.RIGHT_OF] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_above':
+                        rules[RelativeLayout.ABOVE] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_below':
+                        rules[RelativeLayout.BELOW] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignbaseline':
+                        rules[RelativeLayout.ALIGN_BASELINE] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignleft':
+                        rules[RelativeLayout.ALIGN_LEFT] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_aligntop':
+                        rules[RelativeLayout.ALIGN_TOP] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignright':
+                        rules[RelativeLayout.ALIGN_RIGHT] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignbottom':
+                        rules[RelativeLayout.ALIGN_BOTTOM] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignparentleft':
+                        rules[RelativeLayout.ALIGN_PARENT_LEFT] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_alignparenttop':
+                        rules[RelativeLayout.ALIGN_PARENT_TOP] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_alignparentright':
+                        rules[RelativeLayout.ALIGN_PARENT_RIGHT] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_alignparentbottom':
+                        rules[RelativeLayout.ALIGN_PARENT_BOTTOM] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_centerinparent':
+                        rules[RelativeLayout.CENTER_IN_PARENT] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_centerhorizontal':
+                        rules[RelativeLayout.CENTER_HORIZONTAL] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_centervertical':
+                        rules[RelativeLayout.CENTER_VERTICAL] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_tostartof':
+                        rules[RelativeLayout.START_OF] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_toendof':
+                        rules[RelativeLayout.END_OF] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignstart':
+                        rules[RelativeLayout.ALIGN_START] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignend':
+                        rules[RelativeLayout.ALIGN_END] = a.getResourceId(attr, null);
+                        break;
+                    case 'layout_alignparentstart':
+                        rules[RelativeLayout.ALIGN_PARENT_START] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                    case 'layout_alignparentend':
+                        rules[RelativeLayout.ALIGN_PARENT_END] = a.getBoolean(attr, false) ? RelativeLayout.TRUE : null;
+                        break;
+                }
+            }
+            this.mRulesChanged = true;
+            System.arraycopy(rules, RelativeLayout.LEFT_OF, initialRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
+            a.recycle();
+        } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+            super(args[0], args[1]);
+        } else if (args[0] instanceof RelativeLayout.LayoutParams) {
+            const source = <RelativeLayout.LayoutParams>args[0];
+            super(source);
             this.mIsRtlCompatibilityMode = source.mIsRtlCompatibilityMode;
             this.mRulesChanged = source.mRulesChanged;
             this.alignWithParent = source.alignWithParent;
             System.arraycopy(source.mRules, RelativeLayout.LEFT_OF, this.mRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
             System.arraycopy(source.mInitialRules, RelativeLayout.LEFT_OF, this.mInitialRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
+        } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
+            super(args[0]);
+        } else if (args[0] instanceof ViewGroup.LayoutParams) {
+            super(args[0]);
         }
+    }
 
-
-        this._attrBinder.addAttr('alignWithParentIfMissing', (value)=>{
-            this.alignWithParent = this._attrBinder.parseBoolean(value, false);
-        });
-        this._attrBinder.addAttr('toLeftOf', (value)=>{
-            this.addRule(RelativeLayout.LEFT_OF, value);
-        });
-        this._attrBinder.addAttr('toRightOf', (value)=>{
-            this.addRule(RelativeLayout.RIGHT_OF, value);
-        });
-        this._attrBinder.addAttr('above', (value)=>{
-            this.addRule(RelativeLayout.ABOVE, value);
-        });
-        this._attrBinder.addAttr('below', (value)=>{
-            this.addRule(RelativeLayout.BELOW, value);
-        });
-        this._attrBinder.addAttr('alignBaseline', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_BASELINE, value);
-        });
-        this._attrBinder.addAttr('alignLeft', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_LEFT, value);
-        });
-        this._attrBinder.addAttr('alignTop', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_TOP, value);
-        });
-        this._attrBinder.addAttr('alignRight', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_RIGHT, value);
-        });
-        this._attrBinder.addAttr('alignBottom', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_BOTTOM, value);
-        });
-        this._attrBinder.addAttr('alignParentLeft', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
-        });
-        this._attrBinder.addAttr('alignParentTop', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_TOP, anchor);
-        });
-        this._attrBinder.addAttr('alignParentRight', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
-        });
-        this._attrBinder.addAttr('alignParentBottom', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, anchor);
-        });
-        this._attrBinder.addAttr('centerInParent', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.CENTER_IN_PARENT, anchor);
-        });
-        this._attrBinder.addAttr('centerHorizontal', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.CENTER_HORIZONTAL, anchor);
-        });
-        this._attrBinder.addAttr('centerVertical', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.CENTER_VERTICAL, anchor);
-        });
-        //start & end same as left & right
-        this._attrBinder.addAttr('toStartOf', (value)=>{
-            this.addRule(RelativeLayout.LEFT_OF, value);
-        });
-        this._attrBinder.addAttr('toEndOf', (value)=>{
-            this.addRule(RelativeLayout.RIGHT_OF, value);
-        });
-        this._attrBinder.addAttr('alignStart', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_LEFT, value);
-        });
-        this._attrBinder.addAttr('alignEnd', (value)=>{
-            this.addRule(RelativeLayout.ALIGN_RIGHT, value);
-        });
-        this._attrBinder.addAttr('alignParentStart', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
-        });
-        this._attrBinder.addAttr('alignParentEnd', (value)=>{
-            const anchor = this._attrBinder.parseBoolean(value, false) ? <any>RelativeLayout.TRUE : null;
-            this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
+    protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+        return super.createClassAttrBinder().set('layout_alignWithParentIfMissing', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                param.alignWithParent = attrBinder.parseBoolean(value, false);
+            }, getter(param:LayoutParams) {
+                return param.alignWithParent;
+            }
+        }).set('layout_toLeftOf', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.LEFT_OF, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.LEFT_OF];
+            }
+        }).set('layout_toRightOf', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.RIGHT_OF, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.RIGHT_OF];
+            }
+        }).set('layout_above', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ABOVE, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ABOVE];
+            }
+        }).set('layout_below', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.BELOW, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.BELOW];
+            }
+        }).set('layout_alignBaseline', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_BASELINE, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_BASELINE];
+            }
+        }).set('layout_alignLeft', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_LEFT, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_LEFT];
+            }
+        }).set('layout_alignTop', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_TOP, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_TOP];
+            }
+        }).set('layout_alignRight', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_RIGHT, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_RIGHT];
+            }
+        }).set('layout_alignBottom', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_BOTTOM, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_BOTTOM];
+            }
+        }).set('layout_alignParentLeft', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_LEFT];
+            }
+        }).set('layout_alignParentTop', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_TOP, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_TOP];
+            }
+        }).set('layout_alignParentRight', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_RIGHT];
+            }
+        }).set('layout_alignParentBottom', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_BOTTOM];
+            }
+        }).set('layout_centerInParent', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.CENTER_IN_PARENT, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.CENTER_IN_PARENT];
+            }
+        }).set('layout_centerHorizontal', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.CENTER_HORIZONTAL, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.CENTER_HORIZONTAL];
+            }
+        }).set('layout_centerVertical', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.CENTER_VERTICAL, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.CENTER_VERTICAL];
+            }
+        }).set('layout_toStartOf', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.LEFT_OF, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.LEFT_OF];
+            }
+        }).set('layout_toEndOf', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.RIGHT_OF, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.RIGHT_OF];
+            }
+        }).set('layout_alignStart', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_LEFT, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_LEFT];
+            }
+        }).set('layout_alignEnd', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                this.addRule(RelativeLayout.ALIGN_RIGHT, value+'');
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_RIGHT];
+            }
+        }).set('layout_alignParentStart', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_LEFT, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_LEFT];
+            }
+        }).set('layout_alignParentEnd', {
+            setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                const anchor = attrBinder.parseBoolean(value, false) ? RelativeLayout.TRUE : null;
+                this.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, anchor);
+            }, getter(param:LayoutParams) {
+                return param.mRules[RelativeLayout.ALIGN_PARENT_RIGHT];
+            }
         });
     }
 
@@ -1301,7 +1472,7 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
          *        (for example, ALIGN_WITH_PARENT_BOTTOM) just use -1.
          * @see #addRule(int)
          */
-    addRule(verb:number, anchor:string = <any>RelativeLayout.TRUE):void  {
+    addRule(verb:number, anchor:string=RelativeLayout.TRUE):void  {
         this.mRules[verb] = anchor;
         this.mInitialRules[verb] = anchor;
         this.mRulesChanged = true;
@@ -1507,7 +1678,7 @@ export class DependencyGraph {
          * List of nodes in the graph. Each node is identified by its
          * view id (see View#getId()).
          */
-    private mKeyNodes:SparseMap<string, DependencyGraph.Node> = new SparseMap<string, DependencyGraph.Node>();
+    mKeyNodes:SparseMap<string, DependencyGraph.Node> = new SparseMap<string, DependencyGraph.Node>();
 
     /**
          * Temporary data structure used to build the list of roots

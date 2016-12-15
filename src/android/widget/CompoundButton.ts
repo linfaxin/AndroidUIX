@@ -67,7 +67,17 @@ export abstract class CompoundButton extends Button implements Checkable {
 
     constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
         super(context, bindElement, defStyle);
+        const a = context.obtainStyledAttributes(bindElement, defStyle);
 
+        const d = a.getDrawable('button');
+        if (d != null) {
+            this.setButtonDrawable(d);
+        }
+
+        const checked = a.getBoolean('checked', false);
+        this.setChecked(checked);
+
+        a.recycle();
     }
 
     protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {

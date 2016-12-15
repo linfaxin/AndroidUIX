@@ -30,6 +30,7 @@ module android.widget {
     import Rect = android.graphics.Rect;
     import Canvas = android.graphics.Canvas;
     import AttrBinder = androidui.attr.AttrBinder;
+    import Context = android.content.Context;
 
     /**
      * FrameLayout is designed to block out an area on the screen to display
@@ -358,7 +359,7 @@ module android.widget {
             this.layoutChildren(left, top, right, bottom, false /* no force left gravity */);
         }
 
-        layoutChildren(left:number, top:number, right:number, bottom:number, forceLeftGravity:boolean) {
+        layoutChildren(left:number, top:number, right:number, bottom:number, forceLeftGravity:boolean):void {
             const count = this.getChildCount();
 
             const parentLeft = this.getPaddingLeftWithForeground();
@@ -480,6 +481,11 @@ module android.widget {
         getMeasureAllChildren() {
             return this.mMeasureAllChildren;
         }
+
+        public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+            return new FrameLayout.LayoutParams(this.getContext(), attrs);
+        }
+
         shouldDelayChildPressedState():boolean {
             return false;
         }
@@ -510,6 +516,7 @@ module android.widget {
              */
             gravity = -1;
 
+            constructor(context:Context, attrs:HTMLElement);
             constructor();
             /**
              * Copy constructor. Clones the width, height, margin values, and
@@ -532,20 +539,40 @@ module android.widget {
              */
             constructor(width:number, height:number, gravity?:number);
             constructor(...args) {
-                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass gravity to super
-                if (args.length === 1 && args[0] instanceof LayoutParams) {
-                    this.gravity = args[0].gravity;
-                } else if (args.length === 3) {
-                    this.gravity = args[2] || -1;
-                }
+                super(null); // first line must call super
+                if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+                    const c = <Context>args[0];
+                    const attrs = <HTMLElement>args[1];
+                    super(c, attrs);
 
-                this._attrBinder.addAttr('gravity', (value)=>{
-                    this.gravity = this._attrBinder.parseGravity(value, this.gravity);
-                }, ()=>{
-                    return this.gravity;
-                })
+                    const a = c.obtainStyledAttributes(attrs);
+                    this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), -1);
+                    a.recycle();
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] === 'number') {
+                    super(args[0], args[1]);
+                    this.gravity = args[2];
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+                    super(args[0], args[1]);
+                } else if (args[0] instanceof FrameLayout.LayoutParams) {
+                    const source = <FrameLayout.LayoutParams>args[0];
+                    super(source);
+                    this.gravity = source.gravity;
+                } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
+                    super(args[0]);
+                } else if (args[0] instanceof ViewGroup.LayoutParams) {
+                    super(args[0]);
+                }
             }
 
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+                return super.createClassAttrBinder().set('layout_gravity', {
+                    setter(param:LayoutParams, value:any, attrBinder:AttrBinder) {
+                        param.gravity = attrBinder.parseGravity(value, param.gravity);
+                    }, getter(param:LayoutParams) {
+                        return param.gravity;
+                    }
+                });
+            }
         }
     }
 }

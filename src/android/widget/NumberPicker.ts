@@ -458,7 +458,7 @@ module android.widget {
          * @param bindElement a collection of attributes.
          * @param defStyle The default style to apply to this view.
          */
-        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
+        constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle=android.R.attr.numberPickerStyle) {
             super(context, bindElement, defStyle);
 
             // process style attributes
@@ -483,9 +483,8 @@ module android.widget {
             }
             this.mComputeMaxWidth = (this.mMaxWidth == NumberPicker.SIZE_UNSPECIFIED);
             this.mVirtualButtonPressedDrawable = attributesArray.getDrawable('virtualButtonPressedDrawable');
-            attributesArray.recycle();
 
-            this.mTextSize = Math.floor(16 * this.getResources().getDisplayMetrics().density);
+            this.mTextSize = attributesArray.getDimensionPixelSize('textSize', Math.floor(16 * this.getResources().getDisplayMetrics().density)); // AndroidUIX modify
             // create the selector wheel paint
             let paint:Paint = new Paint();
             paint.setAntiAlias(true);
@@ -493,8 +492,11 @@ module android.widget {
             paint.setTextSize(this.mTextSize);
             //paint.setTypeface(this.mInputText.getTypeface());
             //let colors:ColorStateList = this.mInputText.getTextColors();
-            paint.setColor(Color.DKGRAY);
+            paint.setColor(attributesArray.getColor('textColor', Color.DKGRAY)); // AndroidUIX modify
             this.mSelectorWheelPaint = paint;
+
+            this.SELECTOR_WHEEL_ITEM_COUNT = attributesArray.getInt('itemCount', this.SELECTOR_WHEEL_ITEM_COUNT); // AndroidUIX modify
+            this.SELECTOR_MIDDLE_ITEM_INDEX = Math.floor(this.SELECTOR_WHEEL_ITEM_COUNT / 2); // AndroidUIX modify
             this.mSelectorIndices = androidui.util.ArrayCreator.newNumberArray(this.SELECTOR_WHEEL_ITEM_COUNT);
 
             if (this.mMinHeight_ != NumberPicker.SIZE_UNSPECIFIED && this.mMaxHeight != NumberPicker.SIZE_UNSPECIFIED && this.mMinHeight_ > this.mMaxHeight) {
@@ -504,6 +506,10 @@ module android.widget {
                 throw Error(`new IllegalArgumentException("minWidth > maxWidth")`);
             }
             this.mComputeMaxWidth = (this.mMaxWidth == NumberPicker.SIZE_UNSPECIFIED);
+
+            this.setMinValue(attributesArray.getInt('minValue', this.mMinValue)); // AndroidUIX modify
+            this.setMaxValue(attributesArray.getInt('maxValue', this.mMaxValue)); // AndroidUIX modify
+            attributesArray.recycle();
 
             this.mPressedStateHelper = new NumberPicker.PressedStateHelper(this);
             // By default Linearlayout that we extend is not drawn. This is
@@ -515,22 +521,22 @@ module android.widget {
             //let inflater:LayoutInflater = <LayoutInflater> this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             //inflater.inflate(layoutResId, this, true);
             //let onClickListener:View.OnClickListener = (()=>{
-            //    const _this=this;
+            //    const inner_this=this;
             //    class _Inner implements View.OnClickListener {
             //        onClick(v:View):void  {
-            //            _this.hideSoftInput();
-            //            _this.mInputText.clearFocus();
+            //            inner_this.hideSoftInput();
+            //            inner_this.mInputText.clearFocus();
             //            if (v.getId() == R.id.increment) {
-            //                _this.changeValueByOne(true);
+            //                inner_this.changeValueByOne(true);
             //            } else {
-            //                _this.changeValueByOne(false);
+            //                inner_this.changeValueByOne(false);
             //            }
             //        }
             //    }
             //    return new _Inner();
             //})();
             //let onLongClickListener:View.OnLongClickListener = (()=>{
-            //    const _this=this;
+            //    const inner_this=this;
             //    class _Inner implements View.OnLongClickListener {
             //
             //        onLongClick(v:View):boolean  {
@@ -565,7 +571,7 @@ module android.widget {
             // input text
             //this.mInputText = <EditText> this.findViewById(R.id.numberpicker_input);
             //this.mInputText.setOnFocusChangeListener((()=>{
-            //    const _this=this;
+            //    const inner_this=this;
             //    class _Inner extends View.OnFocusChangeListener {
             //
             //        onFocusChange(v:View, hasFocus:boolean):void  {

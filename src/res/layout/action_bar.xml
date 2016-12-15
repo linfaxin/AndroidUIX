@@ -1,6 +1,8 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
     <LinearLayout
             android:id="action_bar_center_layout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
             android:layout_marginLeft="60dp"
             android:layout_marginRight="60dp"
             android:minHeight="48dp"

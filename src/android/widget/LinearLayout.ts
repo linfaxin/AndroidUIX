@@ -27,6 +27,7 @@ module android.widget{
     import Drawable = android.graphics.drawable.Drawable;
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
+    import Context = android.content.Context;
 
     export class LinearLayout extends ViewGroup{
         static HORIZONTAL = 0;
@@ -1470,6 +1471,9 @@ module android.widget{
             }
         }
 
+        public generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams {
+            return new LinearLayout.LayoutParams(this.getContext(), attrs);
+        }
 
         protected generateDefaultLayoutParams():android.view.ViewGroup.LayoutParams {
             let LayoutParams = LinearLayout.LayoutParams;
@@ -1495,29 +1499,51 @@ module android.widget{
             weight = 0;
             gravity = -1;
 
-            constructor();
+            constructor(context:Context, attrs:HTMLElement);
+            constructor(width:number, height:number);
             constructor(source:ViewGroup.LayoutParams);
             constructor(width:number, height:number, weight?:number);
             constructor(...args) {
-                super(...(args.length == 3 ? [args[0], args[1]] : args));//not pass weight to super
-                if (args.length === 1) {
-                    if(args[0] instanceof LayoutParams){
-                        this.gravity = args[0].gravity;
-                    }
-                } else if (args.length === 3) {
-                    this.weight = args[2] || 0;
+                super(null); // first line must call super
+                if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+                    const c = <Context>args[0];
+                    const attrs = <HTMLElement>args[1];
+                    super(c, attrs);
+                    const a = c.obtainStyledAttributes(attrs);
+                    this.weight = a.getFloat('layout_weight', 0);
+                    this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), -1);
+                    a.recycle();
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
+                    super(args[0], args[1]);
+                    this.weight = args[2];
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+                    super(args[0], args[1]);
+                    this.weight = 0;
+                } else if (args[0] instanceof LinearLayout.LayoutParams) {
+                    const source = <LinearLayout.LayoutParams>args[0];
+                    super(source);
+                    this.weight = source.weight;
+                    this.gravity = source.gravity;
+                } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
+                    super(args[0]);
+                } else if (args[0] instanceof ViewGroup.LayoutParams) {
+                    super(args[0]);
                 }
+            }
 
-                let a = this._attrBinder;
-                a.addAttr('gravity', (value)=>{
-                    this.gravity = a.parseGravity(value, this.gravity);
-                }, ()=>{
-                    return this.gravity;
-                });
-                a.addAttr('weight', (value)=>{
-                    this.weight = a.parseFloat(value, this.weight);
-                }, ()=>{
-                    return this.weight;
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+                return super.createClassAttrBinder().set('layout_gravity', {
+                    setter(param:LayoutParams, value:any, attrBinder:androidui.attr.AttrBinder) {
+                        param.gravity = attrBinder.parseGravity(value, param.gravity);
+                    }, getter(param:LayoutParams) {
+                        return param.gravity;
+                    }
+                }).set('layout_weight', {
+                    setter(param:LayoutParams, value:any, attrBinder:androidui.attr.AttrBinder) {
+                        param.weight = attrBinder.parseFloat(value, param.weight);
+                    }, getter(param:LayoutParams) {
+                        return param.weight;
+                    }
                 });
             }
         }

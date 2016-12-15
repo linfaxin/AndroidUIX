@@ -105,8 +105,8 @@ module android.view {
     import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import NetDrawable = androidui.image.NetDrawable;
     import KeyEvent = android.view.KeyEvent;
-    import Animation = animation.Animation;
-    import Transformation = animation.Transformation;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
     import TypedArray = android.content.res.TypedArray;
 
 
@@ -1318,7 +1318,7 @@ module android.view {
         private mPrivateFlags2 = 0;
         private mPrivateFlags3 = 0;
 
-        private mContext:Context;
+        protected mContext:Context;
 
         protected mCurrentAnimation:Animation = null;
 
@@ -1402,6 +1402,9 @@ module android.view {
             return this._mTop;
         }
         set mTop(value:number) {
+            if (Number.isNaN(value)) {
+                debugger;
+            }
             this._mTop = Math.floor(value);
             this.requestSyncBoundToElement();
         }
@@ -4294,32 +4297,26 @@ module android.view {
             this.setOnClickListener((view:View) => {
                 if (!onClickAttrString) return;
                 // call activity method
-                try {
-                    let activityClickMethod = view.getContext()[onClickAttrString];
-                    if (typeof activityClickMethod === 'function') {
-                        try {
-                            activityClickMethod.call(view.getContext(), view);
-                        } catch (e) {
-                            console.error(e);
-                            throw new Error(`Could not execute method '${onClickAttrString}' of the activity`);
-                        }
-                        return;
-                    } else {
-                        throw new Error("Could not find a method " +
+                let activityClickMethod = view.getContext()[onClickAttrString];
+                if (typeof activityClickMethod === 'function') {
+                    try {
+                        activityClickMethod.call(view.getContext(), view);
+                    } catch (e) {
+                        console.error(e);
+                        throw new Error(`Could not execute method '${onClickAttrString}' of the activity`);
+                    }
+                    return;
+                } else {
+                    // eval js code
+                    try {
+                        new Function(onClickAttrString).call(view);
+                    } catch (e) {
+                        console.error(e);
+                        throw new Error("Could not execute or find a method " +
                             onClickAttrString + "(View) in the activity "
                             + view.getContext().constructor.name + " for onClick handler"
                             + " on view " + view.getClass() + view.getId());
                     }
-                } catch (e) {
-                    console.error(e);
-                }
-
-                // eval js code
-                try {
-                    new Function(onClickAttrString).call(view);
-                } catch (e) {
-                    console.error(e);
-                    throw new Error(`Could not execute method '${onClickAttrString}' of the activity`);
                 }
             });
         }
@@ -7138,9 +7135,8 @@ module android.view {
                     }).set('padding', {
                         setter(v: View, value: any, attrBinder:AttrBinder) {
                             if (value == null) value = 0;
-                            let [left, top, right, bottom] = attrBinder.parsePaddingMarginLTRB(value);
-                            v.setPadding(attrBinder.parseDimension(left, 0), attrBinder.parseDimension(top, 0),
-                                attrBinder.parseDimension(right, 0), attrBinder.parseDimension(bottom, 0));
+                            let [top, right, bottom, left] = attrBinder.parsePaddingMarginTRBL(value);
+                            v.setPadding(left, top, right, bottom);
                         },
                         getter(v: View) {
                             return v.mPaddingTop + ' ' + v.mPaddingRight + ' ' + v.mPaddingBottom + ' ' + v.mPaddingLeft;
@@ -7378,12 +7374,11 @@ module android.view {
                         }
                     }).set('cornerRadius', { // androidui add
                         setter(v: View, value: any, attrBinder:AttrBinder) {
-                            let [leftTop, topRight, rightBottom, bottomLeft] = attrBinder.parsePaddingMarginLTRB(value);
-                            v.setCornerRadius(attrBinder.parseNumberPixelSize(leftTop, 0), attrBinder.parseNumberPixelSize(topRight, 0),
-                                attrBinder.parseNumberPixelSize(rightBottom, 0), attrBinder.parseNumberPixelSize(bottomLeft, 0));
+                            let [topRight, rightBottom, bottomLeft, leftTop] = attrBinder.parsePaddingMarginTRBL(value);
+                            v.setCornerRadius(leftTop, topRight, rightBottom, bottomLeft);
                         },
                         getter(v: View) {
-                            return v.mCornerRadiusTopLeft + ' ' + v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft;
+                            return v.mCornerRadiusTopRight + ' ' + v.mCornerRadiusBottomRight + ' ' + v.mCornerRadiusBottomLeft + ' ' + v.mCornerRadiusTopLeft;
                         },
                     }).set('cornerRadiusTopLeft', { // androidui add
                         setter(v: View, value: any, attrBinder:AttrBinder) {
@@ -7582,11 +7577,6 @@ module android.view {
             this._AttrObserver.observe(this.bindElement, {attributes : true, attributeOldValue : true});
         }
 
-        private _fireInitedAttributeChange(){
-            for(let [key, value] of this._stateAttrList.getDefaultStateAttr().getAttrMap().entries()){
-                this.onBindElementAttributeChanged(key, null, value);
-            }
-        }
         private  _fireStateChangeToAttribute(oldState:number[], newState:number[]){
             if(!this._stateAttrList) return;
             if(java.util.Arrays.equals(oldState, newState)) return;
@@ -7614,8 +7604,7 @@ module android.view {
             if(key.startsWith('layout_')){
                 let params = this.getLayoutParams();
                 if(params){
-                    let attrName = key.substring('layout_'.length);
-                    return params._attrBinder.getAttrValue(attrName);
+                    return params.getAttrBinder().getAttrValue(key);
                 }
             }else{
                 return this._attrBinder.getAttrValue(key);
@@ -7631,10 +7620,9 @@ module android.view {
 
             //layout attr
             if(attrName.startsWith('layout_')){
-                attrName = attrName.substring('layout_'.length);
                 let params = this.getLayoutParams();
                 if(params){
-                    params._attrBinder.onAttrChange(attrName, newVal, this.getContext());
+                    params.getAttrBinder().onAttrChange(attrName, newVal, this.getContext());
                     this.requestLayout();
                 }
                 return;

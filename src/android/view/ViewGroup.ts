@@ -46,9 +46,10 @@ module android.view {
     import System = java.lang.System;
     import ArrayList = java.util.ArrayList;
     import Integer = java.lang.Integer;
-    import Animation = animation.Animation;
-    import Transformation = animation.Transformation;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
     import AttrBinder = androidui.attr.AttrBinder;
+    import ClassBinderMap = androidui.attr.AttrBinder.ClassBinderMap;
 
     export abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN = 0x1;
@@ -345,10 +346,11 @@ module android.view {
         focusSearch(direction:number):View;
         focusSearch(focused:View, direction:number):View;
         focusSearch(...args):View {
-            if(arguments.length===1){
+            if(arguments.length === 1){
                 return super.focusSearch(args[0]);
             }
-            let [focused, direction] = args;
+            const focused:View = <View>args[0];
+            const direction:number = args[1];
             if (this.isRootNamespace()) {
                 // root namespace means we should consider ourselves the top of the
                 // tree for focus searching; otherwise we could be focus searching
@@ -1657,6 +1659,10 @@ module android.view {
             return i;
         }
 
+        public generateLayoutParamsFromAttr(attrs:HTMLElement):ViewGroup.LayoutParams {
+            return new ViewGroup.LayoutParams(this.getContext(), attrs);
+        }
+
         protected generateLayoutParams(p:ViewGroup.LayoutParams):ViewGroup.LayoutParams {
             return p;
         }
@@ -1678,26 +1684,17 @@ module android.view {
 
         protected measureChild(child:View, parentWidthMeasureSpec:number, parentHeightMeasureSpec:number) {
             let lp = child.getLayoutParams();
-            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
-            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
-
             const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec,
                 this.mPaddingLeft + this.mPaddingRight, lp.width);
             const childHeightMeasureSpec = ViewGroup.getChildMeasureSpec(parentHeightMeasureSpec,
                 this.mPaddingTop + this.mPaddingBottom, lp.height);
 
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-
-            lp._measuringParentWidthMeasureSpec = null;
-            lp._measuringParentHeightMeasureSpec = null;
         }
 
         protected measureChildWithMargins(child:View, parentWidthMeasureSpec:number, widthUsed:number,
                                 parentHeightMeasureSpec:number, heightUsed:number) {
             let lp = child.getLayoutParams();
-            lp._measuringParentWidthMeasureSpec = parentWidthMeasureSpec;
-            lp._measuringParentHeightMeasureSpec = parentHeightMeasureSpec;
-
             if (lp instanceof ViewGroup.MarginLayoutParams) {
 
                 const childWidthMeasureSpec = ViewGroup.getChildMeasureSpec(parentWidthMeasureSpec,
@@ -1709,9 +1706,6 @@ module android.view {
 
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             }
-
-            lp._measuringParentWidthMeasureSpec = null;
-            lp._measuringParentHeightMeasureSpec = null;
         }
 
         static getChildMeasureSpec(spec:number, padding:number, childDimension:number):number {
@@ -1840,8 +1834,6 @@ module android.view {
                 this.mGroupFlags |= ViewGroup.FLAG_INVALIDATE_REQUIRED;
             }
         }
-
-
 
         dispatchAttachedToWindow(info:View.AttachInfo, visibility:number) {
             this.mGroupFlags |= ViewGroup.FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW;
@@ -2622,296 +2614,189 @@ module android.view {
     }
 
     export module ViewGroup {
-        import AttrBinder = androidui.attr.AttrBinder;
-        export class LayoutParams {
+        export class LayoutParams extends java.lang.JavaObject {
+            private static ClassAttrBinderClazzMap = new Map<java.lang.Class, AttrBinder.ClassBinderMap>();
             static FILL_PARENT = -1;
             static MATCH_PARENT = -1;
             static WRAP_CONTENT = -2;
-            private _width:any = 0;
-            private _widthOrig:string;
-            private _height:any = 0;
-            private _heightOrig:string;
 
-            public get width():number {
-                if(typeof this._width === 'number') return this._width;
-                let up = (this._width + "").toUpperCase();
-                if(up === 'FILL_PARENT' || up === 'MATCH_PARENT') this._width = -1;
-                else if(up === 'WRAP_CONTENT') this._width = -2;
-                else{
-                    let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                    try {
-                        let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._width, 0, parentWidth);
-                        //not save if dynamic, next get will compute again
-                        if(android.util.TypedValue.isDynamicUnitValue(<any>this._width)){
-                            return parsedValue;
-                        }
-                        this._width = parsedValue;
-                    } catch (e) {
-                        console.error(e);
-                        return -2;
-                    }
-                }
-                return this._width;
-            }
+            public width = 0;
+            public height = 0;
+            private _attrBinder:AttrBinder;
 
-            public set width(value) {
-                this._width = this._widthOrig = <any>value;
-            }
-
-            public get height():number {
-                if(typeof this._height === 'number') return this._height;
-                let up = (this._height + "").toUpperCase();
-                if(up === 'FILL_PARENT' || up === 'MATCH_PARENT') this._height = -1;
-                else if(up === 'WRAP_CONTENT') this._height = -2;
-                else{
-                    let parentHeight = View.MeasureSpec.getSize(this._measuringParentHeightMeasureSpec);
-                    try {
-                        let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._height, 0, parentHeight);
-                        //not save if dynamic, next get will compute again
-                        if(android.util.TypedValue.isDynamicUnitValue(<any>this._height)){
-                            return parsedValue;
-                        }
-                        this._height = parsedValue;
-                    } catch (e) {
-                        console.error(e);
-                        return -2;
-                    }
-                }
-                return this._height;
-            }
-
-            public set height(value) {
-                this._height = this._heightOrig = <any>value;
-            }
-
-            _measuringParentWidthMeasureSpec = 0;
-            _measuringParentHeightMeasureSpec = 0;
-            _measuringMeasureSpec:android.util.DisplayMetrics;
-            _attrBinder:androidui.attr.AttrBinder;
-
-            private static ViewGroupParamClassAttrBind:AttrBinder.ClassBinderMap;
-
-            constructor();
-            constructor(src:LayoutParams);
+            constructor(context:Context, attrs:HTMLElement);
             constructor(width:number, height:number);
-            constructor(...args);
+            constructor(src:LayoutParams);
             constructor(...args) {
-                if (args.length === 1) {
-                    let src = args[0];
-                    this.width = src._width;
-                    this.height = src._height;
-                } else if (args.length === 2) {
-                    let [width=0, height=0] = args;
-                    this.width = width;
-                    this.height = height;
-                }
-
-                if(!this._attrBinder) {
-                    this._attrBinder = new androidui.attr.AttrBinder(this);
-                    if (!LayoutParams.ViewGroupParamClassAttrBind) {
-                        LayoutParams.ViewGroupParamClassAttrBind = new AttrBinder.ClassBinderMap();
-                        LayoutParams.ViewGroupParamClassAttrBind.set('width', {
-                            setter(host:LayoutParams, value:any) {
-                                if(value==null) value = -2;
-                                host.width = value;
-                            },
-                            getter(host:LayoutParams) {
-                                return host._widthOrig;
-                            }
-                        }).set('height', {
-                            setter(host:LayoutParams, value:any) {
-                                if(value==null) value = -2;
-                                host.height = value;
-                            },
-                            getter(host:LayoutParams) {
-                                return host._heightOrig;
-                            }
-                        });
-                    }
-                    this._attrBinder.addClassAttrBind(LayoutParams.ViewGroupParamClassAttrBind);
+                super();
+                if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+                    const a = (<Context>args[0]).obtainStyledAttributes(args[1]);
+                    this.setBaseAttributes(a, 'layout_width', 'layout_height');
+                    a.recycle();
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+                    this.width = args[0];
+                    this.height = args[1];
+                } else if (args[0] instanceof LayoutParams) {
+                    this.width = args[0].width;
+                    this.height = args[0].height;
+                } else if (args.length === 0) {
+                    // do nothing
                 }
             }
 
-            parseAttributeFrom(node:Node, context:Context):void {
-                Array.from(node.attributes).forEach((attr:Attr)=>{
-                    let layoutParamFiled = attr.name.startsWith('layout_') && attr.name.substring('layout_'.length);
-                    if (layoutParamFiled) {
-                        this._attrBinder.onAttrChange(layoutParamFiled, attr.value, context);
-                    }
-                });
+            /**
+             * Extracts the layout parameters from the supplied attributes.
+             *
+             * @param a the style attributes to extract the parameters from
+             * @param widthAttr the identifier of the width attribute
+             * @param heightAttr the identifier of the height attribute
+             */
+            protected setBaseAttributes(a:android.content.res.TypedArray, widthAttr:string, heightAttr:string):void {
+                this.width = a.getLayoutDimension(widthAttr, LayoutParams.WRAP_CONTENT);
+                this.height = a.getLayoutDimension(heightAttr, LayoutParams.WRAP_CONTENT);
+            }
+
+            getAttrBinder():AttrBinder {
+                if (!this._attrBinder) {
+                    this._attrBinder = this.initBindAttr();
+                }
+                return this._attrBinder;
+            }
+
+            private initBindAttr():AttrBinder {
+                let classAttrBinder = LayoutParams.ClassAttrBinderClazzMap.get(this.getClass());
+                if (!classAttrBinder) {
+                    classAttrBinder = this.createClassAttrBinder();
+                    LayoutParams.ClassAttrBinderClazzMap.set(this.getClass(), classAttrBinder);
+                }
+                const attrBinder = new AttrBinder(this);
+                attrBinder.addClassAttrBind(classAttrBinder);
+                return attrBinder;
+            }
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+                return new androidui.attr.AttrBinder.ClassBinderMap()
+                    .set('layout_width', {
+                        setter(host:LayoutParams, value:any, attrBinder:AttrBinder) {
+                            host.width = attrBinder.parseDimension(value, host.width);
+                        }, getter(host:LayoutParams) {
+                            return host.width;
+                        }
+                    }).set('layout_height', {
+                        setter(host:LayoutParams, value:any, attrBinder:AttrBinder) {
+                            host.height = attrBinder.parseDimension(value, host.height);
+                        }, getter(host:LayoutParams) {
+                            return host.height;
+                        }
+                    })
             }
         }
         export class MarginLayoutParams extends LayoutParams {
-            private _leftMargin:any = 0;
-            private _topMargin:any = 0;
-            private _rightMargin:any = 0;
-            private _bottomMargin:any = 0;
-            private _leftMarginOrig:any = 0;
-            private _topMarginOrig:any = 0;
-            private _rightMarginOrig:any = 0;
-            private _bottomMarginOrig:any = 0;
-
             static DEFAULT_MARGIN_RELATIVE:number = Integer.MIN_VALUE;
-            private static MarginLayoutParamsClassAttrBind:AttrBinder.ClassBinderMap;
+            static DEFAULT_MARGIN_RESOLVED:number = 0;
+            static UNDEFINED_MARGIN = MarginLayoutParams.DEFAULT_MARGIN_RELATIVE;
 
-            public get leftMargin():number{
-                if(typeof this._leftMargin === 'number') return this._leftMargin;
-                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                try {
-                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._leftMargin, 0, parentWidth);
-                    //not save if dynamic, next get will compute again
-                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._leftMargin)){
-                        return parsedValue;
-                    }
-                    this._leftMargin = parsedValue;
-                } catch (e) {
-                    console.warn(e);
-                    return 0;
-                }
-                return this._leftMargin;
-            }
-            public get topMargin():number{
-                if(typeof this._topMargin === 'number') return this._topMargin;
-                //topMargin with percent will use parent's width
-                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                try {
-                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._topMargin, 0, parentWidth);
-                    //not save if dynamic, next get will compute again
-                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._topMargin)){
-                        return parsedValue;
-                    }
-                    this._topMargin = parsedValue;
-                } catch (e) {
-                    console.warn(e);
-                    return 0;
-                }
-                return this._topMargin;
-            }
-            public get rightMargin():number{
-                if(typeof this._rightMargin === 'number') return this._rightMargin;
-                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                try {
-                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._rightMargin, 0, parentWidth);
-                    //not save if dynamic, next get will compute again
-                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._rightMargin)){
-                        return parsedValue;
-                    }
-                    this._rightMargin = parsedValue;
-                } catch (e) {
-                    console.warn(e);
-                    return 0;
-                }
-                return this._rightMargin;
-            }
-            public get bottomMargin():number{
-                if(typeof this._bottomMargin === 'number') return this._bottomMargin;
-                //topMargin with percent will use parent's width
-                let parentWidth = View.MeasureSpec.getSize(this._measuringParentWidthMeasureSpec);
-                try {
-                    let parsedValue = this._attrBinder.parseNumberPixelSize(<any>this._bottomMargin, 0, parentWidth);
-                    //not save if dynamic, next get will compute again
-                    if(android.util.TypedValue.isDynamicUnitValue(<any>this._bottomMargin)){
-                        return parsedValue;
-                    }
-                    this._bottomMargin = parsedValue;
-                } catch (e) {
-                    console.warn(e);
-                    return 0;
-                }
-                return this._bottomMargin;
-            }
-            public set leftMargin(value) {
-                this._leftMargin = this._leftMarginOrig = value;
-            }
-            public set topMargin(value) {
-                this._topMargin = this._topMarginOrig = value;
-            }
-            public set rightMargin(value) {
-                this._rightMargin = this._rightMarginOrig = value;
-            }
-            public set bottomMargin(value) {
-                this._bottomMargin = this._bottomMarginOrig = value;
-            }
+            public leftMargin = 0;
+            public topMargin = 0;
+            public rightMargin = 0;
+            public bottomMargin = 0;
 
-            constructor();
+            constructor(context:Context, attrs:HTMLElement);
+            constructor(src:MarginLayoutParams);
             constructor(src:LayoutParams);
             constructor(width:number, height:number);
-            constructor(...args);
             constructor(...args) {
-                super(...args);
+                super(null); // first line must call super
+                if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
+                    super(0, 0);
+                    const a = (<Context>args[0]).obtainStyledAttributes(args[1]);
+                    this.setBaseAttributes(a, 'layout_width', 'layout_height');
+                    let margin = a.getDimensionPixelSize('layout_margin', -1);
+                    if (margin >= 0) {
+                        this.leftMargin = margin;
+                        this.topMargin = margin;
+                        this.rightMargin= margin;
+                        this.bottomMargin = margin;
+                    } else {
+                        this.leftMargin = a.getDimensionPixelSize('layout_marginLeft', 0);
+                        this.rightMargin = a.getDimensionPixelSize('layout_marginRight', 0);
+                        this.topMargin = a.getDimensionPixelSize('layout_marginTop', 0);
+                        this.bottomMargin = a.getDimensionPixelSize('layout_marginBottom', 0);
 
-                if (args.length === 1) {
-                    let src = args[0];
-                    if (src instanceof MarginLayoutParams) {
-                        this.leftMargin = src._leftMargin;
-                        this.topMargin = src._topMargin;
-                        this.rightMargin = src._rightMargin;
-                        this.bottomMargin = src._bottomMargin;
+                        this.leftMargin = a.getDimensionPixelSize('layout_marginStart', this.leftMargin);
+                        this.rightMargin = a.getDimensionPixelSize('layout_marginEnd', this.rightMargin);
                     }
-                }
+                    a.recycle();
+                } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
+                    super(args[0], args[1]);
+                } else if (args[0] instanceof MarginLayoutParams) {
+                    const source = args[0];
+                    this.width = source.width;
+                    this.height = source.height;
 
-                if (!MarginLayoutParams.MarginLayoutParamsClassAttrBind) {
-                    MarginLayoutParams.MarginLayoutParamsClassAttrBind = new AttrBinder.ClassBinderMap();
-                    MarginLayoutParams.MarginLayoutParamsClassAttrBind.set('marginLeft', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.leftMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._leftMarginOrig;
-                        }
-                    }).set('marginStart', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.leftMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._leftMarginOrig;
-                        }
-                    }).set('marginTop', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.topMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._topMarginOrig;
-                        }
-                    }).set('marginRight', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.rightMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._rightMarginOrig;
-                        }
-                    }).set('marginEnd', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.rightMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._rightMarginOrig;
-                        }
-                    }).set('marginBottom', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            host.bottomMargin = value;
-                        },
-                        getter(host:MarginLayoutParams) {
-                            return host._bottomMargin;
-                        }
-                    }).set('margin', {
-                        setter(host:MarginLayoutParams, value:any) {
-                            if(value==null) value = 0;
-                            let [left, top, right, bottom] = host._attrBinder.parsePaddingMarginLTRB(value);
-                            host.leftMargin = <any>left;
-                            host.topMargin = <any>top;
-                            host.rightMargin = <any>right;
-                            host.bottomMargin = <any>bottom;
-                        }
-                    })
+                    this.leftMargin = source.leftMargin;
+                    this.topMargin = source.topMargin;
+                    this.rightMargin = source.rightMargin;
+                    this.bottomMargin = source.bottomMargin;
+                } else if (args[0] instanceof ViewGroup.LayoutParams) {
+                    super(args[0]);
                 }
-                this._attrBinder.addClassAttrBind(MarginLayoutParams.MarginLayoutParamsClassAttrBind);
+            }
+
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+                return super.createClassAttrBinder().set('layout_marginLeft', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.leftMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.leftMargin;
+                    }
+                }).set('layout_marginStart', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.leftMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.leftMargin;
+                    }
+                }).set('layout_marginTop', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.topMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.topMargin;
+                    }
+                }).set('layout_marginRight', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.rightMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.rightMargin;
+                    }
+                }).set('layout_marginEnd', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.rightMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.rightMargin;
+                    }
+                }).set('layout_marginBottom', {
+                    setter(host:MarginLayoutParams, value:any) {
+                        if(value==null) value = 0;
+                        host.bottomMargin = value;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.bottomMargin;
+                    }
+                }).set('layout_margin', {
+                    setter(host:MarginLayoutParams, value:any, attrBinder:AttrBinder) {
+                        if(value==null) value = 0;
+                        let [top, right, bottom, left] = attrBinder.parsePaddingMarginTRBL(value);
+                        host.topMargin = top;
+                        host.rightMargin = right;
+                        host.bottomMargin = bottom;
+                        host.leftMargin = left;
+                    }, getter(host:MarginLayoutParams) {
+                        return host.topMargin + ' ' + host.rightMargin + ' ' + host.bottomMargin + ' ' + host.leftMargin;
+                    }
+                });
             }
 
             setMargins(left:number, top:number, right:number, bottom:number) {
@@ -2933,7 +2818,7 @@ module android.view {
             }
 
             resolveLayoutDirection(layoutDirection:number):void  {
-                //do no
+                //do nothing
             }
         }
         export interface OnHierarchyChangeListener {
@@ -2942,7 +2827,7 @@ module android.view {
         }
     }
 
-    class TouchTarget{
+    class TouchTarget {
         private static MAX_RECYCLED = 32;
         private static sRecycleBin:TouchTarget;
         private static sRecycledCount=0;

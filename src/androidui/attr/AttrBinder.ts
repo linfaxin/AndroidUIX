@@ -111,24 +111,23 @@ module androidui.attr {
 
         /**
          * @param value
-         * @returns {[left, top, right, bottom]}
+         * @returns {[top, right, bottom, left]}
          */
-        parsePaddingMarginLTRB(value):string[]{
+        parsePaddingMarginTRBL(value):number[]{
             value = (value + '');
             let parts = [];
             for(let part of value.split(' ')){
                 if(part) parts.push(part);
             }
-            let ltrb: Array<any>;
+            let trbl: Array<string>;
             switch (parts.length){
-                case 1 : ltrb = [parts[0], parts[0], parts[0], parts[0]]; break;
-                case 2 : ltrb = [parts[1], parts[0], parts[1], parts[0]]; break;
-                case 3 : ltrb = [parts[1], parts[0], parts[1], parts[2]]; break;
-                case 4 : ltrb = [parts[3], parts[0], parts[1], parts[2]]; break;
+                case 1 : trbl = [parts[0], parts[0], parts[0], parts[0]]; break;
+                case 2 : trbl = [parts[0], parts[1], parts[0], parts[1]]; break;
+                case 3 : trbl = [parts[0], parts[1], parts[2], parts[1]]; break;
+                case 4 : trbl = [parts[0], parts[1], parts[2], parts[3]]; break;
             }
-            if (ltrb) {
-                ltrb = ltrb.map((v) => this.parseDimension(v));
-                return ltrb;
+            if (trbl) {
+                return trbl.map((v) => this.parseDimension(v));
             }
             throw Error('not a padding or margin value : '+value);
 

@@ -90,7 +90,9 @@ export abstract class ReplacementTransformationMethod implements TransformationM
         //if (source instanceof Spanned) {
         //    return new ReplacementTransformationMethod.SpannedReplacementCharSequence(<Spanned> source, original, replacement);
         //} else {
-            return new ReplacementTransformationMethod.ReplacementCharSequence(source, original, replacement);
+
+            //return new ReplacementTransformationMethod.ReplacementCharSequence(source, original, replacement);
+
         //}
     }
 

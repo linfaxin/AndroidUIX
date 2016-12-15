@@ -8,18 +8,13 @@
 module androidui.widget{
     import View = android.view.View;
     import MeasureSpec = View.MeasureSpec;
-    import ImageView = android.widget.ImageView;//current undefined
-
-    window.addEventListener('AndroidUILoadFinish', ()=>{
-        //there are cross import, should import after lib load finish
-        eval('ImageView = android.widget.ImageView;');//real import now
-    });
+    import AttrBinder = androidui.attr.AttrBinder;
 
     /**
      * use a img element draw Image. It's better to use {@see ImageView} draw image on Canvas.
      */
-    export class HtmlImageView extends HtmlBaseView{
-        private mScaleType:ImageView.ScaleType;
+    export class HtmlImageView extends HtmlBaseView {
+        private mScaleType:android.widget.ImageView.ScaleType;
         private mHaveFrame = false;
         private mAdjustViewBounds = false;
         private mMaxWidth = Number.MAX_SAFE_INTEGER;
@@ -36,35 +31,65 @@ module androidui.widget{
         constructor(context:android.content.Context, bindElement?:HTMLElement, defStyle?:Map<string, string>) {
             super(context, bindElement, defStyle);
             this.initImageView();
-            this._attrBinder.addAttr('src', (value)=>{
-                this.setImageURI(value);
-            }, ()=>{
-                return this.mImgElement.src;
-            });
-            this._attrBinder.addAttr('adjustViewBounds', (value)=>{
-                this.setAdjustViewBounds(this._attrBinder.parseBoolean(value, false));
-            });
-            this._attrBinder.addAttr('maxWidth', (value)=>{
-                let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getWidth() : 0;
-                this.setMaxWidth(this._attrBinder.parseNumberPixelSize(value, this.mMaxWidth, baseValue));
-            }, ()=>{
-                return this.mMaxWidth;
-            });
-            this._attrBinder.addAttr('maxHeight', (value)=>{
-                let baseValue = this.getParent() instanceof View ? (<View><any>this.getParent()).getHeight() : 0;
-                this.setMaxHeight(this._attrBinder.parseNumberPixelSize(value, this.mMaxHeight, baseValue));
-            }, ()=>{
-                return this.mMaxHeight;
-            });
-            this._attrBinder.addAttr('scaleType', (value)=>{
-                this.setScaleType(ImageView.parseScaleType(value, this.mScaleType));
-            }, ()=>{
-                return this.mScaleType.toString();
+
+            const a = context.obtainStyledAttributes(bindElement, defStyle);
+            const src = a.getString('src');
+            if (src) {
+                this.setImageURI(src);
+            }
+            this.setAdjustViewBounds(a.getBoolean('adjustViewBounds', false));
+            this.setMaxWidth(a.getDimensionPixelSize('maxWidth', this.mMaxWidth));
+            this.setMaxHeight(a.getDimensionPixelSize('maxHeight', this.mMaxHeight));
+            this.setScaleType(android.widget.ImageView.parseScaleType(a.getAttrValue('scaleType'), this.mScaleType));
+            this.setImageAlpha(a.getInt('drawableAlpha', this.mAlpha));
+        }
+
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {
+            return super.createClassAttrBinder().set('src', {
+                setter(v:HtmlImageView, value:any, attrBinder:AttrBinder) {
+                    v.setImageURI(value);
+                }, getter(v:HtmlImageView) {
+                    return v.mImgElement.src;
+                }
+            }).set('adjustViewBounds', {
+                setter(v:HtmlImageView, value:any, attrBinder:AttrBinder) {
+                    v.setAdjustViewBounds(attrBinder.parseBoolean(value, false));
+                }, getter(v:HtmlImageView) {
+                    return v.getAdjustViewBounds();
+                }
+            }).set('maxWidth', {
+                setter(v:HtmlImageView, value:any, attrBinder:AttrBinder) {
+                    v.setMaxWidth(attrBinder.parseNumberPixelSize(value, v.mMaxWidth));
+                }, getter(v:HtmlImageView) {
+                    return v.mMaxWidth;
+                }
+            }).set('maxHeight', {
+                setter(v:HtmlImageView, value:any, attrBinder:AttrBinder) {
+                    v.setMaxHeight(attrBinder.parseNumberPixelSize(value, v.mMaxHeight));
+                }, getter(v:HtmlImageView) {
+                    return v.mMaxHeight;
+                }
+            }).set('scaleType', {
+                setter(v:HtmlImageView, value:any, attrBinder:AttrBinder) {
+                    if (typeof value === 'number') {
+                        v.setScaleType(value);
+                    } else {
+                        v.setScaleType(android.widget.ImageView.parseScaleType(value, v.mScaleType));
+                    }
+                }, getter(v:HtmlImageView) {
+                    return v.mScaleType;
+                }
+            }).set('drawableAlpha', {
+                setter(v: HtmlImageView, value: any, attrBinder:AttrBinder) {
+                    v.setImageAlpha(attrBinder.parseInt(value, v.mAlpha));
+                }, getter(v: HtmlImageView) {
+                    return v.mAlpha;
+                }
             });
         }
 
         private initImageView(){
-            this.mScaleType  = ImageView.ScaleType.FIT_CENTER;
+            this.mScaleType  = android.widget.ImageView.ScaleType.FIT_CENTER;
 
             this.mImgElement = document.createElement('img');
             this.mImgElement.style.position = "absolute";
@@ -91,7 +116,7 @@ module androidui.widget{
         setAdjustViewBounds(adjustViewBounds:boolean) {
             this.mAdjustViewBounds = adjustViewBounds;
             if (adjustViewBounds) {
-                this.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                this.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
             }
         }
 
@@ -113,7 +138,7 @@ module androidui.widget{
             this.mImgElement.style.opacity = '0';
             this.mImgElement.src = uri;
         }
-        setScaleType(scaleType:ImageView.ScaleType) {
+        setScaleType(scaleType:android.widget.ImageView.ScaleType) {
             if (scaleType == null) {
                 throw new Error('NullPointerException');
             }
@@ -121,14 +146,14 @@ module androidui.widget{
             if (this.mScaleType != scaleType) {
                 this.mScaleType = scaleType;
 
-                this.setWillNotCacheDrawing(scaleType == ImageView.ScaleType.CENTER);
+                this.setWillNotCacheDrawing(scaleType == android.widget.ImageView.ScaleType.CENTER);
 
                 this.requestLayout();
                 this.invalidate();
             }
         }
 
-        getScaleType():ImageView.ScaleType {
+        getScaleType():android.widget.ImageView.ScaleType {
             return this.mScaleType;
         }
 
@@ -302,7 +327,7 @@ module androidui.widget{
                  */
                 return;
             }
-            if(this.mScaleType === ImageView.ScaleType.FIT_XY){
+            if(this.mScaleType === android.widget.ImageView.ScaleType.FIT_XY){
                 this.mImgElement.style.width = vwidth+'px';
                 this.mImgElement.style.height = vheight+'px';
                 return;
@@ -312,20 +337,20 @@ module androidui.widget{
             this.mImgElement.style.width = dwidth+'px';
             this.mImgElement.style.height = dheight+'px';
 
-            if (ImageView.ScaleType.MATRIX === this.mScaleType) {
+            if (android.widget.ImageView.ScaleType.MATRIX === this.mScaleType) {
                 //nothing : MATRIX is not support
 
             }else if (fits) {
                 // The bitmap fits exactly, no transform needed.
 
-            } else if (ImageView.ScaleType.CENTER === this.mScaleType) {
+            } else if (android.widget.ImageView.ScaleType.CENTER === this.mScaleType) {
                 // Center bitmap in view, no scaling.
                 let left = Math.round((vwidth - dwidth) * 0.5);
                 let top = Math.round((vheight - dheight) * 0.5);
                 this.mImgElement.style.left = left+'px';
                 this.mImgElement.style.top = top+'px';
 
-            } else if (ImageView.ScaleType.CENTER_CROP === this.mScaleType) {
+            } else if (android.widget.ImageView.ScaleType.CENTER_CROP === this.mScaleType) {
 
                 let scale;
                 let dx = 0, dy = 0;
@@ -346,7 +371,7 @@ module androidui.widget{
                     this.mImgElement.style.top = Math.round(dy)+'px';
                 }
 
-            } else if (ImageView.ScaleType.CENTER_INSIDE === this.mScaleType) {
+            } else if (android.widget.ImageView.ScaleType.CENTER_INSIDE === this.mScaleType) {
                 let scale = 1;
                 if (dwidth <= vwidth && dheight <= vheight) {
                     //small nothing
@@ -380,19 +405,19 @@ module androidui.widget{
                     this.mImgElement.style.height = vheight+'px';
                 }
                 let scale = Math.min(wScale, hScale);
-                if (ImageView.ScaleType.FIT_CENTER === this.mScaleType) {
+                if (android.widget.ImageView.ScaleType.FIT_CENTER === this.mScaleType) {
                     let dx = Math.round((vwidth - dwidth * scale) * 0.5);
                     let dy = Math.round((vheight - dheight * scale) * 0.5);
                     this.mImgElement.style.left = dx + 'px';
                     this.mImgElement.style.top = dy+'px';
 
-                }else if (ImageView.ScaleType.FIT_END === this.mScaleType) {
+                }else if (android.widget.ImageView.ScaleType.FIT_END === this.mScaleType) {
                     let dx = Math.round((vwidth - dwidth * scale));
                     let dy = Math.round((vheight - dheight * scale));
                     this.mImgElement.style.left = dx + 'px';
                     this.mImgElement.style.top = dy+'px';
 
-                }else if (ImageView.ScaleType.FIT_START === this.mScaleType) {
+                }else if (android.widget.ImageView.ScaleType.FIT_START === this.mScaleType) {
                     //default is fit start
                 }
 

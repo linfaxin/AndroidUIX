@@ -122,16 +122,13 @@ module android.view{
                 let refLayoutId = domtree.getAttribute('layout');//@layout/xxx
                 if(!refLayoutId) return null;
                 let refEle = this.mContext.getResources().getLayout(refLayoutId);
-                let view = this.inflate(refEle, viewParent, false);
-                if(view){
-                    //merge attr
-                    for(let attr of Array.from(domtree.attributes)){
-                        let name = attr.name;
-                        if(name==='layout') continue;
-                        view.bindElement.setAttribute(name, attr.value);
-                    }
+                //merge attr
+                for(let attr of Array.from(domtree.attributes)){
+                    let name = attr.name;
+                    if(name === 'layout') continue;
+                    refEle.setAttribute(name, attr.value);
                 }
-                return view;
+                return this.inflate(refEle, viewParent);
 
             }else if(className === 'MERGE'){
                 if(!viewParent) throw Error('merge tag need ViewParent');
@@ -161,7 +158,7 @@ module android.view{
             }
 
             let rootView:View;
-            if(styleAttrValue) rootView = new rootViewClass(this.mContext, domtree, defStyle);
+            if(defStyle) rootView = new rootViewClass(this.mContext, domtree, defStyle);
             else rootView = new rootViewClass(this.mContext, domtree);
 
             // androidui add: support for HtmlDataAdapter
@@ -175,13 +172,9 @@ module android.view{
 
             let params;
             if(viewParent){
-                params = viewParent.generateDefaultLayoutParams();
-                params.parseAttributeFrom(domtree, this.mContext);
+                params = viewParent.generateLayoutParamsFromAttr(domtree);
                 rootView.setLayoutParams(params);
             }
-
-            //fire init attr change
-            rootView._fireInitedAttributeChange();
 
             //parse children
             if(rootView instanceof ViewGroup){
@@ -194,7 +187,13 @@ module android.view{
             }
 
             rootView.onFinishInflate();
-            if(attachToRoot && viewParent) viewParent.addView(rootView);
+            if(attachToRoot && viewParent) {
+                if (params) {
+                    viewParent.addView(rootView, params);
+                } else {
+                    viewParent.addView(rootView);
+                }
+            }
 
             return rootView;
         }

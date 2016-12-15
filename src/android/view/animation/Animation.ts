@@ -334,25 +334,25 @@ export abstract class Animation {
      */
     setListenerHandler(handler:Handler):void  {
         if (this.mListenerHandler == null) {
-            const _this=this;
+            const inner_this=this;
             this.mOnStart = {
                 run():void  {
-                    if (_this.mListener != null) {
-                        _this.mListener.onAnimationStart(_this);
+                    if (inner_this.mListener != null) {
+                        inner_this.mListener.onAnimationStart(inner_this);
                     }
                 }
             };
             this.mOnRepeat = {
                 run():void  {
-                    if (_this.mListener != null) {
-                        _this.mListener.onAnimationRepeat(_this);
+                    if (inner_this.mListener != null) {
+                        inner_this.mListener.onAnimationRepeat(inner_this);
                     }
                 }
             };
             this.mOnEnd = {
                 run():void  {
-                    if (_this.mListener != null) {
-                        _this.mListener.onAnimationEnd(_this);
+                    if (inner_this.mListener != null) {
+                        inner_this.mListener.onAnimationEnd(inner_this);
                     }
                 }
             };

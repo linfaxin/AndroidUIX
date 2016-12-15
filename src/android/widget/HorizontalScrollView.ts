@@ -1529,7 +1529,7 @@ export class HorizontalScrollView extends FrameLayout {
 //    }
 //
 //    static CREATOR:Parcelable.Creator<SavedState> = (()=>{
-//        const _this=this;
+//        const inner_this=this;
 //        class _Inner extends Parcelable.Creator<SavedState> {
 //
 //            createFromParcel(_in:Parcel):SavedState  {

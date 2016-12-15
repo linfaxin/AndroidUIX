@@ -125,13 +125,12 @@ module android.graphics.drawable{
                 let dr:Drawable;
                 let stateSpec:number[] = [];
                 let typedArray = r.obtainAttributes(item);
-                for(let attr of Array.from(item.attributes)){
-                    let attrName = attr.name;
-                    if(attrName === 'android:drawable'){
+                for(let attrName of typedArray.getLowerCaseAttrNames()) {
+                    if(attrName === 'drawable'){
                         dr = typedArray.getDrawable(attrName);
 
-                    }else if(attrName.startsWith('android:state_')){
-                        let state = attrName.substring('android:state_'.length);
+                    }else if(attrName.startsWith('state_')){
+                        let state = attrName.substring('state_'.length);
                         let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
                         if(typeof stateValue === "number"){
                             stateSpec.push(typedArray.getBoolean(attrName, true) ? stateValue : -stateValue);

@@ -184,7 +184,7 @@ export class TextLine {
                 // object-replacement character and the remainder with zero width
                 // non-break space aka BOM.  Cursor movement code skips these
                 // zero-width characters.
-                let chars = this.mChars;
+                let chars = this.mChars.split('');
                 for (let i:number = start, inext:number; i < limit; i = inext) {
                     inext = this.mReplacementSpanSpanSet.getNextTransition(i, limit);
                     if (this.mReplacementSpanSpanSet.hasSpansIntersecting(i, inext)) {
@@ -196,6 +196,7 @@ export class TextLine {
                         }
                     }
                 }
+                this.mChars = chars.join('');
             }
         }
         this.mTabs = tabStops;

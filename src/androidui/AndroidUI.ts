@@ -335,9 +335,9 @@ module androidui {
         }
 
         private initRootSizeChange(){
-            const _this = this;
+            const inner_this = this;
             window.addEventListener('resize', ()=>{
-                _this.notifyRootSizeChange();
+                inner_this.notifyRootSizeChange();
             });
 
             let lastWidth = this.androidUIElement.offsetWidth;
@@ -345,12 +345,12 @@ module androidui {
             if(lastWidth>0 && lastHeight>0) this.notifyRootSizeChange();
 
             setInterval(()=>{
-                let width = _this.androidUIElement.offsetWidth;
-                let height = _this.androidUIElement.offsetHeight;
+                let width = inner_this.androidUIElement.offsetWidth;
+                let height = inner_this.androidUIElement.offsetHeight;
                 if(lastHeight !== height || lastWidth !== width){
                     lastWidth = width;
                     lastHeight = height;
-                    _this.notifyRootSizeChange();
+                    inner_this.notifyRootSizeChange();
                 }
 
             }, 500);

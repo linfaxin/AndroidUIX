@@ -358,12 +358,12 @@ module androidui.widget{
                 this.state = state;
                 this.onStateChange(state, oldState);
 
-                const _this = this;
+                const inner_this = this;
                 switch (state){
                     case PullRefreshLoadLayout.State_Header_RefreshFail :
                         this.postDelayed({
                             run(){
-                                if(state === _this.state){
+                                if(state === inner_this.state){
                                     prll.setHeaderState(PullRefreshLoadLayout.State_Header_Normal);
                                 }
                             }

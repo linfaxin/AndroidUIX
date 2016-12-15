@@ -94,10 +94,10 @@ module android.widget {
 
         private mHandler = new Handler();
         private mDelayHide:Runnable = (()=> {
-            const _this = this;
+            const inner_this = this;
             return {
                 run() {
-                    _this.mTN.hide();
+                    inner_this.mTN.hide();
                 }
             }
         })();
@@ -302,24 +302,24 @@ module android.widget {
         export class TN {
 
             mShow:Runnable = (()=> {
-                const _this = this;
+                const inner_this = this;
                 class _Inner implements Runnable {
 
                     run():void {
-                        _this.handleShow();
+                        inner_this.handleShow();
                     }
                 }
                 return new _Inner();
             })();
 
             mHide:Runnable = (()=> {
-                const _this = this;
+                const inner_this = this;
                 class _Inner implements Runnable {
 
                     run():void {
-                        _this.handleHide();
+                        inner_this.handleHide();
                         // Don't do this in handleHide() because it is also invoked by handleShow()
-                        _this.mNextView = null;
+                        inner_this.mNextView = null;
                     }
                 }
                 return new _Inner();
