@@ -1504,30 +1504,31 @@ module android.widget{
             constructor(source:ViewGroup.LayoutParams);
             constructor(width:number, height:number, weight?:number);
             constructor(...args) {
-                super(null); // first line must call super
+                super(...(() => {
+                    if (args[0] instanceof Context && args[1] instanceof HTMLElement) return [args[0], args[1]];
+                    else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] === 'number') return [args[0], args[1]];
+                    else if (typeof args[0] === 'number' && typeof args[1] === 'number') return [args[0], args[1]];
+                    else if (args[0] instanceof LinearLayout.LayoutParams) return [args[0]];
+                    else if (args[0] instanceof ViewGroup.MarginLayoutParams) return [args[0]];
+                    else if (args[0] instanceof ViewGroup.LayoutParams) return [args[0]];
+                })());
                 if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
                     const c = <Context>args[0];
                     const attrs = <HTMLElement>args[1];
-                    super(c, attrs);
                     const a = c.obtainStyledAttributes(attrs);
                     this.weight = a.getFloat('layout_weight', 0);
                     this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), -1);
                     a.recycle();
                 } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
-                    super(args[0], args[1]);
                     this.weight = args[2];
                 } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
-                    super(args[0], args[1]);
                     this.weight = 0;
                 } else if (args[0] instanceof LinearLayout.LayoutParams) {
                     const source = <LinearLayout.LayoutParams>args[0];
-                    super(source);
                     this.weight = source.weight;
                     this.gravity = source.gravity;
                 } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
-                    super(args[0]);
                 } else if (args[0] instanceof ViewGroup.LayoutParams) {
-                    super(args[0]);
                 }
             }
 

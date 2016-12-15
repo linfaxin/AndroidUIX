@@ -1364,28 +1364,28 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
     constructor(source:ViewGroup.MarginLayoutParams);
     constructor(source:LayoutParams);
     constructor(...args){
-        super(null); // first line must call super
+        super(...(() => {
+            if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) return [args[0], args[1]];
+            else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] === 'number') return [args[0], args[1]];
+            else if (typeof args[0] === 'number' && typeof args[1] === 'number') return [args[0], args[1]];
+            else if (args[0] instanceof DrawerLayout.LayoutParams) return [args[0]];
+            else if (args[0] instanceof ViewGroup.MarginLayoutParams) return [args[0]];
+            else if (args[0] instanceof ViewGroup.LayoutParams) return [args[0]];
+        })());
         if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
             const c = <Context>args[0];
             const attrs = <HTMLElement>args[1];
-            super(c, attrs);
-
             const a = c.obtainStyledAttributes(attrs);
             this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), Gravity.NO_GRAVITY);
             a.recycle();
         } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
-            super(args[0], args[1]);
             this.gravity = args[2];
         } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
-            super(args[0], args[1]);
         } else if (args[0] instanceof DrawerLayout.LayoutParams) {
             const source = <DrawerLayout.LayoutParams>args[0];
-            super(source);
             this.gravity = source.gravity;
         } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
-            super(args[0]);
         } else if (args[0] instanceof ViewGroup.LayoutParams) {
-            super(args[0]);
         }
     }
 

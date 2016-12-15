@@ -2692,16 +2692,17 @@ module android.support.v4.view {
             constructor();
             constructor(context:android.content.Context, attrs:HTMLElement);
             constructor(...args) {
-                super(null); // first line must call super
+                super(...(() => {
+                    if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) return [args[0], args[1]];
+                    else if (args.length === 0)  return [ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT];
+                })());
                 if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) {
                     const c = <android.content.Context>args[0];
                     const attrs = <HTMLElement>args[1];
-                    super(c, attrs);
                     const a = c.obtainStyledAttributes(attrs);
                     this.gravity = Gravity.parseGravity(a.getAttrValue('layout_gravity'), Gravity.TOP);
                     a.recycle();
                 } else if (args.length === 0) {
-                    super(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                 }
             }
 

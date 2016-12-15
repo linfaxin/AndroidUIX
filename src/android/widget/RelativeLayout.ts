@@ -1203,11 +1203,16 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
     constructor(source:ViewGroup.LayoutParams);
     constructor(source:ViewGroup.MarginLayoutParams);
     constructor(...args){
-        super(null); // first line must call super
+        super(...(() => {
+            if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) return [args[0], args[1]];
+            else if (typeof args[0] === 'number' && typeof args[1] === 'number') return [args[0], args[1]];
+            else if (args[0] instanceof RelativeLayout.LayoutParams) return [args[0]];
+            else if (args[0] instanceof ViewGroup.MarginLayoutParams) return [args[0]];
+            else if (args[0] instanceof ViewGroup.LayoutParams) return [args[0]];
+        })());
         if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
             const c = <Context>args[0];
             const attrs = <HTMLElement>args[1];
-            super(c, attrs);
             let a = c.obtainStyledAttributes(attrs);
             // const targetSdkVersion:number = c.getApplicationInfo().targetSdkVersion;
             this.mIsRtlCompatibilityMode = false;//(targetSdkVersion < JELLY_BEAN_MR1 || !c.getApplicationInfo().hasRtlSupport());
@@ -1294,16 +1299,13 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
             super(args[0], args[1]);
         } else if (args[0] instanceof RelativeLayout.LayoutParams) {
             const source = <RelativeLayout.LayoutParams>args[0];
-            super(source);
             this.mIsRtlCompatibilityMode = source.mIsRtlCompatibilityMode;
             this.mRulesChanged = source.mRulesChanged;
             this.alignWithParent = source.alignWithParent;
             System.arraycopy(source.mRules, RelativeLayout.LEFT_OF, this.mRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
             System.arraycopy(source.mInitialRules, RelativeLayout.LEFT_OF, this.mInitialRules, RelativeLayout.LEFT_OF, RelativeLayout.VERB_COUNT);
         } else if (args[0] instanceof ViewGroup.MarginLayoutParams) {
-            super(args[0]);
         } else if (args[0] instanceof ViewGroup.LayoutParams) {
-            super(args[0]);
         }
     }
 

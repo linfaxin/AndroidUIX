@@ -5584,16 +5584,17 @@ module android.widget {
             constructor(w:number, h:number, viewType:number);
             constructor(source:ViewGroup.LayoutParams);
             constructor(...args){
-                super(null); // first line must call super
+                super(...(() => {
+                    if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) return [args[0], args[1]];
+                    else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] === 'number') return [args[0], args[1]];
+                    else if (typeof args[0] === 'number' && typeof args[1] === 'number') return [args[0], args[1]];
+                    else if (args[0] instanceof ViewGroup.LayoutParams) return [args[0]];
+                })());
                 if (args[0] instanceof android.content.Context && args[1] instanceof HTMLElement) {
-                    super(args[0], args[1]);
                 } else if (typeof args[0] === 'number' && typeof args[1] === 'number' && typeof args[2] == 'number') {
-                    super(args[0], args[1]);
                     this.viewType = args[2];
                 } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
-                    super(args[0], args[1]);
                 } else if (args[0] instanceof ViewGroup.LayoutParams) {
-                    super(args[0]);
                 }
             }
         }

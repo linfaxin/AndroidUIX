@@ -2627,6 +2627,7 @@ module android.view {
             constructor(context:Context, attrs:HTMLElement);
             constructor(width:number, height:number);
             constructor(src:LayoutParams);
+            constructor(...args);
             constructor(...args) {
                 super();
                 if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
@@ -2704,10 +2705,16 @@ module android.view {
             constructor(src:MarginLayoutParams);
             constructor(src:LayoutParams);
             constructor(width:number, height:number);
+            constructor(...args);
             constructor(...args) {
-                super(null); // first line must call super
+                super(...(() => {
+                    if (args[0] instanceof Context && args[1] instanceof HTMLElement) return [0, 0];
+                    else if (typeof args[0] === 'number' && typeof args[1] === 'number') return [args[0], args[1]];
+                    else if (args[0] instanceof MarginLayoutParams) return [args[0]];
+                    else if (args[0] instanceof ViewGroup.LayoutParams) return [args[0]];
+                })());
+
                 if (args[0] instanceof Context && args[1] instanceof HTMLElement) {
-                    super(0, 0);
                     const a = (<Context>args[0]).obtainStyledAttributes(args[1]);
                     this.setBaseAttributes(a, 'layout_width', 'layout_height');
                     let margin = a.getDimensionPixelSize('layout_margin', -1);
@@ -2727,7 +2734,6 @@ module android.view {
                     }
                     a.recycle();
                 } else if (typeof args[0] === 'number' && typeof args[1] === 'number') {
-                    super(args[0], args[1]);
                 } else if (args[0] instanceof MarginLayoutParams) {
                     const source = args[0];
                     this.width = source.width;
@@ -2738,7 +2744,6 @@ module android.view {
                     this.rightMargin = source.rightMargin;
                     this.bottomMargin = source.bottomMargin;
                 } else if (args[0] instanceof ViewGroup.LayoutParams) {
-                    super(args[0]);
                 }
             }
 
