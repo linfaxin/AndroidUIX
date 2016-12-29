@@ -1219,7 +1219,7 @@ export class LayoutParams extends ViewGroup.MarginLayoutParams {
             const rules:string[] = this.mRules;
             //noinspection MismatchedReadAndWriteOfArray
             const initialRules:string[] = this.mInitialRules;
-            for (let attr of a.getLowerCaseAttrNames()) {
+            for (let attr of a.getLowerCaseNoNamespaceAttrNames()) {
                 switch(attr) {
                     case 'layout_alignwithparentifmissing':
                         this.alignWithParent = a.getBoolean(attr, false);

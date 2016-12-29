@@ -514,7 +514,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
         //         ap, com.android.internal.R.styleable.TextAppearance);
         // }
         // if (appearance != null) {
-        //     for (let attr of appearance.getLowerCaseAttrNames()) {
+        //     for (let attr of appearance.getLowerCaseNoNamespaceAttrNames()) {
         //         switch (attr) {
         //             case 'textcolorhighlight':
         //                 textColorHighlight = appearance.getColor(attr, textColorHighlight);
@@ -595,7 +595,7 @@ export class TextView extends View implements ViewTreeObserver.OnPreDrawListener
 
         let a = context.obtainStyledAttributes(bindElement, defStyle);
 
-        for (let attr of a.getLowerCaseAttrNames()) {
+        for (let attr of a.getLowerCaseNoNamespaceAttrNames()) {
             switch (attr) {
                 case 'editable':
                     editable = a.getBoolean(attr, editable);

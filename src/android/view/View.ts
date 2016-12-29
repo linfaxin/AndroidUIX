@@ -1498,7 +1498,7 @@ module android.view {
             // let rightPaddingDefined = false;
 
             // const targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
-            for (let attr of a.getLowerCaseAttrNames()) {
+            for (let attr of a.getLowerCaseNoNamespaceAttrNames()) {
                 switch (attr) {
                     case 'background':
                         background = a.getDrawable(attr);

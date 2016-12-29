@@ -125,7 +125,7 @@ module android.graphics.drawable{
                 let dr:Drawable;
                 let stateSpec:number[] = [];
                 let typedArray = r.obtainAttributes(item);
-                for(let attrName of typedArray.getLowerCaseAttrNames()) {
+                for(let attrName of typedArray.getLowerCaseNoNamespaceAttrNames()) {
                     if(attrName === 'drawable'){
                         dr = typedArray.getDrawable(attrName);
 

@@ -176,7 +176,7 @@ module android.view {
         private initFromAttributes(context:Context, attrs:HTMLElement, defStyle?:Map<string, string>) {
             const a = context.obtainStyledAttributes(attrs, defStyle);
 
-            for (let attr of a.getLowerCaseAttrNames()) {
+            for (let attr of a.getLowerCaseNoNamespaceAttrNames()) {
                 switch (attr) {
                     case 'clipchildren':
                         this.setClipChildren(a.getBoolean(attr, true));

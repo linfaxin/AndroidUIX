@@ -40,8 +40,7 @@ module android.content.res {
             const attrMap = new Map<string, string>();
             if (defStyleAttr) {
                 for(let [key, value] of defStyleAttr.entries()) {
-                    let attrName = key.split(":").pop().toLowerCase();//remove namespace 'android:'
-                    attrMap.set(attrName, value);
+                    attrMap.set(key.toLowerCase(), value); // lower case like dom's attribute
                 }
             }
             if (xml) {
@@ -50,14 +49,14 @@ module android.content.res {
                     const map = res.getStyleAsMap(refStyleString);
                     if (map) {
                         for(let [key, value] of map.entries()) {
-                            let attrName = key.split(":").pop().toLowerCase();//remove namespace 'android:'
-                            attrMap.set(attrName, value);
+                            attrMap.set(key.toLowerCase(), value);
                         }
                     }
                 }
                 for (let attr of Array.from(xml.attributes)) {
-                    let attrName = attr.name.split(":").pop().toLowerCase();//remove namespace 'android:'
-                    attrMap.set(attrName, attr.value);
+                    const name = attr.name;
+                    if (name === 'android:style' || name === 'style') continue;
+                    attrMap.set(name, attr.value);
                 }
             }
 
@@ -98,7 +97,7 @@ module android.content.res {
 
         /**
          * Return the attrName for the the index in this array.
-         * AndroidUIX Deprecated: please use {@link #getLowerCaseAttrNames} to traverse the attrNames
+         * AndroidUIX Deprecated: please use {@link #getLowerCaseNoNamespaceAttrNames} to traverse the attrNames
          * @deprecated
          */
         public getIndex(keyIndex:number):string {
@@ -108,8 +107,12 @@ module android.content.res {
             return this.attrMapKeysCache[keyIndex];
         }
 
-        public getLowerCaseAttrNames():IterableIterator<string> {
-            return this.attrMap.keys();
+        public getLowerCaseNoNamespaceAttrNames():Array<string> {
+            const keys = [];
+            for(let key of this.attrMap.keys()) {
+                keys.push(key.split(':').pop());
+            }
+            return keys;
         }
 
         /**
@@ -120,8 +123,8 @@ module android.content.res {
         }
 
         public getAttrValue(attrName:string):string {
-            attrName = attrName.split(":").pop().toLowerCase();//remove namespace 'android:'
-            return this.attrMap && this.attrMap.get(attrName && attrName.toLowerCase());
+            const name = attrName.toLowerCase();
+            return this.attrMap && (this.attrMap.get(name) || this.attrMap.get('android:' + name));
         }
 
         public getResourceId(attrName:string, defaultResourceId:string):string {
@@ -380,7 +383,8 @@ module android.content.res {
          */
         public hasValueOrEmpty(attrName:string):boolean {
             this.checkRecycled();
-            return this.attrMap && this.attrMap.has(attrName);
+            const name = attrName.toLowerCase();
+            return this.attrMap && (this.attrMap.has(name) || this.attrMap.has('android:' + name));
         }
 
 

@@ -27,180 +27,180 @@ module android.R {
     export class attr {
 
         static textViewStyle = new Map<string, string>()
-            .set('textSize', '14sp')
-            .set('layerType', 'software')
-            .set('textColor', '@android:color/textView_textColor')
-            .set('textColorHint', '#ff808080');
+            .set('android:textSize', '14sp')
+            .set('android:layerType', 'software')
+            .set('android:textColor', '@android:color/textView_textColor')
+            .set('android:textColorHint', '#ff808080');
 
         static buttonStyle = new Map<string, string>(attr.textViewStyle)
-            .set('background', '@android:drawable/btn_default')
-            .set('focusable', 'true')
-            .set('clickable', 'true')
-            .set('minHeight', '48dp')
-            .set('minWidth', '64dp')
-            .set('textSize', '18sp')
-            .set('gravity', 'center');
+            .set('android:background', '@android:drawable/btn_default')
+            .set('android:focusable', 'true')
+            .set('android:clickable', 'true')
+            .set('android:minHeight', '48dp')
+            .set('android:minWidth', '64dp')
+            .set('android:textSize', '18sp')
+            .set('android:gravity', 'center');
 
         static editTextStyle = new Map<string, string>(attr.textViewStyle)
-            .set('background', '@android:drawable/editbox_background')
-            .set('focusable', 'true')
-            .set('focusableInTouchMode', 'true')
-            .set('clickable', 'true')
-            .set('textSize', '18sp')
-            .set('gravity', 'center_vertical');
+            .set('android:background', '@android:drawable/editbox_background')
+            .set('android:focusable', 'true')
+            .set('android:focusableInTouchMode', 'true')
+            .set('android:clickable', 'true')
+            .set('android:textSize', '18sp')
+            .set('android:gravity', 'center_vertical');
 
         static imageButtonStyle = new Map<string, string>()
-            .set('background', '@android:drawable/btn_default')
-            .set('focusable', 'true')
-            .set('clickable', 'true')
-            .set('gravity', 'center');
+            .set('android:background', '@android:drawable/btn_default')
+            .set('android:focusable', 'true')
+            .set('android:clickable', 'true')
+            .set('android:gravity', 'center');
 
         static checkboxStyle = new Map<string, string>(attr.buttonStyle)
-            .set('background', '@null')
-            .set('button', '@android:drawable/btn_check');
+            .set('android:background', '@null')
+            .set('android:button', '@android:drawable/btn_check');
 
         static radiobuttonStyle = new Map<string, string>(attr.buttonStyle)
-            .set('background', '@null')
-            .set('button', '@android:drawable/btn_radio');
+            .set('android:background', '@null')
+            .set('android:button', '@android:drawable/btn_radio');
 
         static checkedTextViewStyle = new Map<string, string>()
-            .set('textAlignment', 'viewStart');
+            .set('android:textAlignment', 'viewStart');
 
         static progressBarStyle = new Map<string, string>()
-            .set('indeterminateOnly', 'true')
-            .set('indeterminateDrawable', '@android:drawable/progress_medium_holo')
-            .set('indeterminateBehavior', 'repeat')
-            .set('indeterminateDuration', '3500')
-            .set('minWidth', '48dp')
-            .set('maxWidth', '48dp')
-            .set('minHeight', '48dp')
-            .set('maxHeight', '48dp')
-            .set('mirrorForRtl', 'false');
+            .set('android:indeterminateOnly', 'true')
+            .set('android:indeterminateDrawable', '@android:drawable/progress_medium_holo')
+            .set('android:indeterminateBehavior', 'repeat')
+            .set('android:indeterminateDuration', '3500')
+            .set('android:minWidth', '48dp')
+            .set('android:maxWidth', '48dp')
+            .set('android:minHeight', '48dp')
+            .set('android:maxHeight', '48dp')
+            .set('android:mirrorForRtl', 'false');
 
         static progressBarStyleHorizontal = new Map<string, string>()
-            .set('indeterminateOnly', 'false')
-            .set('progressDrawable', '@android:drawable/progress_horizontal_holo')
-            .set('indeterminateDrawable', '@android:drawable/progress_indeterminate_horizontal_holo')
-            .set('indeterminateBehavior', 'repeat')
-            .set('indeterminateDuration', '3500')
-            .set('minHeight', '20dp')
-            .set('maxHeight', '20dp')
-            .set('mirrorForRtl', 'true');
+            .set('android:indeterminateOnly', 'false')
+            .set('android:progressDrawable', '@android:drawable/progress_horizontal_holo')
+            .set('android:indeterminateDrawable', '@android:drawable/progress_indeterminate_horizontal_holo')
+            .set('android:indeterminateBehavior', 'repeat')
+            .set('android:indeterminateDuration', '3500')
+            .set('android:minHeight', '20dp')
+            .set('android:maxHeight', '20dp')
+            .set('android:mirrorForRtl', 'true');
 
         static progressBarStyleSmall = new Map<string, string>(attr.progressBarStyle)
-            .set('indeterminateDrawable', '@android:drawable/progress_small_holo')
-            .set('minWidth', '16dp')
-            .set('maxWidth', '16dp')
-            .set('minHeight', '16dp')
-            .set('maxHeight', '16dp');
+            .set('android:indeterminateDrawable', '@android:drawable/progress_small_holo')
+            .set('android:minWidth', '16dp')
+            .set('android:maxWidth', '16dp')
+            .set('android:minHeight', '16dp')
+            .set('android:maxHeight', '16dp');
 
         static progressBarStyleLarge = new Map<string, string>(attr.progressBarStyle)
-            .set('indeterminateDrawable', '@android:drawable/progress_large_holo')
-            .set('minWidth', '76dp')
-            .set('maxWidth', '76dp')
-            .set('minHeight', '76dp')
-            .set('maxHeight', '76dp');
+            .set('android:indeterminateDrawable', '@android:drawable/progress_large_holo')
+            .set('android:minWidth', '76dp')
+            .set('android:maxWidth', '76dp')
+            .set('android:minHeight', '76dp')
+            .set('android:maxHeight', '76dp');
 
         static seekBarStyle = new Map<string, string>()
-            .set('indeterminateOnly', 'false')
-            .set('progressDrawable', '@android:drawable/scrubber_progress_horizontal_holo_light')
-            .set('indeterminateDrawable', '@android:drawable/scrubber_progress_horizontal_holo_light')
-            .set('minHeight', '13dp')
-            .set('maxHeight', '13dp')
-            .set('thumb', '@android:drawable/scrubber_control_selector_holo')
-            .set('thumbOffset', '16dp')
-            .set('focusable', 'true')
-            .set('paddingLeft', '16dp')
-            .set('paddingRight', '16dp')
-            .set('mirrorForRtl', 'true');
+            .set('android:indeterminateOnly', 'false')
+            .set('android:progressDrawable', '@android:drawable/scrubber_progress_horizontal_holo_light')
+            .set('android:indeterminateDrawable', '@android:drawable/scrubber_progress_horizontal_holo_light')
+            .set('android:minHeight', '13dp')
+            .set('android:maxHeight', '13dp')
+            .set('android:thumb', '@android:drawable/scrubber_control_selector_holo')
+            .set('android:thumbOffset', '16dp')
+            .set('android:focusable', 'true')
+            .set('android:paddingLeft', '16dp')
+            .set('android:paddingRight', '16dp')
+            .set('android:mirrorForRtl', 'true');
 
         static ratingBarStyle = new Map<string, string>()
-            .set('indeterminateOnly', 'false')
-            .set('progressDrawable', '@android:drawable/ratingbar_full_holo_light')
-            .set('indeterminateDrawable', '@android:drawable/ratingbar_full_holo_light')
-            .set('minHeight', '48dip')
-            .set('maxHeight', '48dip')
-            .set('numStars', '5')
-            .set('stepSize', '0.5')
-            .set('thumb', '@null')
-            .set('mirrorForRtl', 'true');
+            .set('android:indeterminateOnly', 'false')
+            .set('android:progressDrawable', '@android:drawable/ratingbar_full_holo_light')
+            .set('android:indeterminateDrawable', '@android:drawable/ratingbar_full_holo_light')
+            .set('android:minHeight', '48dip')
+            .set('android:maxHeight', '48dip')
+            .set('android:numStars', '5')
+            .set('android:stepSize', '0.5')
+            .set('android:thumb', '@null')
+            .set('android:mirrorForRtl', 'true');
 
         static ratingBarStyleIndicator = new Map<string, string>(attr.ratingBarStyle)
-            .set('indeterminateOnly', 'false')
-            .set('progressDrawable', '@android:drawable/ratingbar_holo_light')
-            .set('indeterminateDrawable', '@android:drawable/ratingbar_holo_light')
-            .set('minHeight', '35dip')
-            .set('maxHeight', '35dip')
-            .set('thumb', '@null')
-            .set('isIndicator', 'true');
+            .set('android:indeterminateOnly', 'false')
+            .set('android:progressDrawable', '@android:drawable/ratingbar_holo_light')
+            .set('android:indeterminateDrawable', '@android:drawable/ratingbar_holo_light')
+            .set('android:minHeight', '35dip')
+            .set('android:maxHeight', '35dip')
+            .set('android:thumb', '@null')
+            .set('android:isIndicator', 'true');
 
         static ratingBarStyleSmall = new Map<string, string>(attr.ratingBarStyle)
-            .set('indeterminateOnly', 'false')
-            .set('progressDrawable', '@android:drawable/ratingbar_small_holo_light')
-            .set('indeterminateDrawable', '@android:drawable/ratingbar_small_holo_light')
-            .set('minHeight', '16dip')
-            .set('maxHeight', '16dip')
-            .set('thumb', '@null')
-            .set('isIndicator', 'true');
+            .set('android:indeterminateOnly', 'false')
+            .set('android:progressDrawable', '@android:drawable/ratingbar_small_holo_light')
+            .set('android:indeterminateDrawable', '@android:drawable/ratingbar_small_holo_light')
+            .set('android:minHeight', '16dip')
+            .set('android:maxHeight', '16dip')
+            .set('android:thumb', '@null')
+            .set('android:isIndicator', 'true');
 
         static absListViewStyle = new Map<string, string>()
-            .set('scrollbars', 'vertical')
-            .set('fadingEdge', 'vertical');
+            .set('android:scrollbars', 'vertical')
+            .set('android:fadingEdge', 'vertical');
 
         static gridViewStyle = new Map<string, string>(attr.absListViewStyle)
-            .set('listSelector', '@android:drawable/list_selector_background')
-            .set('numColumns', '1');
+            .set('android:listSelector', '@android:drawable/list_selector_background')
+            .set('android:numColumns', '1');
 
         static listViewStyle = new Map<string, string>(attr.absListViewStyle)
-            .set('divider', '@android:drawable/list_divider')
-            .set('listSelector', '@android:drawable/list_selector_background')
-            .set('dividerHeight', '1');
+            .set('android:divider', '@android:drawable/list_divider')
+            .set('android:listSelector', '@android:drawable/list_selector_background')
+            .set('android:dividerHeight', '1');
 
         static expandableListViewStyle = new Map<string, string>(attr.listViewStyle)
-            .set('childDivider', '@android:drawable/list_divider');
+            .set('android:childDivider', '@android:drawable/list_divider');
 
         static numberPickerStyle = new Map<string, string>()
-            .set('orientation', 'vertical')
-            .set('solidColor', 'transparent')
-            .set('selectionDivider', '#cc33b5e5')
-            .set('selectionDividerHeight', '2dp')
-            .set('selectionDividersDistance', '48dp')
-            .set('internalMinWidth', '64dp')
-            .set('internalMaxHeight', '180dp')
-            .set('virtualButtonPressedDrawable', '@android:drawable/item_background');
+            .set('android:orientation', 'vertical')
+            .set('android:solidColor', 'transparent')
+            .set('android:selectionDivider', '#cc33b5e5')
+            .set('android:selectionDividerHeight', '2dp')
+            .set('android:selectionDividersDistance', '48dp')
+            .set('android:internalMinWidth', '64dp')
+            .set('android:internalMaxHeight', '180dp')
+            .set('android:virtualButtonPressedDrawable', '@android:drawable/item_background');
 
         static popupWindowStyle = new Map<string, string>()
-            .set('popupBackground', '@android:drawable/dropdown_background_dark')
-            .set('popupEnterAnimation', '@android:anim/grow_fade_in_center')
-            .set('popupExitAnimation', '@android:anim/shrink_fade_out_center');
+            .set('android:popupBackground', '@android:drawable/dropdown_background_dark')
+            .set('android:popupEnterAnimation', '@android:anim/grow_fade_in_center')
+            .set('android:popupExitAnimation', '@android:anim/shrink_fade_out_center');
 
         static listPopupWindowStyle = new Map<string, string>()
-            .set('popupBackground', '@android:drawable/menu_panel_holo_light')
-            .set('popupEnterAnimation', '@android:anim/grow_fade_in_center')
-            .set('popupExitAnimation', '@android:anim/shrink_fade_out_center');
+            .set('android:popupBackground', '@android:drawable/menu_panel_holo_light')
+            .set('android:popupEnterAnimation', '@android:anim/grow_fade_in_center')
+            .set('android:popupExitAnimation', '@android:anim/shrink_fade_out_center');
 
         static popupMenuStyle = new Map<string, string>()
-            .set('popupBackground', '@android:drawable/menu_panel_holo_dark');
+            .set('android:popupBackground', '@android:drawable/menu_panel_holo_dark');
 
         static dropDownListViewStyle = new Map<string, string>(attr.listViewStyle);
 
         static spinnerStyle = new Map<string, string>()
-            .set('clickable', 'true')
-            .set('spinnerMode', 'dropdown')
-            .set('gravity', 'start|center_vertical')
-            .set('disableChildrenWhenDisabled', 'true')
-            .set('background', '@android:drawable/btn_default')
-            .set('popupBackground', '@android:drawable/menu_panel_holo_light')
-            .set('dropDownVerticalOffset', '0dp')
-            .set('dropDownHorizontalOffset', '0dp')
-            .set('dropDownWidth', 'wrap_content');
+            .set('android:clickable', 'true')
+            .set('android:spinnerMode', 'dropdown')
+            .set('android:gravity', 'start|center_vertical')
+            .set('android:disableChildrenWhenDisabled', 'true')
+            .set('android:background', '@android:drawable/btn_default')
+            .set('android:popupBackground', '@android:drawable/menu_panel_holo_light')
+            .set('android:dropDownVerticalOffset', '0dp')
+            .set('android:dropDownHorizontalOffset', '0dp')
+            .set('android:dropDownWidth', 'wrap_content');
 
         static actionBarStyle = new Map<string, string>()
-            .set('background', '#ff333333');
+            .set('android:background', '#ff333333');
 
         static scrollViewStyle = new Map<string, string>()
-            .set('scrollbars', 'vertical')
-            .set('fadingEdge', 'vertical');
+            .set('android:scrollbars', 'vertical')
+            .set('android:fadingEdge', 'vertical');
 
     }
 }
