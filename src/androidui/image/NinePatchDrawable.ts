@@ -144,6 +144,11 @@ module androidui.image {
                     let dstRect = this.mTmpRect2;
                     srcRect.set(srcFromX, srcFromY, srcToX, srcFromY+srcHeight);
                     dstRect.set(dstFromX, dstFromY, dstToX, dstFromY+dstHeight);
+
+                    // eat half pix for iOS to prevent draw the nine-patch border
+                    if (srcRect.bottom === image.height - 1) srcRect.bottom -= 0.5;
+                    if (srcRect.right === image.width - 1) srcRect.right -= 0.5;
+
                     canvas.drawImage(image, srcRect, dstRect);
 
                     srcFromY+=srcHeight;
