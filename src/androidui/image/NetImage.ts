@@ -70,17 +70,10 @@ module androidui.image{
             let url = this.src;
             if(!url) return 1;
             if(url.startsWith('data:')) return 1;//may base64 encode
-            let idx = url.lastIndexOf('.'); // xxx@3x.png
-            if(idx>0){
-                url = url.substring(0, idx);
+            const match = url.match(/@(\d)x(\.9)?\.\w*$/); // xxx@3x.xxx & // xxx@3x.9.xxx
+            if (match) {
+                return parseInt(match[1]);
             }
-            if(url.endsWith('.9')) url = url.substring(0, url.length-2);// xxx@3x.9.png
-
-            if(url.endsWith('@2x')) return 2;
-            if(url.endsWith('@3x')) return 3;
-            if(url.endsWith('@4x')) return 4;
-            if(url.endsWith('@5x')) return 5;
-            if(url.endsWith('@6x')) return 6;
             return 1;
         }
 
