@@ -309,7 +309,7 @@ export module WindowManager{
                             childTop = parentTop + (parentBottom - parentTop - height) / 2 + lp.topMargin - lp.bottomMargin;
                             break;
                         case Gravity.BOTTOM:
-                            childTop = parentBottom - height - lp.bottomMargin - lp.x;
+                            childTop = parentBottom - height - lp.bottomMargin - lp.y;
                             break;
                         default:
                             childTop = parentTop + lp.topMargin;
