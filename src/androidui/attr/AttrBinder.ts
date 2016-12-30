@@ -10,6 +10,11 @@
 ///<reference path="../../android/content/Context.ts"/>
 ///<reference path="AttrValueParser.ts"/>
 
+function fixDefaultNamespaceAndLowerCase(key) {
+    key = key.toLowerCase();
+    if (!key.includes(':')) key = 'android:' + key;
+    return key;
+}
 
 module androidui.attr {
     import View = android.view.View;
@@ -27,7 +32,7 @@ module androidui.attr {
         private host:View|ViewGroup.LayoutParams;
         private attrChangeMap:Map<string, (newValue:any)=>void>;
         private attrStashMap:Map<string, ()=>any>;
-        private classAttrBindList:AttrBinder.ClassBinderMap[] = [];
+        private classAttrBindMap:AttrBinder.ClassBinderMap;
         private objectRefs = [];
         private mContext:Context;
 
@@ -35,15 +40,16 @@ module androidui.attr {
             this.host = host;
         }
 
-        addClassAttrBind(classAttrBind:AttrBinder.ClassBinderMap):void {
+        setClassAttrBind(classAttrBind:AttrBinder.ClassBinderMap):void {
             if (classAttrBind) {
-                this.classAttrBindList.push(classAttrBind);
+                this.classAttrBindMap = classAttrBind;
             }
         }
 
         addAttr(attrName:string, onAttrChange:(newValue:any)=>void, stashAttrValueWhenStateChange?:()=>any):void {
             if(!attrName) return;
-            attrName = attrName.toLowerCase();
+            attrName = fixDefaultNamespaceAndLowerCase(attrName);
+
             if(onAttrChange){
                 if (!this.attrChangeMap) {
                     this.attrChangeMap = new Map<string, (newValue:any)=>void>();
@@ -59,13 +65,14 @@ module androidui.attr {
         onAttrChange(attrName:string, attrValue:any, context:Context):void {
             this.mContext = context;
             if(!attrName) return;
-            attrName = attrName.toLowerCase();
+            attrName = fixDefaultNamespaceAndLowerCase(attrName);
+
             let onAttrChangeCall = this.attrChangeMap && this.attrChangeMap.get(attrName);
             if(onAttrChangeCall) {
                 onAttrChangeCall.call(this.host, attrValue, this.host);
             }
-            for(let classAttrBind of this.classAttrBindList) {
-                classAttrBind.callSetter(attrName, this.host, attrValue, this);
+            if(this.classAttrBindMap) {
+                this.classAttrBindMap.callSetter(attrName, this.host, attrValue, this);
             }
         }
 
@@ -74,16 +81,13 @@ module androidui.attr {
          */
         getAttrValue(attrName:string):string {
             if(!attrName) return undefined;
-            attrName = attrName.toLowerCase();
+            attrName = fixDefaultNamespaceAndLowerCase(attrName);
             let getAttrCall = this.attrStashMap && this.attrStashMap.get(attrName);
             let value;
             if(getAttrCall){
                 value = getAttrCall.call(this.host);
-            } else {
-                for(let classAttrBind of this.classAttrBindList) {
-                    value = classAttrBind.callGetter(attrName, this.host);
-                    if (value) break;
-                }
+            } else if (this.classAttrBindMap) {
+                value = this.classAttrBindMap.callGetter(attrName, this.host);
             }
             if(value == null) return null;
             if(typeof value === "number" || typeof value === "boolean" || typeof value === "string") return value+'';
@@ -255,12 +259,14 @@ module androidui.attr {
             }
 
             set(key:string, value?:androidui.attr.AttrBinder.ClassBinderValue):ClassBinderMap {
-                this.binderMap.set(key.toLowerCase(), value);
+                key = fixDefaultNamespaceAndLowerCase(key);
+                this.binderMap.set(key, value);
                 return this;
             }
 
             get(key:string):androidui.attr.AttrBinder.ClassBinderValue {
-                return this.binderMap.get(key.toLowerCase());
+                key = fixDefaultNamespaceAndLowerCase(key);
+                return this.binderMap.get(key);
             }
 
             private callSetter(attrName:string, host:android.view.View|android.view.ViewGroup.LayoutParams, attrValue:any, attrBinder:AttrBinder):void {

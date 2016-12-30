@@ -54,7 +54,6 @@
 ///<reference path="../../android/util/LayoutDirection.ts"/>
 ///<reference path="../../java/lang/System.ts"/>
 ///<reference path="../../androidui/attr/StateAttrList.ts"/>
-///<reference path="../../androidui/attr/StateAttr.ts"/>
 ///<reference path="../../androidui/attr/AttrBinder.ts"/>
 ///<reference path="../../androidui/util/PerformanceAdjuster.ts"/>
 ///<reference path="../../androidui/image/NetDrawable.ts"/>
@@ -99,8 +98,6 @@ module android.view {
     import Pools = android.util.Pools;
     import LinearInterpolator = android.view.animation.LinearInterpolator;
     import AnimationUtils = android.view.animation.AnimationUtils;
-    import StateAttrList = androidui.attr.StateAttrList;
-    import StateAttr = androidui.attr.StateAttr;
     import AttrBinder = androidui.attr.AttrBinder;
     import PerformanceAdjuster = androidui.util.PerformanceAdjuster;
     import NetDrawable = androidui.image.NetDrawable;
@@ -1078,7 +1075,6 @@ module android.view {
         static VIEW_STATE_SELECTED = 1 << 1;
         static VIEW_STATE_FOCUSED = 1 << 2;
         static VIEW_STATE_ENABLED = 1 << 3;
-        static VIEW_STATE_DISABLE = -View.VIEW_STATE_ENABLED;//can defined state style as state_disable
         static VIEW_STATE_PRESSED = 1 << 4;
         static VIEW_STATE_ACTIVATED = 1 << 5;
         //static VIEW_STATE_ACCELERATED = 1 << 6;
@@ -1801,6 +1797,10 @@ module android.view {
                         //AndroidUIX add: these cases, attr pass to attr Binder (let attr Binder parse and set these values).
                         this._attrBinder.onAttrChange(attr, a.getAttrValue(attr), this.getContext());
                         break;
+                    default:
+                        if (attr && attr.startsWith('state_')) {
+                            this._stateAttrList.addStatedAttr(attr, a.getAttrValue(attr));
+                        }
                 }
             }
 
@@ -7068,7 +7068,7 @@ module android.view {
         //bind Element show the layout and extra info
         bindElement: HTMLElement;
         private _AttrObserver:MutationObserver;
-        private _stateAttrList:StateAttrList;
+        private _stateAttrList = new androidui.attr.StateAttrList(this);
         private _attrBinder = new AttrBinder(this);
         private static ViewClassAttrBinderClazzMap = new Map<java.lang.Class, AttrBinder.ClassBinderMap>();
         static AndroidViewProperty = 'AndroidView';
@@ -7098,7 +7098,6 @@ module android.view {
             }
             this.bindElement[View.AndroidViewProperty]=this;
 
-            this._stateAttrList = new StateAttrList(this);
             this._initAttrObserver();
         }
 
@@ -7108,7 +7107,7 @@ module android.view {
                 classAttrBinder = this.createClassAttrBinder();
                 View.ViewClassAttrBinderClazzMap.set(this.getClass(), classAttrBinder);
             }
-            this._attrBinder.addClassAttrBind(classAttrBinder);
+            this._attrBinder.setClassAttrBind(classAttrBinder);
         }
 
         /**
@@ -7581,8 +7580,8 @@ module android.view {
             if(!this._stateAttrList) return;
             if(java.util.Arrays.equals(oldState, newState)) return;
 
-            let oldMatchedAttr:StateAttr = this._stateAttrList.getMatchedStateAttr(oldState);
-            let matchedAttr:StateAttr = this._stateAttrList.getMatchedStateAttr(newState);
+            let oldMatchedAttr = this._stateAttrList.getMatchedStateAttr(oldState);
+            let matchedAttr = this._stateAttrList.getMatchedStateAttr(newState);
 
             //let attrMap = matchedAttr.createDiffKeyAsNullValueAttrMap(oldMatchedAttr);
             for(let [key, value] of matchedAttr.getAttrMap().entries()){
@@ -7601,7 +7600,7 @@ module android.view {
 
         private _getBinderAttrValue(key:string):string {
             if(!key) return null;
-            if(key.startsWith('layout_')){
+            if(key.startsWith('layout_') || key.startsWith('android:layout_')) {
                 let params = this.getLayoutParams();
                 if(params){
                     return params.getAttrBinder().getAttrValue(key);
@@ -7647,7 +7646,7 @@ module android.view {
              * getMatrix(), which will automatically recalculate the matrix if necessary
              * to get the correct matrix based on the latest rotation and scale properties.
              */
-            private mMatrix:Matrix = new Matrix();
+            mMatrix:Matrix = new Matrix();
 
             /**
              * The transform matrix for the View. This transform is calculated internally
@@ -7670,7 +7669,7 @@ module android.view {
              * transform matrix, based on whether the rotation or scaleX/Y properties
              * have changed since the matrix was last calculated.
              */
-            private mInverseMatrixDirty:boolean = true;
+            mInverseMatrixDirty:boolean = true;
 
             /**
              * A variable that tracks whether we need to recalculate the
@@ -7679,7 +7678,7 @@ module android.view {
              * is only valid after a call to updateMatrix() or to a function that
              * calls it such as getMatrix(), hasIdentityMatrix() and getInverseMatrix().
              */
-            private mMatrixIsIdentity:boolean = true;
+            mMatrixIsIdentity:boolean = true;
 
             ///**
             // * The Camera object is used to compute a 3D matrix when rotationX or rotationY are set.
@@ -7696,9 +7695,9 @@ module android.view {
              * pivot point is only used in matrix operations (when rotation, scale, or translation are
              * set), so thes values are only used then as well.
              */
-            private mPrevWidth:number = -1;
+            mPrevWidth:number = -1;
 
-            private mPrevHeight:number = -1;
+            mPrevHeight:number = -1;
 
             ///**
             // * The degrees rotation around the vertical axis through the pivot point.

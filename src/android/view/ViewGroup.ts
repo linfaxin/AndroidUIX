@@ -2671,7 +2671,7 @@ module android.view {
                     LayoutParams.ClassAttrBinderClazzMap.set(this.getClass(), classAttrBinder);
                 }
                 const attrBinder = new AttrBinder(this);
-                attrBinder.addClassAttrBind(classAttrBinder);
+                attrBinder.setClassAttrBind(classAttrBinder);
                 return attrBinder;
             }
             protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap {

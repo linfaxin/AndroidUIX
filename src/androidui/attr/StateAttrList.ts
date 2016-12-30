@@ -5,139 +5,108 @@
 ///<reference path="../../android/view/View.ts"/>
 ///<reference path="../../android/util/StateSet.ts"/>
 
-module androidui.attr{
+let STATE_MAP:Map<string, number>; // delay init, because android.view.View was undefined now.
+
+module androidui.attr {
     import View = android.view.View;
 
     export class StateAttrList {
-        private static CacheMap = new Map<string, Array<StateAttr>>(); // <attr json, clone state attr>
-        private list:Array<StateAttr> = [];
-        private matchedAttrCache:Array<StateAttr> = [];
+        private originStateAttrList:Array<StateAttr> = [];
+        private matchedStateAttrList:Array<StateAttr> = [];
         private mView:View;
 
         constructor(view:View){
             this.mView = view;
-
-            let attrMap = new Map<string, string>();
-            let attributes = Array.from(view.bindElement.attributes);
-            for(let attr of attributes){
-                attrMap.set(attr.name, attr.value);
-            }
-            let attrMapJSON = JSON.stringify(attrMap);
-
-            // find in cache first
-            let cachedAttrArray = StateAttrList.CacheMap.get(attrMapJSON);
-            if (cachedAttrArray) {
-                for(let stateAttr of cachedAttrArray) {
-                    this.list.push(stateAttr.clone());
-                }
-            } else {
-                this.optStateAttr([]);//ensure default stateAttr
-                this._initStyleAttributes(attrMap, []);
-                // save to cache
-                let cachedAttrArray:Array<StateAttr> = [];
-                for(let stateAttr of this.list) {
-                    cachedAttrArray.push(stateAttr.clone());
-                }
-                StateAttrList.CacheMap.set(attrMapJSON, cachedAttrArray);
-            }
+            this.getOrCreateStateAttr([]); // create default stateAttr
         }
 
-        private _initStyleAttributes(attrMap:Map<string,string>, inParseState:number[]){
-
-            //parse ref style first
-            let refStyleValue = attrMap.get('android:style');
-            if(refStyleValue){
-                attrMap.delete('android:style');
-                this._initStyleAttr('android:style', refStyleValue, inParseState);
+        static getViewStateValue(attrName:string):number {
+            if (!STATE_MAP) { // delay init
+                STATE_MAP = new Map<string, number>()
+                    .set('state_window_focused', android.view.View.VIEW_STATE_WINDOW_FOCUSED)
+                    .set('state_selected', android.view.View.VIEW_STATE_SELECTED)
+                    .set('state_focused', android.view.View.VIEW_STATE_FOCUSED)
+                    .set('state_enabled', android.view.View.VIEW_STATE_ENABLED)
+                    .set('state_disabled', -android.view.View.VIEW_STATE_ENABLED)
+                    .set('state_pressed', android.view.View.VIEW_STATE_PRESSED)
+                    .set('state_activated', android.view.View.VIEW_STATE_ACTIVATED)
+                    .set('state_hovered', android.view.View.VIEW_STATE_HOVERED)
+                    .set('state_checked', android.view.View.VIEW_STATE_CHECKED);
             }
-
-            //parse inline style (override the ref style)
-            for (let [key, value] of attrMap.entries()) {
-                if(key.startsWith('android:state_')){
-                    continue;
-                }
-                this._initStyleAttr(key, value, inParseState);
-            }
-
-            //parse ref stated style
-            for (let [key, value] of attrMap.entries()) {
-                if(key.startsWith('android:state_')){
-                    this._initStyleAttr(key, value, inParseState);
-                }
-            }
+            return STATE_MAP.get(attrName.split(':').pop());
         }
 
-        private _initStyleAttr(attrName:string, attrValue:string, inParseState:number[]){
-            if(attrName.startsWith('android:')) {
-                attrName = attrName.substring('android:'.length);
-            }
+        public addStatedAttr(attrName:string, attrValue:string):void {
+            this.addStatedAttrImpl(attrName, attrValue, []);
+        }
 
-            if(attrName.startsWith('state_')){
-                let state = attrName.substring('state_'.length);
-                let stateValue = android.view.View['VIEW_STATE_' + state.toUpperCase()];
-                if(typeof stateValue === "number"){
-                    inParseState = inParseState.concat(stateValue).sort();
-                }
-            }
+        private addStatedAttrImpl(attrName:string, attrValue:string, inParseState:number[]){
+            const stateValue = StateAttrList.getViewStateValue(attrName);
+            if(stateValue != null) {
+                const newInParseState = inParseState.concat(stateValue).sort();
+                let _stateAttr = this.getOrCreateStateAttr(newInParseState);
 
-            let _stateAttr = this.optStateAttr(inParseState);
-
-            //parse style or stated style
-            if(attrName.startsWith('state_') || attrName==='style'){
                 //attr with state
-                if(attrValue.startsWith('@style/')){
+                if(attrValue.startsWith('@')){
                     //support: android:state_pressed="@style/myStyle"
                     let styleMap = this.mView.getResources().getStyleAsMap(attrValue);
-                    if(styleMap && styleMap.size>0){
-                        this._initStyleAttributes(styleMap, inParseState);
+                    if(styleMap && styleMap.size > 0) {
+                        const statedEntries:Array<Array<any>> = [];
+                        for(let entry of styleMap.entries()) {
+                            const [key, value] = entry;
+                            if (key.startsWith('android:state_')) {
+                                statedEntries.push(entry);
+                            } else {
+                                _stateAttr.setAttr(key.toLowerCase(), value);
+                            }
+                        }
+                        for(let entry of statedEntries) {
+                            const [key, value] = entry;
+                            this.addStatedAttrImpl(key, value, newInParseState);
+                        }
                     }
 
                 }else{
-                    //support: android:state_pressed="padding:10dp; background:#333;"
+                    // support like: android:state_pressed="padding:10dp; background:#333;"
                     for(let part of attrValue.split(';')){
                         let [name, value] = part.split(':');
-                        if(name) _stateAttr.setAttr(name.trim().toLowerCase(), value);
+                        name = name.trim();
+                        if(name) {
+                            _stateAttr.setAttr('android:' + name.toLowerCase(), value.trim());
+                        }
                     }
                 }
-            }else{
-                _stateAttr.setAttr(attrName, attrValue);
-            }
-        }
-
-        getDefaultStateAttr():StateAttr{
-            for(let stateAttr of this.list){
-                if(stateAttr.isDefaultState()) return stateAttr;
             }
         }
 
         private getStateAttr(state:number[]):StateAttr{
-            for(let stateAttr of this.list){
+            for(let stateAttr of this.originStateAttrList){
                 if(stateAttr.isStateEquals(state)) return stateAttr;
             }
         }
 
-        private optStateAttr(state:number[]):StateAttr{
+        private getOrCreateStateAttr(state:number[]):StateAttr{
             let stateAttr = this.getStateAttr(state);
-            if(!stateAttr){
+            if(!stateAttr) {
                 stateAttr = new StateAttr(state);
-                this.list.push(stateAttr);
+                this.originStateAttrList.push(stateAttr);
             }
             return stateAttr;
         }
 
         getMatchedStateAttr(state:number[]):StateAttr {
             if(state == null) return null;
-            for(let stateAttr of this.matchedAttrCache){
+            for(let stateAttr of this.matchedStateAttrList){
                 if(stateAttr.isStateEquals(state)) return stateAttr;
             }
             let matchedAttr:StateAttr = new StateAttr(state);
-            for(let stateAttr of this.list){
-                if(stateAttr.isDefaultState()) continue;//ignore default state
+            for(let stateAttr of this.originStateAttrList){
+                if(stateAttr.isDefaultState()) continue; // ignore default state
                 if(stateAttr.isStateMatch(state)){
                     matchedAttr.putAll(stateAttr);
                 }
             }
-            this.matchedAttrCache.push(matchedAttr);
+            this.matchedStateAttrList.push(matchedAttr);
             return matchedAttr;
         }
 
@@ -146,10 +115,10 @@ module androidui.attr{
          * @param attrName this attr's name
          */
         removeAttrAllState(attrName:string){
-            for(let stateAttr of this.list){
+            for(let stateAttr of this.originStateAttrList){
                 stateAttr.getAttrMap().delete(attrName);
             }
-            for(let stateAttr of this.matchedAttrCache){
+            for(let stateAttr of this.matchedStateAttrList){
                 stateAttr.getAttrMap().delete(attrName);
             }
         }
