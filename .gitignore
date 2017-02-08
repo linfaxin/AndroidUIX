@@ -3,4 +3,3 @@ node_modules/
 .idea
 .DS_Store
 .outjs
-sample/gen/

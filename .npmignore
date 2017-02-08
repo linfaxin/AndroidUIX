@@ -1,8 +1,8 @@
-test
+test/
 node_modules/
 .idea
 .DS_Store
 .outjs
+
 src/
-sample/
 buildtool/
