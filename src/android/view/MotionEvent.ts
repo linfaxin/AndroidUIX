@@ -27,7 +27,7 @@ module android.view {
 
     const tempBound = new Rect();
 
-    interface TouchEvent extends UIEvent {
+    interface TouchEvent {
         touches: TouchList;
         changedTouches: TouchList;
         type: string;
@@ -38,7 +38,6 @@ module android.view {
     interface TouchList {
         length: number;
         [index: number]: Touch;
-        item: (index:number) => Touch;
     }
     interface Touch {
         //identifier: number;
@@ -57,12 +56,16 @@ module android.view {
 
 
     const ID_FixID_Cache:Array<number> = [];
-
+    const tmpTouchEvent:TouchEvent = {
+        touches: null,
+        changedTouches: null,
+        type: null
+    };
     /**
      * identifier on iOS safari was not same as other platform
      * http://stackoverflow.com/questions/25008690/javascript-ipad-touch-event-identifier-is-continually-incrementing
      */
-    function fixEventId(e:TouchEvent){
+    function fixEventId(e:TouchEvent):TouchEvent {
         for (let i = 0, length = e.changedTouches.length; i < length; i++) {
             fixTouchId(e.changedTouches[i]);
         }
@@ -72,26 +75,34 @@ module android.view {
         if(e.type == 'touchend' || e.type == 'touchcancel'){
             ID_FixID_Cache[e.changedTouches[0].id_fix] = null;
         }
+        tmpTouchEvent.type = e.type;
+        tmpTouchEvent.changedTouches = Array.from(e.changedTouches).map((touch) => fixTouchId(touch));
+        tmpTouchEvent.touches = Array.from(e.touches).map((touch) => fixTouchId(touch));
+        return tmpTouchEvent;
     }
-    function fixTouchId(touch:Touch){
+    function fixTouchId(touch:Touch):Touch {
         let originID = touch['identifier'];
-        if(originID <= 10){
-            //no need fix
-            touch.id_fix = originID;
-            ID_FixID_Cache[originID] = originID;
-            return;
-        }
-        touch.id_fix = ID_FixID_Cache.indexOf(originID);
-        if(touch.id_fix>=0) return;
-
-        for(let i = 0, length=ID_FixID_Cache.length + 1; i<length; i++){
-            if(ID_FixID_Cache[i] == null){
-                ID_FixID_Cache[i] = originID;
-                touch.id_fix = i;
-                return;
+        let fix_id = ID_FixID_Cache.indexOf(originID);
+        if (fix_id < 0) {
+            for (let i = 0, length = ID_FixID_Cache.length + 1; i < length; i++) {
+                if(ID_FixID_Cache[i] == null){
+                    ID_FixID_Cache[i] = originID;
+                    fix_id = i;
+                    break;
+                }
             }
         }
-
+        return {
+            id_fix: fix_id,
+            target: touch.target,
+            screenX: touch.screenX,
+            screenY: touch.screenY,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            pageX: touch.pageX,
+            pageY: touch.pageY,
+            mEventTime: touch.mEventTime,
+        };
     }
 
 
@@ -325,9 +336,7 @@ module android.view {
         private static IdIndexCache = new Map<number, number>();
 
         initWithTouch(event, baseAction:number, windowBound = new Rect() ) {
-            //this._event = event;
-            let e = <TouchEvent>event;
-            fixEventId(e);
+            let e = fixEventId(event);
 
             let now = android.os.SystemClock.uptimeMillis();
             //get actionIndex
@@ -336,6 +345,7 @@ module android.view {
             let activeTouch = e.changedTouches[0];
             this._activeTouch = activeTouch;
             let activePointerId = activeTouch.id_fix;
+            if (activePointerId == null) console.warn('activePointerId null, activeTouch.identifier: ' + activeTouch['identifier']);
             for (let i = 0, length = e.touches.length; i < length; i++) {
                 if (e.touches[i].id_fix === activePointerId) {
                     actionIndex = i;
