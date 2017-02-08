@@ -136,7 +136,17 @@ export class WindowManager {
 
         let enterAnimation = window.getContext().androidUI.mActivityThread.getOverrideEnterAnimation();
         if(enterAnimation === undefined) enterAnimation = wparams.enterAnimation;
-        if(enterAnimation){
+        if(enterAnimation) {
+            decorView.bindElement.style.visibility = 'hidden';
+            enterAnimation.setAnimationListener({
+                onAnimationStart(animation: Animation): void {
+                },
+                onAnimationEnd(animation: Animation): void {
+                    decorView.bindElement.style.visibility = '';
+                },
+                onAnimationRepeat(animation: Animation): void {
+                }
+            });
             decorView.startAnimation(enterAnimation);
         }
     }
