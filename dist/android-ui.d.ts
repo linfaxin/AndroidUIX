@@ -555,8 +555,8 @@ declare module androidui.image {
         protected createImage(): void;
         protected loadImage(): void;
         src: string;
-        width: number;
-        height: number;
+        readonly width: number;
+        readonly height: number;
         getImageRatio(): number;
         isImageLoaded(): boolean;
         private fireOnLoad();
@@ -873,7 +873,7 @@ declare module android.graphics.drawable {
 }
 declare module java.lang {
     class JavaObject {
-        static class: Class;
+        static readonly class: Class;
         private hash;
         hashCode(): number;
         getClass(): Class;
@@ -1048,6 +1048,7 @@ declare module android.content {
         getApplicationContext(): android.app.Application;
         getResources(): android.content.res.Resources;
         getLayoutInflater(): LayoutInflater;
+        obtainStyledAttributes(attrs: HTMLElement, defStyleAttr?: Map<string, string>): res.TypedArray;
     }
 }
 declare module android.R {
@@ -1084,14 +1085,19 @@ declare module androidui.attr {
 declare module android.content.res {
     import Drawable = android.graphics.drawable.Drawable;
     class TypedArray {
-        static obtain(res: android.content.res.Resources, xml: HTMLElement): TypedArray;
+        static obtain(res: android.content.res.Resources, xml: HTMLElement, defStyleAttr?: Map<string, string>): TypedArray;
         private mResources;
-        private mXml;
+        private attrMap;
+        private attrMapKeysCache;
         private mRecycled;
-        constructor(res: android.content.res.Resources, xml: HTMLElement);
+        constructor(res: android.content.res.Resources, attrMap: Map<string, string>);
         private checkRecycled();
         length(): number;
+        getIndex(keyIndex: number): string;
+        getLowerCaseNoNamespaceAttrNames(): Array<string>;
         getResources(): android.content.res.Resources;
+        getAttrValue(attrName: string): string;
+        getResourceId(attrName: string, defaultResourceId: string): string;
         getText(attrName: string): string;
         getString(attrName: string): string;
         getBoolean(attrName: string, defValue: boolean): boolean;
@@ -1100,6 +1106,7 @@ declare module android.content.res {
         getColor(attrName: string, defValue: number): number;
         getColorStateList(attrName: string): android.content.res.ColorStateList;
         getInteger(attrName: string, defValue: number): number;
+        getLayoutDimension(attrName: string, defValue: number): number;
         getDimension(attrName: string, defValue: number): number;
         getDimensionPixelOffset(attrName: string, defValue: number): number;
         getDimensionPixelSize(attrName: string, defValue: number): number;
@@ -1113,9 +1120,10 @@ declare module android.content.res {
 declare module android.content.res {
     import DisplayMetrics = android.util.DisplayMetrics;
     import Drawable = android.graphics.drawable.Drawable;
+    import SynchronizedPool = android.util.Pools.SynchronizedPool;
     class Resources {
         private static instance;
-        private mTypedArrayPool;
+        mTypedArrayPool: SynchronizedPool<TypedArray>;
         private displayMetrics;
         private context;
         static _AppBuildImageFileFinder: (refString: string) => Drawable;
@@ -1127,7 +1135,7 @@ declare module android.content.res {
         static getDisplayMetrics(): DisplayMetrics;
         getDisplayMetrics(): DisplayMetrics;
         private fillDisplayMetrics(displayMetrics);
-        private getDefStyle(refString);
+        getDefStyle(refString: string): any;
         getDrawable(refString: string): Drawable;
         getColor(refString: string): number;
         getColorStateList(refString: string): ColorStateList;
@@ -1141,13 +1149,12 @@ declare module android.content.res {
         getString(refString: string): string;
         getStringArray(refString: string): string[];
         getLayout(refString: string): HTMLElement;
+        getAnimation(refString: string): android.view.animation.Animation;
         private getStyleAsMap(refString);
         getXml(refString: string): HTMLElement;
         getValue(refString: string, resolveRefs?: boolean): HTMLElement;
         obtainAttributes(attrs: HTMLElement): TypedArray;
-        static buildDrawableFinder: any;
-        static buildLayoutFinder: any;
-        static buildResourcesElement: void;
+        obtainStyledAttributes(attrs: HTMLElement, defStyleAttr: Map<string, string>): TypedArray;
     }
 }
 declare module android.view {
@@ -1453,6 +1460,7 @@ declare module android.view.animation {
 declare module android.view.animation {
     class AnimationUtils {
         static currentAnimationTimeMillis(): number;
+        static loadAnimation(context: android.content.Context, id: string): Animation;
     }
 }
 declare module android.util {
@@ -1487,23 +1495,24 @@ declare module androidui.attr {
         createDiffKeyAsNullValueAttrMap(another: StateAttr): Map<string, string>;
     }
 }
+declare let STATE_MAP: Map<string, number>;
 declare module androidui.attr {
     import View = android.view.View;
     class StateAttrList {
-        private static CacheMap;
-        private list;
-        private matchedAttrCache;
+        private originStateAttrList;
+        private matchedStateAttrList;
         private mView;
         constructor(view: View);
-        private _initStyleAttributes(attrMap, inParseState);
-        private _initStyleAttr(attrName, attrValue, inParseState);
-        getDefaultStateAttr(): StateAttr;
+        static getViewStateValue(attrName: string): number;
+        addStatedAttr(attrName: string, attrValue: string): void;
+        private addStatedAttrImpl(attrName, attrValue, inParseState);
         private getStateAttr(state);
-        private optStateAttr(state);
+        private getOrCreateStateAttr(state);
         getMatchedStateAttr(state: number[]): StateAttr;
         removeAttrAllState(attrName: string): void;
     }
 }
+declare function fixDefaultNamespaceAndLowerCase(key: any): any;
 declare module androidui.attr {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
@@ -1514,17 +1523,17 @@ declare module androidui.attr {
         private host;
         private attrChangeMap;
         private attrStashMap;
-        private classAttrBindList;
+        private classAttrBindMap;
         private objectRefs;
         private mContext;
         constructor(host: View | ViewGroup.LayoutParams);
-        addClassAttrBind(classAttrBind: AttrBinder.ClassBinderMap): void;
+        setClassAttrBind(classAttrBind: AttrBinder.ClassBinderMap): void;
         addAttr(attrName: string, onAttrChange: (newValue: any) => void, stashAttrValueWhenStateChange?: () => any): void;
         onAttrChange(attrName: string, attrValue: any, context: Context): void;
         getAttrValue(attrName: string): string;
         private getRefObject(ref);
         private setRefObject(obj);
-        parsePaddingMarginLTRB(value: any): string[];
+        parsePaddingMarginTRBL(value: any): number[];
         parseEnum(value: any, enumMap: Map<string, number>, defaultValue: number): number;
         parseBoolean(value: any, defaultValue?: boolean): boolean;
         parseGravity(s: string, defaultValue?: number): number;
@@ -1542,13 +1551,14 @@ declare module androidui.attr {
     module AttrBinder {
         class ClassBinderMap {
             binderMap: Map<string, ClassBinderValue>;
+            constructor(copyBinderMap?: Map<string, androidui.attr.AttrBinder.ClassBinderValue>);
             set(key: string, value?: androidui.attr.AttrBinder.ClassBinderValue): ClassBinderMap;
             get(key: string): androidui.attr.AttrBinder.ClassBinderValue;
-            private callSetter(attrName, host, attrValue);
+            private callSetter(attrName, host, attrValue, attrBinder);
             private callGetter(attrName, host);
         }
         interface ClassBinderValue {
-            setter: (host: android.view.View | android.view.ViewGroup.LayoutParams, attrValue: any) => void;
+            setter: (host: android.view.View | android.view.ViewGroup.LayoutParams, attrValue: any, attrBinder: AttrBinder) => void;
             getter?: (host: android.view.View | android.view.ViewGroup.LayoutParams) => any;
         }
     }
@@ -1565,8 +1575,8 @@ declare module androidui.image {
     class NetDrawable extends Drawable {
         private mState;
         private mLoadListener;
-        private mImageWidth;
-        private mImageHeight;
+        protected mImageWidth: number;
+        protected mImageHeight: number;
         private mTileModeX;
         private mTileModeY;
         private mTmpTileBound;
@@ -2058,7 +2068,7 @@ declare module android.graphics.drawable {
             mOwner: DrawableContainer;
             private mDrawableFutures;
             mDrawables: Array<Drawable>;
-            mNumChildren: number;
+            readonly mNumChildren: number;
             mVariablePadding: boolean;
             mPaddingChecked: boolean;
             mConstantPadding: Rect;
@@ -2203,31 +2213,31 @@ declare module android.R {
     import InsetDrawable = android.graphics.drawable.InsetDrawable;
     import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class drawable {
-        static btn_default: Drawable;
-        static editbox_background: Drawable;
-        static btn_check: Drawable;
-        static btn_radio: Drawable;
-        static progress_small_holo: Drawable;
-        static progress_medium_holo: Drawable;
-        static progress_large_holo: Drawable;
-        static progress_horizontal_holo: Drawable;
-        static progress_indeterminate_horizontal_holo: Drawable;
-        static ratingbar_full_empty_holo_light: Drawable;
-        static ratingbar_full_filled_holo_light: Drawable;
-        static ratingbar_full_holo_light: Drawable;
-        static ratingbar_holo_light: Drawable;
-        static ratingbar_small_holo_light: Drawable;
-        static scrubber_control_selector_holo: Drawable;
-        static scrubber_progress_horizontal_holo_light: Drawable;
-        static scrubber_primary_holo: Drawable;
-        static scrubber_secondary_holo: Drawable;
-        static scrubber_track_holo_light: Drawable;
-        static list_selector_background: Drawable;
-        static list_divider: Drawable;
-        static divider_vertical: Drawable;
-        static divider_horizontal: Drawable;
-        static item_background: StateListDrawable;
-        static toast_frame: InsetDrawable;
+        static readonly btn_default: Drawable;
+        static readonly editbox_background: Drawable;
+        static readonly btn_check: Drawable;
+        static readonly btn_radio: Drawable;
+        static readonly progress_small_holo: Drawable;
+        static readonly progress_medium_holo: Drawable;
+        static readonly progress_large_holo: Drawable;
+        static readonly progress_horizontal_holo: Drawable;
+        static readonly progress_indeterminate_horizontal_holo: Drawable;
+        static readonly ratingbar_full_empty_holo_light: Drawable;
+        static readonly ratingbar_full_filled_holo_light: Drawable;
+        static readonly ratingbar_full_holo_light: Drawable;
+        static readonly ratingbar_holo_light: Drawable;
+        static readonly ratingbar_small_holo_light: Drawable;
+        static readonly scrubber_control_selector_holo: Drawable;
+        static readonly scrubber_progress_horizontal_holo_light: Drawable;
+        static readonly scrubber_primary_holo: Drawable;
+        static readonly scrubber_secondary_holo: Drawable;
+        static readonly scrubber_track_holo_light: Drawable;
+        static readonly list_selector_background: Drawable;
+        static readonly list_divider: Drawable;
+        static readonly divider_vertical: Drawable;
+        static readonly divider_horizontal: Drawable;
+        static readonly item_background: StateListDrawable;
+        static readonly toast_frame: InsetDrawable;
     }
 }
 declare module androidui.image {
@@ -2277,63 +2287,63 @@ declare module androidui.image {
 }
 declare module android.R {
     class image_base64 {
-        static actionbar_ic_back_white: any;
-        static btn_check_off_disabled_focused_holo_light: any;
-        static btn_check_off_disabled_holo_light: any;
-        static btn_check_off_focused_holo_light: any;
-        static btn_check_off_holo_light: any;
-        static btn_check_off_pressed_holo_light: any;
-        static btn_check_on_disabled_focused_holo_light: any;
-        static btn_check_on_disabled_holo_light: any;
-        static btn_check_on_focused_holo_light: any;
-        static btn_check_on_holo_light: any;
-        static btn_check_on_pressed_holo_light: any;
-        static btn_default_disabled_focused_holo_light: any;
-        static btn_default_disabled_holo_light: any;
-        static btn_default_focused_holo_light: any;
-        static btn_default_normal_holo_light: any;
-        static btn_default_pressed_holo_light: any;
-        static btn_radio_off_disabled_focused_holo_light: any;
-        static btn_radio_off_disabled_holo_light: any;
-        static btn_radio_off_focused_holo_light: any;
-        static btn_radio_off_holo_light: any;
-        static btn_radio_off_pressed_holo_light: any;
-        static btn_radio_on_disabled_focused_holo_light: any;
-        static btn_radio_on_disabled_holo_light: any;
-        static btn_radio_on_focused_holo_light: any;
-        static btn_radio_on_holo_light: any;
-        static btn_radio_on_pressed_holo_light: any;
-        static btn_rating_star_off_normal_holo_light: any;
-        static btn_rating_star_off_pressed_holo_light: any;
-        static btn_rating_star_on_normal_holo_light: any;
-        static btn_rating_star_on_pressed_holo_light: any;
-        static dropdown_background_dark: any;
-        static editbox_background_focus_yellow: any;
-        static editbox_background_normal: any;
-        static ic_menu_moreoverflow_normal_holo_dark: any;
-        static menu_panel_holo_dark: any;
-        static menu_panel_holo_light: any;
-        static popup_bottom_bright: any;
-        static popup_center_bright: any;
-        static popup_full_bright: any;
-        static popup_top_bright: any;
-        static progressbar_indeterminate_holo1: any;
-        static progressbar_indeterminate_holo2: any;
-        static progressbar_indeterminate_holo3: any;
-        static progressbar_indeterminate_holo4: any;
-        static progressbar_indeterminate_holo5: any;
-        static progressbar_indeterminate_holo6: any;
-        static progressbar_indeterminate_holo7: any;
-        static progressbar_indeterminate_holo8: any;
-        static rate_star_big_half_holo_light: any;
-        static rate_star_big_off_holo_light: any;
-        static rate_star_big_on_holo_light: any;
-        static scrubber_control_disabled_holo: any;
-        static scrubber_control_focused_holo: any;
-        static scrubber_control_normal_holo: any;
-        static scrubber_control_pressed_holo: any;
-        static spinner_76_inner_holo: any;
-        static spinner_76_outer_holo: any;
+        static readonly actionbar_ic_back_white: any;
+        static readonly btn_check_off_disabled_focused_holo_light: any;
+        static readonly btn_check_off_disabled_holo_light: any;
+        static readonly btn_check_off_focused_holo_light: any;
+        static readonly btn_check_off_holo_light: any;
+        static readonly btn_check_off_pressed_holo_light: any;
+        static readonly btn_check_on_disabled_focused_holo_light: any;
+        static readonly btn_check_on_disabled_holo_light: any;
+        static readonly btn_check_on_focused_holo_light: any;
+        static readonly btn_check_on_holo_light: any;
+        static readonly btn_check_on_pressed_holo_light: any;
+        static readonly btn_default_disabled_focused_holo_light: any;
+        static readonly btn_default_disabled_holo_light: any;
+        static readonly btn_default_focused_holo_light: any;
+        static readonly btn_default_normal_holo_light: any;
+        static readonly btn_default_pressed_holo_light: any;
+        static readonly btn_radio_off_disabled_focused_holo_light: any;
+        static readonly btn_radio_off_disabled_holo_light: any;
+        static readonly btn_radio_off_focused_holo_light: any;
+        static readonly btn_radio_off_holo_light: any;
+        static readonly btn_radio_off_pressed_holo_light: any;
+        static readonly btn_radio_on_disabled_focused_holo_light: any;
+        static readonly btn_radio_on_disabled_holo_light: any;
+        static readonly btn_radio_on_focused_holo_light: any;
+        static readonly btn_radio_on_holo_light: any;
+        static readonly btn_radio_on_pressed_holo_light: any;
+        static readonly btn_rating_star_off_normal_holo_light: any;
+        static readonly btn_rating_star_off_pressed_holo_light: any;
+        static readonly btn_rating_star_on_normal_holo_light: any;
+        static readonly btn_rating_star_on_pressed_holo_light: any;
+        static readonly dropdown_background_dark: any;
+        static readonly editbox_background_focus_yellow: any;
+        static readonly editbox_background_normal: any;
+        static readonly ic_menu_moreoverflow_normal_holo_dark: any;
+        static readonly menu_panel_holo_dark: any;
+        static readonly menu_panel_holo_light: any;
+        static readonly popup_bottom_bright: any;
+        static readonly popup_center_bright: any;
+        static readonly popup_full_bright: any;
+        static readonly popup_top_bright: any;
+        static readonly progressbar_indeterminate_holo1: any;
+        static readonly progressbar_indeterminate_holo2: any;
+        static readonly progressbar_indeterminate_holo3: any;
+        static readonly progressbar_indeterminate_holo4: any;
+        static readonly progressbar_indeterminate_holo5: any;
+        static readonly progressbar_indeterminate_holo6: any;
+        static readonly progressbar_indeterminate_holo7: any;
+        static readonly progressbar_indeterminate_holo8: any;
+        static readonly rate_star_big_half_holo_light: any;
+        static readonly rate_star_big_off_holo_light: any;
+        static readonly rate_star_big_on_holo_light: any;
+        static readonly scrubber_control_disabled_holo: any;
+        static readonly scrubber_control_focused_holo: any;
+        static readonly scrubber_control_normal_holo: any;
+        static readonly scrubber_control_pressed_holo: any;
+        static readonly spinner_76_inner_holo: any;
+        static readonly spinner_76_outer_holo: any;
     }
 }
 declare module android.R {
@@ -2341,78 +2351,78 @@ declare module android.R {
     import ChangeImageSizeDrawable = androidui.image.ChangeImageSizeDrawable;
     import NinePatchDrawable = androidui.image.NinePatchDrawable;
     class image {
-        static actionbar_ic_back_white: NetDrawable;
-        static btn_check_off_disabled_focused_holo_light: NetDrawable;
-        static btn_check_off_disabled_holo_light: NetDrawable;
-        static btn_check_off_focused_holo_light: NetDrawable;
-        static btn_check_off_holo_light: NetDrawable;
-        static btn_check_off_pressed_holo_light: NetDrawable;
-        static btn_check_on_disabled_focused_holo_light: NetDrawable;
-        static btn_check_on_disabled_holo_light: NetDrawable;
-        static btn_check_on_focused_holo_light: NetDrawable;
-        static btn_check_on_holo_light: NetDrawable;
-        static btn_check_on_pressed_holo_light: NetDrawable;
-        static btn_default_disabled_focused_holo_light: NinePatchDrawable;
-        static btn_default_disabled_holo_light: NinePatchDrawable;
-        static btn_default_focused_holo_light: NinePatchDrawable;
-        static btn_default_normal_holo_light: NinePatchDrawable;
-        static btn_default_pressed_holo_light: NinePatchDrawable;
-        static btn_radio_off_disabled_focused_holo_light: NetDrawable;
-        static btn_radio_off_disabled_holo_light: NetDrawable;
-        static btn_radio_off_focused_holo_light: NetDrawable;
-        static btn_radio_off_holo_light: NetDrawable;
-        static btn_radio_off_pressed_holo_light: NetDrawable;
-        static btn_radio_on_disabled_focused_holo_light: NetDrawable;
-        static btn_radio_on_disabled_holo_light: NetDrawable;
-        static btn_radio_on_focused_holo_light: NetDrawable;
-        static btn_radio_on_holo_light: NetDrawable;
-        static btn_radio_on_pressed_holo_light: NetDrawable;
-        static btn_rating_star_off_normal_holo_light: NetDrawable;
-        static btn_rating_star_off_pressed_holo_light: NetDrawable;
-        static btn_rating_star_on_normal_holo_light: NetDrawable;
-        static btn_rating_star_on_pressed_holo_light: NetDrawable;
-        static dropdown_background_dark: NinePatchDrawable;
-        static editbox_background_focus_yellow: NinePatchDrawable;
-        static editbox_background_normal: NinePatchDrawable;
-        static ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
-        static menu_panel_holo_dark: NinePatchDrawable;
-        static menu_panel_holo_light: NinePatchDrawable;
-        static popup_bottom_bright: NinePatchDrawable;
-        static popup_center_bright: NinePatchDrawable;
-        static popup_full_bright: NinePatchDrawable;
-        static popup_top_bright: NinePatchDrawable;
-        static progressbar_indeterminate_holo1: NetDrawable;
-        static progressbar_indeterminate_holo2: NetDrawable;
-        static progressbar_indeterminate_holo3: NetDrawable;
-        static progressbar_indeterminate_holo4: NetDrawable;
-        static progressbar_indeterminate_holo5: NetDrawable;
-        static progressbar_indeterminate_holo6: NetDrawable;
-        static progressbar_indeterminate_holo7: NetDrawable;
-        static progressbar_indeterminate_holo8: NetDrawable;
-        static rate_star_big_half_holo_light: NetDrawable;
-        static rate_star_big_off_holo_light: NetDrawable;
-        static rate_star_big_on_holo_light: NetDrawable;
-        static scrubber_control_disabled_holo: NetDrawable;
-        static scrubber_control_focused_holo: NetDrawable;
-        static scrubber_control_normal_holo: NetDrawable;
-        static scrubber_control_pressed_holo: NetDrawable;
-        static spinner_76_inner_holo: NetDrawable;
-        static spinner_76_outer_holo: NetDrawable;
-        static spinner_48_outer_holo: ChangeImageSizeDrawable;
-        static spinner_48_inner_holo: ChangeImageSizeDrawable;
-        static spinner_16_outer_holo: ChangeImageSizeDrawable;
-        static spinner_16_inner_holo: ChangeImageSizeDrawable;
-        static rate_star_small_off_holo_light: ChangeImageSizeDrawable;
-        static rate_star_small_half_holo_light: ChangeImageSizeDrawable;
-        static rate_star_small_on_holo_light: ChangeImageSizeDrawable;
+        static readonly actionbar_ic_back_white: NetDrawable;
+        static readonly btn_check_off_disabled_focused_holo_light: NetDrawable;
+        static readonly btn_check_off_disabled_holo_light: NetDrawable;
+        static readonly btn_check_off_focused_holo_light: NetDrawable;
+        static readonly btn_check_off_holo_light: NetDrawable;
+        static readonly btn_check_off_pressed_holo_light: NetDrawable;
+        static readonly btn_check_on_disabled_focused_holo_light: NetDrawable;
+        static readonly btn_check_on_disabled_holo_light: NetDrawable;
+        static readonly btn_check_on_focused_holo_light: NetDrawable;
+        static readonly btn_check_on_holo_light: NetDrawable;
+        static readonly btn_check_on_pressed_holo_light: NetDrawable;
+        static readonly btn_default_disabled_focused_holo_light: NinePatchDrawable;
+        static readonly btn_default_disabled_holo_light: NinePatchDrawable;
+        static readonly btn_default_focused_holo_light: NinePatchDrawable;
+        static readonly btn_default_normal_holo_light: NinePatchDrawable;
+        static readonly btn_default_pressed_holo_light: NinePatchDrawable;
+        static readonly btn_radio_off_disabled_focused_holo_light: NetDrawable;
+        static readonly btn_radio_off_disabled_holo_light: NetDrawable;
+        static readonly btn_radio_off_focused_holo_light: NetDrawable;
+        static readonly btn_radio_off_holo_light: NetDrawable;
+        static readonly btn_radio_off_pressed_holo_light: NetDrawable;
+        static readonly btn_radio_on_disabled_focused_holo_light: NetDrawable;
+        static readonly btn_radio_on_disabled_holo_light: NetDrawable;
+        static readonly btn_radio_on_focused_holo_light: NetDrawable;
+        static readonly btn_radio_on_holo_light: NetDrawable;
+        static readonly btn_radio_on_pressed_holo_light: NetDrawable;
+        static readonly btn_rating_star_off_normal_holo_light: NetDrawable;
+        static readonly btn_rating_star_off_pressed_holo_light: NetDrawable;
+        static readonly btn_rating_star_on_normal_holo_light: NetDrawable;
+        static readonly btn_rating_star_on_pressed_holo_light: NetDrawable;
+        static readonly dropdown_background_dark: NinePatchDrawable;
+        static readonly editbox_background_focus_yellow: NinePatchDrawable;
+        static readonly editbox_background_normal: NinePatchDrawable;
+        static readonly ic_menu_moreoverflow_normal_holo_dark: NetDrawable;
+        static readonly menu_panel_holo_dark: NinePatchDrawable;
+        static readonly menu_panel_holo_light: NinePatchDrawable;
+        static readonly popup_bottom_bright: NinePatchDrawable;
+        static readonly popup_center_bright: NinePatchDrawable;
+        static readonly popup_full_bright: NinePatchDrawable;
+        static readonly popup_top_bright: NinePatchDrawable;
+        static readonly progressbar_indeterminate_holo1: NetDrawable;
+        static readonly progressbar_indeterminate_holo2: NetDrawable;
+        static readonly progressbar_indeterminate_holo3: NetDrawable;
+        static readonly progressbar_indeterminate_holo4: NetDrawable;
+        static readonly progressbar_indeterminate_holo5: NetDrawable;
+        static readonly progressbar_indeterminate_holo6: NetDrawable;
+        static readonly progressbar_indeterminate_holo7: NetDrawable;
+        static readonly progressbar_indeterminate_holo8: NetDrawable;
+        static readonly rate_star_big_half_holo_light: NetDrawable;
+        static readonly rate_star_big_off_holo_light: NetDrawable;
+        static readonly rate_star_big_on_holo_light: NetDrawable;
+        static readonly scrubber_control_disabled_holo: NetDrawable;
+        static readonly scrubber_control_focused_holo: NetDrawable;
+        static readonly scrubber_control_normal_holo: NetDrawable;
+        static readonly scrubber_control_pressed_holo: NetDrawable;
+        static readonly spinner_76_inner_holo: NetDrawable;
+        static readonly spinner_76_outer_holo: NetDrawable;
+        static readonly spinner_48_outer_holo: ChangeImageSizeDrawable;
+        static readonly spinner_48_inner_holo: ChangeImageSizeDrawable;
+        static readonly spinner_16_outer_holo: ChangeImageSizeDrawable;
+        static readonly spinner_16_inner_holo: ChangeImageSizeDrawable;
+        static readonly rate_star_small_off_holo_light: ChangeImageSizeDrawable;
+        static readonly rate_star_small_half_holo_light: ChangeImageSizeDrawable;
+        static readonly rate_star_small_on_holo_light: ChangeImageSizeDrawable;
     }
 }
 declare module android.R {
     import ColorStateList = android.content.res.ColorStateList;
     class color {
-        static textView_textColor: ColorStateList;
-        static primary_text_light_disable_only: ColorStateList;
-        static primary_text_dark_disable_only: ColorStateList;
+        static readonly textView_textColor: ColorStateList;
+        static readonly primary_text_light_disable_only: ColorStateList;
+        static readonly primary_text_dark_disable_only: ColorStateList;
         static white: number;
         static black: number;
         static transparent: number;
@@ -2629,270 +2639,34 @@ declare module android.view.animation {
     }
 }
 declare module android.R {
-    import Drawable = android.graphics.drawable.Drawable;
-    import ColorDrawable = android.graphics.drawable.ColorDrawable;
-    import StateListDrawable = android.graphics.drawable.StateListDrawable;
     class attr {
-        static _viewStyle: any;
-        static viewStyle: any;
-        static textViewStyle: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        };
-        static buttonStyle: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            minHeight: string;
-            minWidth: string;
-            textSize: string;
-            gravity: number;
-        };
-        static editTextStyle: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: Drawable;
-            focusable: boolean;
-            focusableInTouchMode: boolean;
-            clickable: boolean;
-            textSize: string;
-            gravity: number;
-        };
-        static imageButtonStyle: {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            gravity: number;
-        };
-        static checkboxStyle: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            minHeight: string;
-            minWidth: string;
-            textSize: string;
-            gravity: number;
-        } & {
-            background: any;
-            button: Drawable;
-        };
-        static radiobuttonStyle: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            minHeight: string;
-            minWidth: string;
-            textSize: string;
-            gravity: number;
-        } & {
-            background: any;
-            button: Drawable;
-        };
-        static checkedTextViewStyle: {
-            textAlignment: string;
-        };
-        static progressBarStyle: {
-            indeterminateOnly: boolean;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        };
-        static progressBarStyleHorizontal: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        };
-        static progressBarStyleSmall: {
-            indeterminateOnly: boolean;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        } & {
-            indeterminateDrawable: Drawable;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-        };
-        static progressBarStyleLarge: {
-            indeterminateOnly: boolean;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        } & {
-            indeterminateDrawable: Drawable;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-        };
-        static seekBarStyle: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            thumb: Drawable;
-            thumbOffset: string;
-            focusable: boolean;
-            paddingLeft: string;
-            paddingRight: string;
-            mirrorForRtl: boolean;
-        };
-        static ratingBarStyle: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            numStars: string;
-            stepSize: string;
-            thumb: any;
-            mirrorForRtl: boolean;
-        };
-        static ratingBarStyleIndicator: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            numStars: string;
-            stepSize: string;
-            thumb: any;
-            mirrorForRtl: boolean;
-        } & {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            thumb: any;
-            isIndicator: boolean;
-        };
-        static ratingBarStyleSmall: {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            numStars: string;
-            stepSize: string;
-            thumb: any;
-            mirrorForRtl: boolean;
-        } & {
-            indeterminateOnly: boolean;
-            progressDrawable: Drawable;
-            indeterminateDrawable: Drawable;
-            minHeight: string;
-            maxHeight: string;
-            thumb: any;
-            isIndicator: boolean;
-        };
-        static gridViewStyle: {
-            listSelector: Drawable;
-            numColumns: number;
-        };
-        static listViewStyle: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        };
-        static expandableListViewStyle: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        } & {
-            childDivider: Drawable;
-        };
-        static numberPickerStyle: {
-            orientation: string;
-            solidColor: string;
-            selectionDivider: ColorDrawable;
-            selectionDividerHeight: string;
-            selectionDividersDistance: string;
-            internalMinWidth: string;
-            internalMaxHeight: string;
-            virtualButtonPressedDrawable: StateListDrawable;
-        };
-        static popupWindowStyle: {
-            popupBackground: androidui.image.NinePatchDrawable;
-            popupEnterAnimation: view.animation.Animation;
-            popupExitAnimation: view.animation.Animation;
-        };
-        static listPopupWindowStyle: {
-            popupBackground: androidui.image.NinePatchDrawable;
-            popupEnterAnimation: view.animation.Animation;
-            popupExitAnimation: view.animation.Animation;
-        };
-        static popupMenuStyle: {
-            popupBackground: androidui.image.NinePatchDrawable;
-        };
-        static dropDownListViewStyle: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        };
-        static spinnerStyle: {
-            clickable: boolean;
-            spinnerMode: string;
-            gravity: number;
-            disableChildrenWhenDisabled: boolean;
-            background: Drawable;
-            popupBackground: androidui.image.NinePatchDrawable;
-            dropDownVerticalOffset: string;
-            dropDownHorizontalOffset: string;
-            dropDownWidth: number;
-        };
-        static actionBarStyle: {
-            background: ColorDrawable;
-        };
-    }
-    module attr {
-        interface popupWindowStyleType {
-            popupBackground?: Drawable;
-            popupEnterAnimation?: android.view.animation.Animation;
-            popupExitAnimation?: android.view.animation.Animation;
-        }
+        static textViewStyle: Map<string, string>;
+        static buttonStyle: Map<string, string>;
+        static editTextStyle: Map<string, string>;
+        static imageButtonStyle: Map<string, string>;
+        static checkboxStyle: Map<string, string>;
+        static radiobuttonStyle: Map<string, string>;
+        static checkedTextViewStyle: Map<string, string>;
+        static progressBarStyle: Map<string, string>;
+        static progressBarStyleHorizontal: Map<string, string>;
+        static progressBarStyleSmall: Map<string, string>;
+        static progressBarStyleLarge: Map<string, string>;
+        static seekBarStyle: Map<string, string>;
+        static ratingBarStyle: Map<string, string>;
+        static ratingBarStyleIndicator: Map<string, string>;
+        static ratingBarStyleSmall: Map<string, string>;
+        static absListViewStyle: Map<string, string>;
+        static gridViewStyle: Map<string, string>;
+        static listViewStyle: Map<string, string>;
+        static expandableListViewStyle: Map<string, string>;
+        static numberPickerStyle: Map<string, string>;
+        static popupWindowStyle: Map<string, string>;
+        static listPopupWindowStyle: Map<string, string>;
+        static popupMenuStyle: Map<string, string>;
+        static dropDownListViewStyle: Map<string, string>;
+        static spinnerStyle: Map<string, string>;
+        static actionBarStyle: Map<string, string>;
+        static scrollViewStyle: Map<string, string>;
     }
 }
 declare module android.view {
@@ -2911,8 +2685,9 @@ declare module android.view {
     import Resources = android.content.res.Resources;
     import AttrBinder = androidui.attr.AttrBinder;
     import KeyEvent = android.view.KeyEvent;
-    import Animation = animation.Animation;
-    import Transformation = animation.Transformation;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    import TypedArray = android.content.res.TypedArray;
     class View extends JavaObject implements Drawable.Callback, KeyEvent.Callback {
         static DBG: boolean;
         static VIEW_LOG_TAG: string;
@@ -3025,7 +2800,6 @@ declare module android.view {
         static VIEW_STATE_SELECTED: number;
         static VIEW_STATE_FOCUSED: number;
         static VIEW_STATE_ENABLED: number;
-        static VIEW_STATE_DISABLE: number;
         static VIEW_STATE_PRESSED: number;
         static VIEW_STATE_ACTIVATED: number;
         static VIEW_STATE_HOVERED: number;
@@ -3070,7 +2844,7 @@ declare module android.view {
         protected mPrivateFlags: number;
         private mPrivateFlags2;
         private mPrivateFlags3;
-        private mContext;
+        protected mContext: Context;
         protected mCurrentAnimation: Animation;
         private mOldWidthMeasureSpec;
         private mOldHeightMeasureSpec;
@@ -3130,18 +2904,17 @@ declare module android.view {
         private _mScrollY;
         mScrollX: number;
         mScrollY: number;
-        private mPaddingLeft;
-        private mPaddingRight;
-        private mPaddingTop;
-        private mPaddingBottom;
+        protected mPaddingLeft: number;
+        protected mPaddingRight: number;
+        protected mPaddingTop: number;
+        protected mPaddingBottom: number;
         private mCornerRadiusTopLeft;
         private mCornerRadiusTopRight;
         private mCornerRadiusBottomRight;
         private mCornerRadiusBottomLeft;
         private mShadowPaint;
         private mShadowDrawable;
-        constructor(context?: Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(): void;
+        constructor(context: Context, bindElement?: HTMLElement, defStyleAttr?: Map<string, string>);
         getContext(): Context;
         getWidth(): number;
         getHeight(): number;
@@ -3154,7 +2927,6 @@ declare module android.view {
         setPaddingRight(right: number): void;
         setPaddingBottom(bottom: number): void;
         setPadding(left: number, top: number, right: number, bottom: number): void;
-        private _setPaddingWithUnit(left, top, right, bottom);
         resolvePadding(): void;
         setScrollX(value: number): void;
         setScrollY(value: number): void;
@@ -3168,6 +2940,10 @@ declare module android.view {
         private updateMatrix();
         getRotation(): number;
         setRotation(rotation: number): void;
+        getRotationY(): number;
+        setRotationY(rotationY: number): void;
+        getRotationX(): number;
+        setRotationX(rotationX: number): void;
         getScaleX(): number;
         setScaleX(scaleX: number): void;
         getScaleY(): number;
@@ -3302,6 +3078,7 @@ declare module android.view {
         removeOnLayoutChangeListener(listener: View.OnLayoutChangeListener): void;
         addOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
         removeOnAttachStateChangeListener(listener: View.OnAttachStateChangeListener): void;
+        private setOnClickListenerByAttrValueString(onClickAttrString);
         setOnClickListener(l: View.OnClickListener | ((v: View) => void)): void;
         hasOnClickListeners(): boolean;
         setOnLongClickListener(l: View.OnLongClickListener | ((v: View) => boolean)): void;
@@ -3473,7 +3250,7 @@ declare module android.view {
         getHorizontalFadingEdgeLength(): number;
         getVerticalScrollbarWidth(): number;
         getHorizontalScrollbarHeight(): number;
-        initializeScrollbars(a?: any): void;
+        initializeScrollbars(a?: TypedArray): void;
         initScrollCache(): void;
         private getScrollCache();
         isHorizontalScrollBarEnabled(): boolean;
@@ -3534,11 +3311,13 @@ declare module android.view {
         bindElement: HTMLElement;
         private _AttrObserver;
         private _stateAttrList;
-        protected _attrBinder: AttrBinder;
-        private static ViewClassAttrBinder;
+        private _attrBinder;
+        private static ViewClassAttrBinderClazzMap;
         static AndroidViewProperty: string;
-        private _AttrObserverCallBack(arr, observer);
+        private static _AttrObserverCallBack(arr, observer);
         protected initBindElement(bindElement?: HTMLElement): void;
+        protected initBindAttr(): void;
+        protected createClassAttrBinder(): AttrBinder.ClassBinderMap;
         private _syncToElementLock;
         private _syncToElementImmediatelyLock;
         private _syncToElementRun;
@@ -3556,22 +3335,20 @@ declare module android.view {
         syncVisibleToElement(): void;
         protected dependOnDebugLayout(): boolean;
         private _initAttrObserver();
-        private _fireInitedAttributeChange();
         private _fireStateChangeToAttribute(oldState, newState);
         private _getBinderAttrValue(key);
         private onBindElementAttributeChanged(attributeName, oldVal, newVal);
-        applyDefaultAttributes(attrs: any): void;
         tagName(): string;
     }
     module View {
         class TransformationInfo {
-            private mMatrix;
+            mMatrix: Matrix;
             private mInverseMatrix;
             mMatrixDirty: boolean;
-            private mInverseMatrixDirty;
-            private mMatrixIsIdentity;
-            private mPrevWidth;
-            private mPrevHeight;
+            mInverseMatrixDirty: boolean;
+            mMatrixIsIdentity: boolean;
+            mPrevWidth: number;
+            mPrevHeight: number;
             mRotation: number;
             mTranslationX: number;
             mTranslationY: number;
@@ -3907,8 +3684,9 @@ declare module android.view {
     import RectF = android.graphics.RectF;
     import Context = android.content.Context;
     import ArrayList = java.util.ArrayList;
-    import Animation = animation.Animation;
-    import Transformation = animation.Transformation;
+    import Animation = android.view.animation.Animation;
+    import Transformation = android.view.animation.Transformation;
+    import AttrBinder = androidui.attr.AttrBinder;
     abstract class ViewGroup extends View implements ViewParent {
         static FLAG_CLIP_CHILDREN: number;
         static FLAG_CLIP_TO_PADDING: number;
@@ -3957,14 +3735,15 @@ declare module android.view {
         mGroupFlags: number;
         mLayoutMode: number;
         mChildren: Array<View>;
-        mChildrenCount: number;
+        readonly mChildrenCount: number;
         mSuppressLayout: boolean;
         private mLayoutCalledWhileSuppressed;
         private mChildCountWithTransientState;
         private static ViewGroupClassAttrBind;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(): void;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         private initViewGroup();
+        private initFromAttributes(context, attrs, defStyle?);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         getDescendantFocusability(): number;
         setDescendantFocusability(focusability: number): void;
         handleFocusGainInternal(direction: number, previouslyFocusedRect: Rect): void;
@@ -4058,6 +3837,7 @@ declare module android.view {
         isChildrenDrawingOrderEnabled(): boolean;
         setChildrenDrawingOrderEnabled(enabled: boolean): void;
         getChildDrawingOrder(childCount: number, i: number): number;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): ViewGroup.LayoutParams;
         protected generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
         protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
         measureChildren(widthMeasureSpec: number, heightMeasureSpec: number): void;
@@ -4114,46 +3894,37 @@ declare module android.view {
         onSetLayoutParams(child: View, layoutParams: ViewGroup.LayoutParams): void;
     }
     module ViewGroup {
-        class LayoutParams {
+        class LayoutParams extends java.lang.JavaObject {
+            private static ClassAttrBinderClazzMap;
             static FILL_PARENT: number;
             static MATCH_PARENT: number;
             static WRAP_CONTENT: number;
-            private _width;
-            private _widthOrig;
-            private _height;
-            private _heightOrig;
             width: number;
             height: number;
-            _measuringParentWidthMeasureSpec: number;
-            _measuringParentHeightMeasureSpec: number;
-            _measuringMeasureSpec: android.util.DisplayMetrics;
-            _attrBinder: androidui.attr.AttrBinder;
-            private static ViewGroupParamClassAttrBind;
-            constructor();
-            constructor(src: LayoutParams);
+            private _attrBinder;
+            constructor(context: Context, attrs: HTMLElement);
             constructor(width: number, height: number);
+            constructor(src: LayoutParams);
             constructor(...args: any[]);
-            parseAttributeFrom(node: Node, context: Context): void;
+            protected setBaseAttributes(a: android.content.res.TypedArray, widthAttr: string, heightAttr: string): void;
+            getAttrBinder(): AttrBinder;
+            private initBindAttr();
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         }
         class MarginLayoutParams extends LayoutParams {
-            private _leftMargin;
-            private _topMargin;
-            private _rightMargin;
-            private _bottomMargin;
-            private _leftMarginOrig;
-            private _topMarginOrig;
-            private _rightMarginOrig;
-            private _bottomMarginOrig;
             static DEFAULT_MARGIN_RELATIVE: number;
-            private static MarginLayoutParamsClassAttrBind;
+            static DEFAULT_MARGIN_RESOLVED: number;
+            static UNDEFINED_MARGIN: number;
             leftMargin: number;
             topMargin: number;
             rightMargin: number;
             bottomMargin: number;
-            constructor();
+            constructor(context: Context, attrs: HTMLElement);
+            constructor(src: MarginLayoutParams);
             constructor(src: LayoutParams);
             constructor(width: number, height: number);
             constructor(...args: any[]);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
             setMargins(left: number, top: number, right: number, bottom: number): void;
             setLayoutDirection(layoutDirection: number): void;
             getLayoutDirection(): number;
@@ -4196,6 +3967,7 @@ declare module android.widget {
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
     import Canvas = android.graphics.Canvas;
+    import Context = android.content.Context;
     class FrameLayout extends ViewGroup {
         static DEFAULT_CHILD_GRAVITY: number;
         mMeasureAllChildren: boolean;
@@ -4210,7 +3982,8 @@ declare module android.widget {
         mForegroundInPadding: boolean;
         mForegroundBoundsChanged: boolean;
         private mMatchParentChildren;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         getForegroundGravity(): number;
         setForegroundGravity(foregroundGravity: number): void;
         protected verifyDrawable(who: Drawable): boolean;
@@ -4230,6 +4003,7 @@ declare module android.widget {
         draw(canvas: Canvas): void;
         setMeasureAllChildren(measureAll: boolean): void;
         getMeasureAllChildren(): boolean;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         shouldDelayChildPressedState(): boolean;
         protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
         protected generateLayoutParams(p: ViewGroup.LayoutParams): FrameLayout.LayoutParams;
@@ -4237,9 +4011,11 @@ declare module android.widget {
     module FrameLayout {
         class LayoutParams extends ViewGroup.MarginLayoutParams {
             gravity: number;
+            constructor(context: Context, attrs: HTMLElement);
             constructor();
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, gravity?: number);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         }
     }
 }
@@ -4296,8 +4072,7 @@ declare module android.text.style {
     abstract class CharacterStyle {
         static type: symbol;
         mType: symbol;
-        abstract: any;
-        updateDrawState(tp: TextPaint): void;
+        abstract updateDrawState(tp: TextPaint): void;
         static wrap(cs: CharacterStyle): CharacterStyle;
         getUnderlying(): CharacterStyle;
     }
@@ -4798,6 +4573,8 @@ declare module android.view {
             dispatchKeyEvent(event: android.view.KeyEvent): boolean;
             protected isTransformedTouchPointInView(x: number, y: number, child: android.view.View, outLocalPoint: android.graphics.Point): boolean;
             onChildVisibilityChanged(child: android.view.View, oldVisibility: number, newVisibility: number): void;
+            protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
+            layoutChildren(left: number, top: number, right: number, bottom: number, forceLeftGravity: boolean): void;
             tagName(): string;
         }
         class LayoutParams extends android.widget.FrameLayout.LayoutParams {
@@ -4852,10 +4629,6 @@ declare module android.view {
             static ALPHA_CHANGED: number;
             copyFrom(o: LayoutParams): number;
             private mTitle;
-            leftMargin: number;
-            topMargin: number;
-            rightMargin: number;
-            bottomMargin: number;
             private isFocusable();
             private isTouchable();
             private isTouchModal();
@@ -5044,26 +4817,26 @@ declare module android.R {
 declare module android.R {
     import Animation = android.view.animation.Animation;
     class anim {
-        static activity_close_enter: Animation;
-        static activity_close_exit: Animation;
-        static activity_open_enter: Animation;
-        static activity_open_exit: Animation;
-        static activity_close_enter_ios: Animation;
-        static activity_close_exit_ios: Animation;
-        static activity_open_enter_ios: Animation;
-        static activity_open_exit_ios: Animation;
-        static dialog_enter: Animation;
-        static dialog_exit: Animation;
-        static fade_in: Animation;
-        static fade_out: Animation;
-        static toast_enter: Animation;
-        static toast_exit: Animation;
-        static grow_fade_in: Animation;
-        static grow_fade_in_center: Animation;
-        static grow_fade_in_from_bottom: Animation;
-        static shrink_fade_out: Animation;
-        static shrink_fade_out_center: Animation;
-        static shrink_fade_out_from_bottom: Animation;
+        static readonly activity_close_enter: Animation;
+        static readonly activity_close_exit: Animation;
+        static readonly activity_open_enter: Animation;
+        static readonly activity_open_exit: Animation;
+        static readonly activity_close_enter_ios: Animation;
+        static readonly activity_close_exit_ios: Animation;
+        static readonly activity_open_enter_ios: Animation;
+        static readonly activity_open_exit_ios: Animation;
+        static readonly dialog_enter: Animation;
+        static readonly dialog_exit: Animation;
+        static readonly fade_in: Animation;
+        static readonly fade_out: Animation;
+        static readonly toast_enter: Animation;
+        static readonly toast_exit: Animation;
+        static readonly grow_fade_in: Animation;
+        static readonly grow_fade_in_center: Animation;
+        static readonly grow_fade_in_from_bottom: Animation;
+        static readonly shrink_fade_out: Animation;
+        static readonly shrink_fade_out_center: Animation;
+        static readonly shrink_fade_out_from_bottom: Animation;
     }
 }
 declare module android.view {
@@ -5257,7 +5030,7 @@ declare module androidui {
         static BindToElementName: string;
         androidUIElement: AndroidUIElement;
         private _canvas;
-        windowManager: android.view.WindowManager;
+        readonly windowManager: android.view.WindowManager;
         private mActivityThread;
         private _viewRootImpl;
         private mApplication;
@@ -5267,7 +5040,7 @@ declare module androidui {
         private showDebugLayoutDefault;
         private _windowBound;
         private tempRect;
-        windowBound: android.graphics.Rect;
+        readonly windowBound: android.graphics.Rect;
         private touchEvent;
         private ketEvent;
         constructor(androidUIElement: AndroidUIElement);
@@ -5626,136 +5399,12 @@ declare module android.view {
         }
     }
 }
-declare module androidui.util {
-    class NumberChecker {
-        static warnNotNumber(...n: number[]): boolean;
-        static assetNotNumber(...ns: number[]): void;
-        static checkIsNumber(...ns: number[]): boolean;
-    }
-}
-declare module android.widget {
-    import Interpolator = android.view.animation.Interpolator;
-    class OverScroller {
-        private mMode;
-        private mScrollerX;
-        private mScrollerY;
-        private mInterpolator;
-        private mFlywheel;
-        static DEFAULT_DURATION: number;
-        static SCROLL_MODE: number;
-        static FLING_MODE: number;
-        constructor(interpolator?: Interpolator, flywheel?: boolean);
-        setInterpolator(interpolator: Interpolator): void;
-        setFriction(friction: number): void;
-        isFinished(): boolean;
-        forceFinished(finished: boolean): void;
-        getCurrX(): number;
-        getCurrY(): number;
-        getCurrVelocity(): number;
-        getStartX(): number;
-        getStartY(): number;
-        getFinalX(): number;
-        getFinalY(): number;
-        getDuration(): number;
-        computeScrollOffset(): boolean;
-        startScroll(startX: number, startY: number, dx: number, dy: number, duration?: number): void;
-        springBack(startX: number, startY: number, minX: number, maxX: number, minY: number, maxY: number): boolean;
-        fling(startX: number, startY: number, velocityX: number, velocityY: number, minX: number, maxX: number, minY: number, maxY: number, overX?: number, overY?: number): void;
-        notifyHorizontalEdgeReached(startX: number, finalX: number, overX: number): void;
-        notifyVerticalEdgeReached(startY: number, finalY: number, overY: number): void;
-        isOverScrolled(): boolean;
-        abortAnimation(): void;
-        timePassed(): number;
-        isScrollingInDirection(xvel: number, yvel: number): boolean;
-    }
-}
-declare module android.widget {
-    import View = android.view.View;
-    import MotionEvent = android.view.MotionEvent;
-    import Rect = android.graphics.Rect;
-    import KeyEvent = android.view.KeyEvent;
-    class ScrollView extends FrameLayout {
-        static ANIMATED_SCROLL_GAP: number;
-        static MAX_SCROLL_FACTOR: number;
-        private static TAG;
-        private static INVALID_POINTER;
-        private mLastScroll;
-        private mTempRect;
-        private mScroller;
-        private mLastMotionY;
-        private mIsLayoutDirty;
-        private mChildToScrollTo;
-        private mIsBeingDragged;
-        private mVelocityTracker;
-        private mFillViewport;
-        private mSmoothScrollingEnabled;
-        private mMinimumVelocity;
-        private mMaximumVelocity;
-        private mOverscrollDistance;
-        private _mOverflingDistance;
-        private mOverflingDistance;
-        private mActivePointerId;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        shouldDelayChildPressedState(): boolean;
-        getMaxScrollAmount(): number;
-        private initScrollView();
-        addView(...args: any[]): any;
-        private canScroll();
-        isFillViewport(): boolean;
-        setFillViewport(fillViewport: boolean): void;
-        isSmoothScrollingEnabled(): boolean;
-        setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
-        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
-        dispatchKeyEvent(event: KeyEvent): boolean;
-        executeKeyEvent(event: KeyEvent): boolean;
-        private inChild(x, y);
-        private initOrResetVelocityTracker();
-        private initVelocityTrackerIfNotExists();
-        private recycleVelocityTracker();
-        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
-        onInterceptTouchEvent(ev: MotionEvent): boolean;
-        onTouchEvent(ev: MotionEvent): boolean;
-        private onSecondaryPointerUp(ev);
-        onGenericMotionEvent(event: MotionEvent): boolean;
-        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
-        private getScrollRange();
-        private findFocusableViewInBounds(topFocus, top, bottom);
-        pageScroll(direction: number): boolean;
-        fullScroll(direction: number): boolean;
-        private scrollAndFocus(direction, top, bottom);
-        arrowScroll(direction: number): boolean;
-        private isOffScreen(descendant);
-        private isWithinDeltaOfScreen(descendant, delta, height);
-        private doScrollY(delta);
-        smoothScrollBy(dx: number, dy: number): void;
-        smoothScrollTo(x: number, y: number): void;
-        protected computeVerticalScrollRange(): number;
-        protected computeVerticalScrollOffset(): number;
-        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
-        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
-        computeScroll(): void;
-        private scrollToChild(child);
-        private scrollToChildRect(rect, immediate);
-        computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
-        requestChildFocus(child: View, focused: View): void;
-        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
-        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
-        requestLayout(): void;
-        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
-        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
-        private static isViewDescendantOf(child, parent);
-        fling(velocityY: number): void;
-        private endDrag();
-        scrollTo(x: number, y: number): void;
-        private static clamp(n, my, child);
-        canScrollVertically(direction: number): boolean;
-    }
-}
 declare module android.widget {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import Drawable = android.graphics.drawable.Drawable;
     import Canvas = android.graphics.Canvas;
+    import Context = android.content.Context;
     class LinearLayout extends ViewGroup {
         static HORIZONTAL: number;
         static VERTICAL: number;
@@ -5783,7 +5432,8 @@ declare module android.widget {
         private mDividerHeight;
         private mShowDividers;
         private mDividerPadding;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         setShowDividers(showDividers: number): void;
         shouldDelayChildPressedState(): boolean;
         getShowDividers(): number;
@@ -5828,6 +5478,7 @@ declare module android.widget {
         setGravity(gravity: number): void;
         setHorizontalGravity(horizontalGravity: number): void;
         setVerticalGravity(verticalGravity: number): void;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         protected generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
         protected generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
         protected checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
@@ -5836,59 +5487,12 @@ declare module android.widget {
         class LayoutParams extends android.view.ViewGroup.MarginLayoutParams {
             weight: number;
             gravity: number;
-            constructor();
+            constructor(context: Context, attrs: HTMLElement);
+            constructor(width: number, height: number);
             constructor(source: ViewGroup.LayoutParams);
             constructor(width: number, height: number, weight?: number);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         }
-    }
-}
-declare module android.util {
-    class ArrayMap<K, V> {
-        private map;
-        constructor(capacity?: number);
-        clear(): void;
-        erase(): void;
-        ensureCapacity(minimumCapacity: number): void;
-        containsKey(key: K): boolean;
-        indexOfValue(value: V): number;
-        containsValue(value: V): boolean;
-        get(key: K): V;
-        keyAt(index: number): K;
-        valueAt(index: number): V;
-        setValueAt(index: number, value: V): V;
-        isEmpty(): boolean;
-        put(key: K, value: V): V;
-        append(key: K, value: V): void;
-        remove(key: K): V;
-        removeAt(index: number): V;
-        keySet(): Set<K>;
-        size(): number;
-    }
-}
-declare module java.util {
-    class ArrayDeque<E> extends ArrayList<E> {
-        addFirst(e: E): void;
-        addLast(e: E): void;
-        offerFirst(e: E): boolean;
-        offerLast(e: E): boolean;
-        removeFirst(): E;
-        removeLast(): E;
-        pollFirst(): E;
-        pollLast(): E;
-        getFirst(): E;
-        getLast(): E;
-        peekFirst(): E;
-        peekLast(): E;
-        removeFirstOccurrence(o: any): boolean;
-        removeLastOccurrence(o: any): boolean;
-        offer(e: E): boolean;
-        remove(): E;
-        poll(): E;
-        element(): E;
-        peek(): E;
-        push(e: E): void;
-        pop(): E;
-        private delete(i);
     }
 }
 declare module android.util {
@@ -6514,6 +6118,49 @@ declare module android.text.method {
         private static sInstance;
     }
 }
+declare module androidui.util {
+    class NumberChecker {
+        static warnNotNumber(...n: number[]): boolean;
+        static assetNotNumber(...ns: number[]): void;
+        static checkIsNumber(...ns: number[]): boolean;
+    }
+}
+declare module android.widget {
+    import Interpolator = android.view.animation.Interpolator;
+    class OverScroller {
+        private mMode;
+        private mScrollerX;
+        private mScrollerY;
+        private mInterpolator;
+        private mFlywheel;
+        static DEFAULT_DURATION: number;
+        static SCROLL_MODE: number;
+        static FLING_MODE: number;
+        constructor(interpolator?: Interpolator, flywheel?: boolean);
+        setInterpolator(interpolator: Interpolator): void;
+        setFriction(friction: number): void;
+        isFinished(): boolean;
+        forceFinished(finished: boolean): void;
+        getCurrX(): number;
+        getCurrY(): number;
+        getCurrVelocity(): number;
+        getStartX(): number;
+        getStartY(): number;
+        getFinalX(): number;
+        getFinalY(): number;
+        getDuration(): number;
+        computeScrollOffset(): boolean;
+        startScroll(startX: number, startY: number, dx: number, dy: number, duration?: number): void;
+        springBack(startX: number, startY: number, minX: number, maxX: number, minY: number, maxY: number): boolean;
+        fling(startX: number, startY: number, velocityX: number, velocityY: number, minX: number, maxX: number, minY: number, maxY: number, overX?: number, overY?: number): void;
+        notifyHorizontalEdgeReached(startX: number, finalX: number, overX: number): void;
+        notifyVerticalEdgeReached(startY: number, finalY: number, overY: number): void;
+        isOverScrolled(): boolean;
+        abortAnimation(): void;
+        timePassed(): number;
+        isScrollingInDirection(xvel: number, yvel: number): boolean;
+    }
+}
 declare module android.widget {
     import ColorStateList = android.content.res.ColorStateList;
     import Canvas = android.graphics.Canvas;
@@ -6633,9 +6280,8 @@ declare module android.widget {
         mTextEditSuggestionItemLayout: number;
         private mEditor;
         protected mSkipDrawText: boolean;
-        private static TextViewClassAttrBind;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(): void;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private setTypefaceFromAttrs(familyName, typefaceIndex, styleIndex);
         private setRelativeDrawablesIfNeeded(start, end);
         setEnabled(enabled: boolean): void;
@@ -6711,6 +6357,8 @@ declare module android.widget {
         setHintTextColor(colors: ColorStateList | number): void;
         getHintTextColors(): ColorStateList;
         getCurrentHintTextColor(): number;
+        setLinkTextColor(colors: number | ColorStateList): void;
+        getLinkTextColors(): ColorStateList;
         setGravity(gravity: number): void;
         getGravity(): number;
         getPaintFlags(): number;
@@ -7007,7 +6655,7 @@ declare module android.widget {
 }
 declare module android.widget {
     class Button extends TextView {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
     }
 }
 declare module android.widget {
@@ -7157,8 +6805,9 @@ declare module android.widget {
         private mLastHandledItemCount;
         static sLinearInterpolator: Interpolator;
         private mPendingSync;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         private initAbsListView();
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         setOverScrollMode(mode: number): void;
         setAdapter(adapter: ListAdapter): void;
         getCheckedItemCount(): number;
@@ -7303,6 +6952,7 @@ declare module android.widget {
         onGlobalLayout(): void;
         protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
         protected generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): ViewGroup.LayoutParams;
         protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
         setTranscriptMode(mode: number): void;
         getTranscriptMode(): number;
@@ -7408,7 +7058,7 @@ declare module android.widget {
             forceAdd: boolean;
             scrappedFromPosition: number;
             itemId: number;
-            constructor();
+            constructor(context: android.content.Context, attrs: HTMLElement);
             constructor(w: number, h: number);
             constructor(w: number, h: number, viewType: number);
             constructor(source: ViewGroup.LayoutParams);
@@ -7569,7 +7219,8 @@ declare module android.widget {
         private mDividerPaint;
         private mArrowScrollFocusResult;
         private mFocusSelector;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         getMaxScrollAmount(): number;
         private adjustViewsUpOrDown();
         addHeaderView(v: View, data?: any, isSelectable?: boolean): void;
@@ -7698,6 +7349,145 @@ declare module android.widget {
     }
 }
 declare module android.widget {
+    class Scroller extends OverScroller {
+    }
+}
+declare module android.widget {
+    import Canvas = android.graphics.Canvas;
+    import Rect = android.graphics.Rect;
+    import KeyEvent = android.view.KeyEvent;
+    import MotionEvent = android.view.MotionEvent;
+    import View = android.view.View;
+    import FrameLayout = android.widget.FrameLayout;
+    class ScrollView extends FrameLayout {
+        static ANIMATED_SCROLL_GAP: number;
+        static MAX_SCROLL_FACTOR: number;
+        private static TAG;
+        private mLastScroll;
+        private mTempRect;
+        private mScroller;
+        private mLastMotionY;
+        private mIsLayoutDirty;
+        private mChildToScrollTo;
+        private mIsBeingDragged;
+        private mVelocityTracker;
+        private mFillViewport;
+        private mSmoothScrollingEnabled;
+        private mMinimumVelocity;
+        private mMaximumVelocity;
+        private mOverscrollDistance;
+        private mOverflingDistance;
+        private mActivePointerId;
+        private static INVALID_POINTER;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
+        shouldDelayChildPressedState(): boolean;
+        protected getTopFadingEdgeStrength(): number;
+        protected getBottomFadingEdgeStrength(): number;
+        getMaxScrollAmount(): number;
+        private initScrollView();
+        addView(...args: any[]): void;
+        private canScroll();
+        isFillViewport(): boolean;
+        setFillViewport(fillViewport: boolean): void;
+        isSmoothScrollingEnabled(): boolean;
+        setSmoothScrollingEnabled(smoothScrollingEnabled: boolean): void;
+        protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
+        dispatchKeyEvent(event: KeyEvent): boolean;
+        executeKeyEvent(event: KeyEvent): boolean;
+        private inChild(x, y);
+        private initOrResetVelocityTracker();
+        private initVelocityTrackerIfNotExists();
+        private recycleVelocityTracker();
+        requestDisallowInterceptTouchEvent(disallowIntercept: boolean): void;
+        onInterceptTouchEvent(ev: MotionEvent): boolean;
+        onTouchEvent(ev: MotionEvent): boolean;
+        private onSecondaryPointerUp(ev);
+        onGenericMotionEvent(event: MotionEvent): boolean;
+        protected onOverScrolled(scrollX: number, scrollY: number, clampedX: boolean, clampedY: boolean): void;
+        private getScrollRange();
+        private findFocusableViewInBounds(topFocus, top, bottom);
+        pageScroll(direction: number): boolean;
+        fullScroll(direction: number): boolean;
+        private scrollAndFocus(direction, top, bottom);
+        arrowScroll(direction: number): boolean;
+        private isOffScreen(descendant);
+        private isWithinDeltaOfScreen(descendant, delta, height);
+        private doScrollY(delta);
+        smoothScrollBy(dx: number, dy: number): void;
+        smoothScrollTo(x: number, y: number): void;
+        protected computeVerticalScrollRange(): number;
+        protected computeVerticalScrollOffset(): number;
+        protected measureChild(child: View, parentWidthMeasureSpec: number, parentHeightMeasureSpec: number): void;
+        protected measureChildWithMargins(child: View, parentWidthMeasureSpec: number, widthUsed: number, parentHeightMeasureSpec: number, heightUsed: number): void;
+        computeScroll(): void;
+        private scrollToChild(child);
+        private scrollToChildRect(rect, immediate);
+        protected computeScrollDeltaToGetChildRectOnScreen(rect: Rect): number;
+        requestChildFocus(child: View, focused: View): void;
+        protected onRequestFocusInDescendants(direction: number, previouslyFocusedRect: Rect): boolean;
+        requestChildRectangleOnScreen(child: View, rectangle: Rect, immediate: boolean): boolean;
+        requestLayout(): void;
+        protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        protected onSizeChanged(w: number, h: number, oldw: number, oldh: number): void;
+        private static isViewDescendantOf(child, parent);
+        fling(velocityY: number): void;
+        private endDrag();
+        scrollTo(x: number, y: number): void;
+        draw(canvas: Canvas): void;
+        private static clamp(n, my, child);
+    }
+}
+declare module android.util {
+    class ArrayMap<K, V> {
+        private map;
+        constructor(capacity?: number);
+        clear(): void;
+        erase(): void;
+        ensureCapacity(minimumCapacity: number): void;
+        containsKey(key: K): boolean;
+        indexOfValue(value: V): number;
+        containsValue(value: V): boolean;
+        get(key: K): V;
+        keyAt(index: number): K;
+        valueAt(index: number): V;
+        setValueAt(index: number, value: V): V;
+        isEmpty(): boolean;
+        put(key: K, value: V): V;
+        append(key: K, value: V): void;
+        remove(key: K): V;
+        removeAt(index: number): V;
+        keySet(): Set<K>;
+        size(): number;
+    }
+}
+declare module java.util {
+    class ArrayDeque<E> extends ArrayList<E> {
+        addFirst(e: E): void;
+        addLast(e: E): void;
+        offerFirst(e: E): boolean;
+        offerLast(e: E): boolean;
+        removeFirst(): E;
+        removeLast(): E;
+        pollFirst(): E;
+        pollLast(): E;
+        getFirst(): E;
+        getLast(): E;
+        peekFirst(): E;
+        peekLast(): E;
+        removeFirstOccurrence(o: any): boolean;
+        removeLastOccurrence(o: any): boolean;
+        offer(e: E): boolean;
+        remove(): E;
+        poll(): E;
+        element(): E;
+        peek(): E;
+        push(e: E): void;
+        pop(): E;
+        private delete(i);
+    }
+}
+declare module android.widget {
     import Canvas = android.graphics.Canvas;
     import Rect = android.graphics.Rect;
     import KeyEvent = android.view.KeyEvent;
@@ -7725,7 +7515,8 @@ declare module android.widget {
         private mOverflingDistance;
         private mActivePointerId;
         private static INVALID_POINTER;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         protected getLeftFadingEdgeStrength(): number;
         protected getRightFadingEdgeStrength(): number;
         getMaxScrollAmount(): number;
@@ -7789,8 +7580,9 @@ declare module android.widget {
     import SparseMap = android.util.SparseMap;
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
+    import Context = android.content.Context;
     class RelativeLayout extends ViewGroup {
-        static TRUE: number;
+        static TRUE: string;
         static LEFT_OF: number;
         static RIGHT_OF: number;
         static ABOVE: number;
@@ -7813,7 +7605,7 @@ declare module android.widget {
         static ALIGN_END: number;
         static ALIGN_PARENT_START: number;
         static ALIGN_PARENT_END: number;
-        private static VERB_COUNT;
+        static VERB_COUNT: number;
         private static RULES_VERTICAL;
         private static RULES_HORIZONTAL;
         private mBaselineView;
@@ -7829,7 +7621,8 @@ declare module android.widget {
         private mAllowBrokenMeasureSpecs;
         private mMeasureVerticalWithPaddingMargin;
         private static DEFAULT_WIDTH;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private queryCompatibilityModes();
         shouldDelayChildPressedState(): boolean;
         setIgnoreGravity(viewId: string): void;
@@ -7855,6 +7648,7 @@ declare module android.widget {
         private static centerHorizontal(child, params, myWidth);
         private static centerVertical(child, params, myHeight);
         protected onLayout(changed: boolean, l: number, t: number, r: number, b: number): void;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
         protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
         protected generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
@@ -7863,18 +7657,21 @@ declare module android.widget {
         class LayoutParams extends ViewGroup.MarginLayoutParams {
             private mRules;
             private mInitialRules;
-            private mLeft;
-            private mTop;
-            private mRight;
-            private mBottom;
+            mLeft: number;
+            mTop: number;
+            mRight: number;
+            mBottom: number;
             private mStart;
             private mEnd;
             private mRulesChanged;
             private mIsRtlCompatibilityMode;
             alignWithParent: boolean;
+            constructor(context: Context, attrs: HTMLElement);
             constructor(w: number, h: number);
+            constructor(source: RelativeLayout.LayoutParams);
             constructor(source: ViewGroup.LayoutParams);
-            constructor(...args: any[]);
+            constructor(source: ViewGroup.MarginLayoutParams);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
             addRule(verb: number, anchor?: string): void;
             removeRule(verb: number): void;
             private hasRelativeRules();
@@ -7884,7 +7681,7 @@ declare module android.widget {
         }
         class DependencyGraph {
             private mNodes;
-            private mKeyNodes;
+            mKeyNodes: SparseMap<string, DependencyGraph.Node>;
             private mRoots;
             clear(): void;
             add(view: View): void;
@@ -7923,6 +7720,7 @@ declare module android.widget {
         private mForceDisableDraw;
         private mMaxLength;
         constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         protected initBindElement(bindElement: HTMLElement): void;
         protected onInputValueChange(e: any): void;
         private onDomTextInput(e);
@@ -7950,6 +7748,7 @@ declare module android.widget {
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         setGravity(gravity: number): void;
         setSingleLine(singleLine?: boolean): void;
+        _setInputType(value: string): void;
         setInputType(type: number): void;
         getInputType(): number;
         private syncTextBoundInfoToInputElement();
@@ -7986,9 +7785,8 @@ declare module android.widget {
         private mBaseline;
         private mBaselineAlignBottom;
         private mAdjustViewBoundsCompat;
-        private static ImageViewClassAttrBind;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(): void;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private initImageView();
         protected verifyDrawable(dr: Drawable): boolean;
         jumpDrawablesToCurrentState(): void;
@@ -8052,12 +7850,7 @@ declare module android.widget {
 }
 declare module android.widget {
     class ImageButton extends ImageView {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            background: graphics.drawable.Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            gravity: number;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
     }
 }
 declare module android.widget {
@@ -8083,10 +7876,8 @@ declare module android.widget {
         private mReferenceViewInSelectedRow;
         private mGravity;
         private mTempRect;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            listSelector: graphics.drawable.Drawable;
-            numColumns: number;
-        });
+        constructor(context: android.content.Context, attrs: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         getAdapter(): ListAdapter;
         setAdapter(adapter: ListAdapter): void;
         lookForSelectablePosition(position: number, lookDown: boolean): number;
@@ -8237,7 +8028,8 @@ declare module android.widget {
         private mDecrementVirtualButtonPressed;
         private mPressedStateHelper;
         private mLastHandledDownDpadKeyCode;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         protected onLayout(changed: boolean, left: number, top: number, right: number, bottom: number): void;
         protected onMeasure(widthMeasureSpec: number, heightMeasureSpec: number): void;
         private moveToFinalScrollerPosition(scroller);
@@ -8344,7 +8136,7 @@ declare module android.widget {
             _NumberPicker_this: NumberPicker;
             constructor(arg: NumberPicker);
             private mIncrement;
-            private setStep(increment);
+            setStep(increment: boolean): void;
             run(): void;
         }
         class BeginSoftInputOnLongPressCommand implements Runnable {
@@ -8434,17 +8226,8 @@ declare module android.widget {
         private mRefreshIsPosted;
         mMirrorForRtl: boolean;
         private mRefreshData;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            indeterminateOnly: boolean;
-            indeterminateDrawable: Drawable;
-            indeterminateBehavior: string;
-            indeterminateDuration: number;
-            minWidth: string;
-            maxWidth: string;
-            minHeight: string;
-            maxHeight: string;
-            mirrorForRtl: boolean;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private tileify(drawable, clip);
         private tileifyIndeterminate(drawable);
         private initProgressBar();
@@ -8510,7 +8293,8 @@ declare module android.widget {
         private mOnCheckedChangeListener;
         private mOnCheckedChangeWidgetListener;
         private static CHECKED_STATE_SET;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         toggle(): void;
         performClick(): boolean;
         isChecked(): boolean;
@@ -8537,45 +8321,13 @@ declare module android.widget {
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class CheckBox extends CompoundButton {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: graphics.drawable.Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            minHeight: string;
-            minWidth: string;
-            textSize: string;
-            gravity: number;
-        } & {
-            background: any;
-            button: graphics.drawable.Drawable;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
     }
 }
 declare module android.widget {
     import CompoundButton = android.widget.CompoundButton;
     class RadioButton extends CompoundButton {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            textSize: string;
-            layerType: string;
-            textColor: content.res.ColorStateList;
-            textColorHint: number;
-        } & {
-            background: graphics.drawable.Drawable;
-            focusable: boolean;
-            clickable: boolean;
-            minHeight: string;
-            minWidth: string;
-            textSize: string;
-            gravity: number;
-        } & {
-            background: any;
-            button: graphics.drawable.Drawable;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         toggle(): void;
     }
 }
@@ -8590,9 +8342,8 @@ declare module android.widget {
         private mProtectFromCheckedChange;
         private mOnCheckedChangeListener;
         private mPassThroughListener;
-        private static RadioGroupClassAttrBind;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
-        protected initBindAttr(): void;
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private init();
         setOnHierarchyChangeListener(listener: ViewGroup.OnHierarchyChangeListener): void;
         protected onFinishInflate(): void;
@@ -8603,11 +8354,13 @@ declare module android.widget {
         getCheckedRadioButtonId(): string;
         clearCheck(): void;
         setOnCheckedChangeListener(listener: RadioGroup.OnCheckedChangeListener): void;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
         protected generateDefaultLayoutParams(): LinearLayout.LayoutParams;
     }
     module RadioGroup {
         class LayoutParams extends LinearLayout.LayoutParams {
+            protected setBaseAttributes(a: android.content.res.TypedArray, widthAttr: string, heightAttr: string): void;
         }
         interface OnCheckedChangeListener {
             onCheckedChanged(group: RadioGroup, checkedId: string): void;
@@ -8640,9 +8393,8 @@ declare module android.widget {
         private mCheckMarkWidth;
         private mNeedRequestlayout;
         private static CHECKED_STATE_SET;
-        constructor(context: Context, bindElement?: HTMLElement, defStyle?: {
-            textAlignment: string;
-        });
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         toggle(): void;
         isChecked(): boolean;
         setChecked(checked: boolean): void;
@@ -8672,7 +8424,8 @@ declare module android.widget {
         private mDisabledAlpha;
         private mTouchDownX;
         private mIsDragging;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         setThumb(thumb: Drawable): void;
         getThumb(): Drawable;
         getThumbOffset(): number;
@@ -8702,19 +8455,7 @@ declare module android.widget {
     import AbsSeekBar = android.widget.AbsSeekBar;
     class SeekBar extends AbsSeekBar {
         private mOnSeekBarChangeListener;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            indeterminateOnly: boolean;
-            progressDrawable: graphics.drawable.Drawable;
-            indeterminateDrawable: graphics.drawable.Drawable;
-            minHeight: string;
-            maxHeight: string;
-            thumb: graphics.drawable.Drawable;
-            thumbOffset: string;
-            focusable: boolean;
-            paddingLeft: string;
-            paddingRight: string;
-            mirrorForRtl: boolean;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         onProgressRefresh(scale: number, fromUser: boolean): void;
         setOnSeekBarChangeListener(l: SeekBar.OnSeekBarChangeListener): void;
         onStartTrackingTouch(): void;
@@ -8734,17 +8475,8 @@ declare module android.widget {
         private mNumStars;
         private mProgressOnStartTracking;
         private mOnRatingBarChangeListener;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            indeterminateOnly: boolean;
-            progressDrawable: graphics.drawable.Drawable;
-            indeterminateDrawable: graphics.drawable.Drawable;
-            minHeight: string;
-            maxHeight: string;
-            numStars: string;
-            stepSize: string;
-            thumb: any;
-            mirrorForRtl: boolean;
-        });
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         setOnRatingBarChangeListener(listener: RatingBar.OnRatingBarChangeListener): void;
         getOnRatingBarChangeListener(): RatingBar.OnRatingBarChangeListener;
         setIsIndicator(isIndicator: boolean): void;
@@ -8943,13 +8675,8 @@ declare module android.widget {
         private static CHILD_LAST_STATE_SET;
         private mChildDivider;
         private mIndicatorRect;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: {
-            divider: Drawable;
-            listSelector: Drawable;
-            dividerHeight: number;
-        } & {
-            childDivider: Drawable;
-        });
+        constructor(context: android.content.Context, attrs?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private isRtlCompatibilityMode();
         private hasRtlSupport();
         onRtlPropertiesChanged(layoutDirection: number): void;
@@ -9237,6 +8964,9 @@ declare module android.widget {
         private mNotifyOnChange;
         private mContext;
         private mInflater;
+        constructor(context: Context, resource: string);
+        constructor(context: Context, resource: string, textViewResourceId: string);
+        constructor(context: Context, resource: string, objects: T[]);
         constructor(context: Context, resource: string, textViewResourceId: string, objects: T[] | List<T>);
         add(object: T): void;
         addAll(collection: List<T>): void;
@@ -9342,7 +9072,7 @@ declare module android.app {
         }
         class RecycleListView extends ListView {
             mRecycleOnMeasure: boolean;
-            constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+            constructor(context: Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
             protected recycleOnMeasure(): boolean;
         }
         class AlertParams {
@@ -9475,7 +9205,8 @@ declare module android.widget {
         mRecycler: AbsSpinner.RecycleBin;
         private mDataSetObserver;
         private mTouchFrame;
-        constructor(context: Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private initAbsSpinner();
         setAdapter(adapter: SpinnerAdapter): void;
         resetList(): void;
@@ -9486,8 +9217,7 @@ declare module android.widget {
         recycleAllViews(): void;
         setSelection(position: number, animate?: boolean): void;
         setSelectionInt(position: number, animate: boolean): void;
-        abstract: any;
-        layoutSpinner(delta: number, animate: boolean): void;
+        abstract layoutSpinner(delta: number, animate: boolean): void;
         getSelectedView(): View;
         requestLayout(): void;
         getAdapter(): SpinnerAdapter;
@@ -9506,7 +9236,6 @@ declare module android.widget {
     }
 }
 declare module android.widget {
-    import R = android.R;
     import Context = android.content.Context;
     import Drawable = android.graphics.drawable.Drawable;
     import KeyEvent = android.view.KeyEvent;
@@ -9567,7 +9296,7 @@ declare module android.widget {
         private mAnchoredGravity;
         private mPopupViewInitialLayoutDirectionInherited;
         constructor(contentView: View, width?: number, height?: number, focusable?: boolean);
-        constructor(context: Context, styleAttr?: R.attr.popupWindowStyleType);
+        constructor(context: Context, styleAttr?: Map<string, string>);
         getBackground(): Drawable;
         setBackgroundDrawable(background: Drawable): void;
         getEnterAnimation(): Animation;
@@ -9643,10 +9372,6 @@ declare module android.widget {
     }
 }
 declare module android.widget {
-    class Scroller extends OverScroller {
-    }
-}
-declare module android.widget {
     import DataSetObserver = android.database.DataSetObserver;
     import Drawable = android.graphics.drawable.Drawable;
     import KeyEvent = android.view.KeyEvent;
@@ -9701,7 +9426,7 @@ declare module android.widget {
         static INPUT_METHOD_FROM_FOCUSABLE: number;
         static INPUT_METHOD_NEEDED: number;
         static INPUT_METHOD_NOT_NEEDED: number;
-        constructor(context: Context, styleAttr?: android.R.attr.popupWindowStyleType);
+        constructor(context: Context, styleAttr?: Map<string, string>);
         setAdapter(adapter: ListAdapter): void;
         setPromptPosition(position: number): void;
         getPromptPosition(): number;
@@ -9839,9 +9564,8 @@ declare module android.widget {
     import ListPopupWindow = android.widget.ListPopupWindow;
     import SpinnerAdapter = android.widget.SpinnerAdapter;
     import Context = android.content.Context;
-    import R = android.R;
     class Spinner extends AbsSpinner implements OnClickListener {
-        private static TAG;
+        static TAG: string;
         private static MAX_ITEMS_MEASURED;
         static MODE_DIALOG: number;
         static MODE_DROPDOWN: number;
@@ -9852,17 +9576,8 @@ declare module android.widget {
         private mGravity;
         private mDisableChildrenWhenDisabled;
         private mTempRect;
-        constructor(context: Context, bindElement?: HTMLElement, defStyle?: {
-            clickable: boolean;
-            spinnerMode: string;
-            gravity: number;
-            disableChildrenWhenDisabled: boolean;
-            background: Drawable;
-            popupBackground: androidui.image.NinePatchDrawable;
-            dropDownVerticalOffset: string;
-            dropDownHorizontalOffset: string;
-            dropDownWidth: number;
-        }, mode?: number);
+        constructor(context: Context, bindElement?: HTMLElement, defStyle?: Map<string, string>, mode?: number);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         setPopupBackgroundDrawable(background: Drawable): void;
         getPopupBackground(): Drawable;
         setDropDownVerticalOffset(pixels: number): void;
@@ -9946,7 +9661,7 @@ declare module android.widget {
         class DropdownPopup extends ListPopupWindow implements Spinner.SpinnerPopup {
             _Spinner_this: Spinner;
             private mHintText;
-            constructor(context: Context, defStyleRes: R.attr.popupWindowStyleType, arg: Spinner);
+            constructor(context: Context, defStyleRes: Map<string, string>, arg: Spinner);
             setAdapter(adapter: ListAdapter): void;
             getHintText(): string;
             setPromptText(hintText: string): void;
@@ -9959,7 +9674,7 @@ declare module androidui.widget {
     import View = android.view.View;
     class HtmlBaseView extends View {
         private mHtmlTouchAble;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         onTouchEvent(event: android.view.MotionEvent): boolean;
         setHtmlTouchAble(enable: boolean): void;
         isHtmlTouchAble(): boolean;
@@ -9978,7 +9693,7 @@ declare module android.webkit {
         private iFrameElement;
         protected mClient: WebViewClient;
         private initIFrameHistoryLength;
-        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         private initIFrameElement(url);
         private checkActivityResume();
         goBack(): void;
@@ -10250,7 +9965,7 @@ declare module android.support.v4.view {
         static SCROLL_STATE_SETTLING: number;
         private mEndScrollRunnable;
         private mScrollState;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
         private initViewPager();
         protected onDetachedFromWindow(): void;
         private setScrollState(newState);
@@ -10339,6 +10054,7 @@ declare module android.support.v4.view {
         protected generateDefaultLayoutParams(): android.view.ViewGroup.LayoutParams;
         protected generateLayoutParams(p: android.view.ViewGroup.LayoutParams): android.view.ViewGroup.LayoutParams;
         protected checkLayoutParams(p: android.view.ViewGroup.LayoutParams): boolean;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         private static isImplDecor(view);
         static setClassImplDecor(clazz: Function): void;
     }
@@ -10367,6 +10083,8 @@ declare module android.support.v4.view {
             position: number;
             childIndex: number;
             constructor();
+            constructor(context: android.content.Context, attrs: HTMLElement);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         }
     }
 }
@@ -10490,6 +10208,7 @@ declare module android.support.v4.widget {
     import View = android.view.View;
     import ViewGroup = android.view.ViewGroup;
     import ViewDragHelper = android.support.v4.widget.ViewDragHelper;
+    import Context = android.content.Context;
     class DrawerLayout extends ViewGroup {
         private static TAG;
         static STATE_IDLE: number;
@@ -10500,9 +10219,9 @@ declare module android.support.v4.widget {
         static LOCK_MODE_LOCKED_OPEN: number;
         private static MIN_DRAWER_MARGIN;
         private static DEFAULT_SCRIM_COLOR;
-        private static PEEK_DELAY;
+        static PEEK_DELAY: number;
         private static MIN_FLING_VELOCITY;
-        private static ALLOW_EDGE_LOCK;
+        static ALLOW_EDGE_LOCK: boolean;
         private static CHILDREN_DISALLOW_INTERCEPT;
         private static TOUCH_SLOP_SENSITIVITY;
         private mMinDrawerMargin;
@@ -10525,7 +10244,7 @@ declare module android.support.v4.widget {
         private mInitialMotionY;
         private mShadowLeft;
         private mShadowRight;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         setDrawerShadow(shadowDrawable: Drawable, gravity: number): void;
         setScrimColor(color: number): void;
         setDrawerListener(listener: DrawerLayout.DrawerListener): void;
@@ -10577,6 +10296,7 @@ declare module android.support.v4.widget {
         protected generateDefaultLayoutParams(): ViewGroup.LayoutParams;
         protected generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams;
         protected checkLayoutParams(p: ViewGroup.LayoutParams): boolean;
+        generateLayoutParamsFromAttr(attrs: HTMLElement): android.view.ViewGroup.LayoutParams;
         private hasVisibleDrawer();
         private findVisibleDrawer();
         cancelChildViewTouch(): void;
@@ -10623,12 +10343,13 @@ declare module android.support.v4.widget {
             onScreen: number;
             isPeeking: boolean;
             knownOpen: boolean;
-            constructor();
+            constructor(context: Context, attrs: HTMLElement);
             constructor(width: number, height: number);
             constructor(width: number, height: number, gravity: number);
             constructor(source: ViewGroup.LayoutParams);
             constructor(source: ViewGroup.MarginLayoutParams);
             constructor(source: LayoutParams);
+            protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         }
     }
 }
@@ -10914,7 +10635,7 @@ declare module uk.co.senab.photoview {
     class PhotoView extends ImageView implements IPhotoView {
         private mAttacher;
         private mPendingScaleType;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         protected init(): void;
         setPhotoViewRotation(rotationDegree: number): void;
         setRotationTo(rotationDegree: number): void;
@@ -11007,14 +10728,13 @@ declare module android.app {
 }
 declare module androidui.widget {
     class HtmlView extends HtmlBaseView {
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         setHtml(html: string): void;
         getHtml(): string;
     }
 }
 declare module androidui.widget {
-    import ImageView = android.widget.ImageView;
     class HtmlImageView extends HtmlBaseView {
         private mScaleType;
         private mHaveFrame;
@@ -11026,7 +10746,8 @@ declare module androidui.widget {
         private mDrawableHeight;
         private mAdjustViewBoundsCompat;
         private mImgElement;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
+        protected createClassAttrBinder(): androidui.attr.AttrBinder.ClassBinderMap;
         private initImageView();
         getAdjustViewBounds(): boolean;
         setAdjustViewBounds(adjustViewBounds: boolean): void;
@@ -11035,8 +10756,8 @@ declare module androidui.widget {
         getMaxHeight(): number;
         setMaxHeight(maxHeight: number): void;
         setImageURI(uri: string): void;
-        setScaleType(scaleType: ImageView.ScaleType): void;
-        getScaleType(): ImageView.ScaleType;
+        setScaleType(scaleType: android.widget.ImageView.ScaleType): void;
+        getScaleType(): android.widget.ImageView.ScaleType;
         protected onMeasure(widthMeasureSpec: any, heightMeasureSpec: any): void;
         private resolveAdjustedSize(desiredSize, maxSize, measureSpec);
         protected setFrame(left: number, top: number, right: number, bottom: number): boolean;
@@ -11124,7 +10845,9 @@ declare module androidui.widget {
         static State_Footer_ReadyToLoad: number;
         static State_Footer_LoadFail: number;
         static State_Footer_NoMoreToLoad: number;
-        static StateChangeLimit: {};
+        static StateChangeLimit: {
+            [x: number]: number[];
+        };
         private autoLoadScrollAtBottom;
         private headerView;
         private footerView;
@@ -11133,7 +10856,7 @@ declare module androidui.widget {
         private contentOverY;
         private overScrollLocker;
         private refreshLoadListener;
-        constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+        constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
         protected onViewAdded(child: View): void;
         private configHeaderView();
         private configFooterView();
@@ -11178,13 +10901,13 @@ declare module androidui.widget {
         class DefaultHeaderView extends HeaderView {
             textView: TextView;
             progressBar: ProgressBar;
-            constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+            constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
             onStateChange(newState: number, oldState: number): void;
         }
         class DefaultFooterView extends FooterView {
             textView: TextView;
             progressBar: ProgressBar;
-            constructor(context?: android.content.Context, bindElement?: HTMLElement, defStyle?: any);
+            constructor(context: android.content.Context, bindElement?: HTMLElement, defStyle?: Map<string, string>);
             onStateChange(newState: number, oldState: number): void;
         }
     }
