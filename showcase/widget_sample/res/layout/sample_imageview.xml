@@ -16,15 +16,15 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:layout_marginLeft="4dp"
                     android:layout_height="200dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:layout_width="match_parent"
                     android:layout_marginLeft="4dp"
                     android:style="@style/imageStyle" />
@@ -37,12 +37,12 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent" >
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitStart"
                     android:layout_height="200dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitStart"
                     android:layout_width="match_parent"
                     android:layout_marginLeft="4dp"
@@ -56,12 +56,12 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitEnd"
                     android:layout_height="200dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitEnd"
                     android:layout_width="match_parent"
                     android:layout_marginLeft="4dp"
@@ -75,12 +75,12 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitXy"
                     android:layout_height="200dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="fitXy"
                     android:layout_width="match_parent"
                     android:layout_marginLeft="4dp"
@@ -95,13 +95,13 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="center"
                     android:layout_height="80dp"
                     android:layout_width="80dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="center"
                     android:layout_height="180dp"
                     android:layout_width="180dp"
@@ -116,20 +116,20 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent" >
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="centerCrop"
                     android:layout_height="80dp"
                     android:layout_width="80dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="centerCrop"
                     android:layout_marginLeft="4dp"
                     android:layout_height="100dp"
                     android:layout_width="60dp"
                     android:style="@style/imageStyle"/>
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="centerCrop"
                     android:layout_height="60dp"
                     android:layout_width="100dp"
@@ -144,13 +144,13 @@
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent">
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="centerInside"
                     android:layout_height="80dp"
                     android:layout_width="80dp"
                     android:style="@style/imageStyle" />
             <ImageView
-                    android:src="assets/images/logo_android_1@2x.png"
+                    android:src="url(assets/images/logo_android_1@2x.png)"
                     android:scaleType="centerInside"
                     android:layout_height="180dp"
                     android:layout_width="180dp"

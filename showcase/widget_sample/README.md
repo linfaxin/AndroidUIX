@@ -1,4 +1,4 @@
-# AndroidUI Sample
+# AndroidUIX Sample
 
-This is a sample App for AndroidUI. 
+This is a sample App for AndroidUIX.
 

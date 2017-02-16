@@ -28,7 +28,7 @@
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"
                 android:gravity="center"
-                >Left drawer</TextView>
+                android:text="Left drawer" />
     </LinearLayout>
     <LinearLayout
             android:layout_gravity="right"
@@ -40,6 +40,6 @@
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"
                 android:gravity="center"
-                >Right drawer</TextView>
+                android:text="Right drawer" />
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

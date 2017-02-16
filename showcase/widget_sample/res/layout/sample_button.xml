@@ -58,9 +58,9 @@
                 android:layout_width="match_parent"
                 android:padding="8dp"
                 android:layout_margin="6dp"
-                android:textColor="@color/btn_color"
+                android:textColor="#fff"
                 android:cornerRadius="4dp"
                 android:background="@color/red"
-                android:state_pressed="background:@color/red_press;" />
+                android:state_pressed="alpha:0.8;" />
     </LinearLayout>
 </ScrollView>

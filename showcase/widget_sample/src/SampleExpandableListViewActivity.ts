@@ -67,7 +67,7 @@ module sample.app {
                      parent:android.view.ViewGroup):android.view.View {
             let tv:TextView = <TextView>convertView;
             if(tv==null){
-                tv = new TextView();
+                tv = new TextView(parent.getContext());
                 const density = android.content.res.Resources.getDisplayMetrics().density;
                 tv.setTextSize(18);
                 tv.setPadding(12 * density, 6 * density, 6 * density, 6 * density);

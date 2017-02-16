@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "removeComments": true,
+    "target":"ES5",
+    "outFile": "build/app.es5.js",
+    "lib": ["dom", "es5", "es6", "es2015", "es2016"],
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "androidui-sdk"
+  ]
+}

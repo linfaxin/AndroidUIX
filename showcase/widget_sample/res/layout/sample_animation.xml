@@ -15,7 +15,7 @@
                 android:text="Rotate:" />
         <ImageView
                 android:id="rotate_repeat"
-                android:src="assets/images/logo_android_1@2x.png"
+                android:src="url(assets/images/logo_android_1@2x.png)"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_margin="20dp 12dp" />
@@ -26,7 +26,7 @@
                 android:text="Translate:" />
         <ImageView
                 android:id="translate_repeat"
-                android:src="assets/images/logo_android_1@2x.png"
+                android:src="url(assets/images/logo_android_1@2x.png)"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_margin="12dp" />
@@ -37,7 +37,7 @@
                 android:gravity="center" />
         <ImageView
                 android:id="scale_repeat"
-                android:src="assets/images/logo_android_1@2x.png"
+                android:src="url(assets/images/logo_android_1@2x.png)"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_margin="12dp" />
@@ -48,7 +48,7 @@
                 android:gravity="center" />
         <ImageView
                 android:id="alpha_repeat"
-                android:src="assets/images/logo_android_1@2x.png"
+                android:src="url(assets/images/logo_android_1@2x.png)"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_margin="12dp" />
@@ -59,7 +59,7 @@
                 android:gravity="center" />
         <ImageView
                 android:id="anim_set"
-                android:src="assets/images/logo_android_1@2x.png"
+                android:src="url(assets/images/logo_android_1@2x.png)"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 android:layout_margin="12dp" />

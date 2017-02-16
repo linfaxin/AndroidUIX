@@ -4,15 +4,27 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:orientation="vertical">
-        <HtmlView>
+        <HtmlView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
             <p style="font-size: 24px;text-align: center">HtmlView</p>
         </HtmlView>
-        <HtmlView style="padding:0 20px;box-sizing: border-box;line-height: 20px;">
+        <HtmlView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                style="padding:0 20px;box-sizing: border-box;line-height: 20px;">
             <p>HtmlView can wrap any <span style="color: red;font-weight: bold;">HTML tag</span>, render with DOM, but too many HtmlView will reduce FPS.</p>
             <p>HtmlView above on all Android Views</p>
         </HtmlView>
-        <TextView android:gravity="center">This is a Android View</TextView>
-        <HtmlView style="overflow: visible;text-align: center;">
+        <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:text="This is a Android View"
+                android:gravity="center" ></TextView>
+        <HtmlView
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                style="overflow: visible;text-align: center;">
             <p>This is a HtmlView</p>
         </HtmlView>
     </LinearLayout>

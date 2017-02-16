@@ -5,6 +5,7 @@
 module sample.app {
     import Activity = android.app.Activity;
     import ActionBarActivity = android.app.ActionBarActivity;
+    import NumberPicker = android.widget.NumberPicker;
 
 
     export class SamplePickerActivity extends ActionBarActivity {

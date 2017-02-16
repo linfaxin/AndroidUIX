@@ -19,7 +19,7 @@
         <ImageView
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
-                android:src="assets/images/logo_google_3.png" />
+                android:src="url(assets/images/logo_google_3.png)" />
         <CheckBox
                 android:text="CheckBox"
                 android:layout_height="wrap_content"
