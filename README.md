@@ -3,7 +3,7 @@
 
 Make a high-performance web app with Android UI.
 
-Site: http://androiduix.com
+Site: http://linfaxin.github.io/AndroidUIX/
 
 
 ### Feature
@@ -31,7 +31,7 @@ You can test [Showcase](http://androiduix.com/showcase/index.html) on your devic
 
 ### Showcase
 
-* [Showcase](http://androiduix.com/showcase/index.html)
+* [Showcase](http://linfaxin.github.io/AndroidUIX/showcase/index.html)
 
 
 
