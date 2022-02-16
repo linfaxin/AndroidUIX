@@ -17,7 +17,7 @@
 
 ### 60fps
 
-在移动端60fps非常困难, 目前Sample页在移动端的fps:
+Sample页在移动端的fps:
 
 1. IOS: 50-60fps
 2. Android Chrome: 50fps
