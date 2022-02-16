@@ -20,7 +20,7 @@ Look wiki: [Getting Started](https://github.com/linfaxin/AndroidUIX/wiki/1.-Gett
 
 ### 60fps
 
-60fps is difficult on mobile, the sample app's fps:
+the sample app's fps:
 
 1. IOS: 50-60fps
 2. Android Chrome: 50fps
