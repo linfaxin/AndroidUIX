@@ -2,7 +2,7 @@
 
 移植Android的UI组件到Web端, 以Android的方式来制作高性能优体验的WebApp
 
-网站: http://androiduix.com
+网站: http://linfaxin.github.io/AndroidUIX
 
 
 ### 特点
@@ -27,11 +27,7 @@
 
 ### Showcase
 
-* [Showcase](http://androiduix.com/showcase/index.html)
-
-### 支持
-
-加入QQ群：275850460，我将为你提供技术支持 :)
+* [Showcase](http://linfaxin.github.io/AndroidUIX/showcase/index.html)
 
 
 ### LICENSE
